@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shopping_lists">Listes de courses</string>
+    <string name="no_shopping_lists_available">Aucune liste de courses pour l\'instant\nAppuie sur + pour en créer une</string>
+    <string name="shopping_list_subtitle">%1$s · %2$s</string>
+    <string name="pending_items_count">%1$d en attente</string>
+
+    <string name="create_shopping_list">Créer une liste de courses</string>
+    <string name="edit_shopping_list">Modifier la liste de courses</string>
+    <string name="delete_shopping_list">Supprimer la liste de courses</string>
+    <string name="save">Enregistrer</string>
+    <string name="shopping_list_name">Nom de la liste</string>
+    <string name="shopping_list_name_error">Le nom de la liste ne doit pas être vide</string>
+    <string name="select_category">Catégorie</string>
+    <string name="select_account">Compte</string>
+
+    <string name="add_item">Ajouter un article</string>
+    <string name="item_name">Nom de l\'article</string>
+    <string name="item_name_error">Le nom de l\'article ne doit pas être vide</string>
+    <string name="item_price">Prix</string>
+    <string name="item_price_error">Le prix ne peut pas être négatif</string>
+    <string name="delete_item">Retirer l\'article</string>
+    <string name="pending_total">Total en attente</string>
+    <string name="no_items_available">Aucun article pour l\'instant\nAppuie sur + pour en ajouter un</string>
+</resources>

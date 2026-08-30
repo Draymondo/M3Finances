@@ -1,0 +1,29 @@
+package com.naveenapps.expensemanager.feature.settings.di
+
+import com.naveenapps.expensemanager.feature.settings.SettingsViewModel
+import com.naveenapps.expensemanager.feature.settings.advanced.AdvancedSettingsViewModel
+import org.koin.core.module.dsl.viewModel
+import org.koin.dsl.module
+
+val SettingsViewModelModule = module {
+    viewModel {
+        SettingsViewModel(
+            getDefaultCurrencyUseCase = get(),
+            getCurrencyUseCase = get(),
+            getCurrentThemeUseCase = get(),
+            getCurrentLocaleUseCase = get(),
+            getAllAccountsUseCase = get(),
+            getAllCategoryUseCase = get(),
+            settingsRepository = get(),
+            googleAuthRepository = get(),
+            cloudBackupRepository = get(),
+            appComposeNavigator = get()
+        )
+    }
+    viewModel {
+        AdvancedSettingsViewModel(
+            appComposeNavigator = get()
+        )
+    }
+}
+

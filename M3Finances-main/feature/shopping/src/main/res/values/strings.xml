@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shopping_lists">Shopping lists</string>
+    <string name="no_shopping_lists_available">No shopping lists yet\nTap + to start one</string>
+    <string name="shopping_list_subtitle">%1$s · %2$s</string>
+    <string name="pending_items_count">%1$d pending</string>
+
+    <string name="create_shopping_list">Create shopping list</string>
+    <string name="edit_shopping_list">Edit shopping list</string>
+    <string name="delete_shopping_list">Delete shopping list</string>
+    <string name="save">Save</string>
+    <string name="shopping_list_name">List name</string>
+    <string name="shopping_list_name_error">List name shouldn\'t be blank</string>
+    <string name="select_category">Category</string>
+    <string name="select_account">Account</string>
+
+    <string name="add_item">Add item</string>
+    <string name="item_name">Item name</string>
+    <string name="item_name_error">Item name shouldn\'t be blank</string>
+    <string name="item_price">Price</string>
+    <string name="item_price_error">Price can\'t be negative</string>
+    <string name="delete_item">Remove item</string>
+    <string name="pending_total">Pending total</string>
+    <string name="no_items_available">No items yet\nTap + to add one</string>
+</resources>

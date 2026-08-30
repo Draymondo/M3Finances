@@ -1,0 +1,113 @@
+{
+  "project_info": {
+    "project_number": "312791889198",
+    "project_id": "m3notes-9712f",
+    "storage_bucket": "m3notes-9712f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:312791889198:android:defc0d0536797e190bb6bf",
+        "android_client_info": {
+          "package_name": "com.m3notes.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "312791889198-9gmo7b7igt11in4nb9ujle7n95o2d60h.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDpQwgOOINjgGCR8NXPMfsDPVwXLPhn67c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "312791889198-9gmo7b7igt11in4nb9ujle7n95o2d60h.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:312791889198:android:2f64229b6723072a0bb6bf",
+        "android_client_info": {
+          "package_name": "com.naveenapps.expensemanager"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "312791889198-sp7e88sht7tc9psp02ajl16a3i4e5v14.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.naveenapps.expensemanager",
+            "certificate_hash": "a01d7e9ea3d44a2914d2275a02be4bf09b0b3f45"
+          }
+        },
+        {
+          "client_id": "312791889198-9gmo7b7igt11in4nb9ujle7n95o2d60h.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDpQwgOOINjgGCR8NXPMfsDPVwXLPhn67c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "312791889198-9gmo7b7igt11in4nb9ujle7n95o2d60h.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:312791889198:android:964e17c0f8ea4d4d0bb6bf",
+        "android_client_info": {
+          "package_name": "com.naveenapps.expensemanager.debug"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "312791889198-0dh9h8re8sktmjtie3e4dice3l9gr44i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.naveenapps.expensemanager.debug",
+            "certificate_hash": "a01d7e9ea3d44a2914d2275a02be4bf09b0b3f45"
+          }
+        },
+        {
+          "client_id": "312791889198-9gmo7b7igt11in4nb9ujle7n95o2d60h.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDpQwgOOINjgGCR8NXPMfsDPVwXLPhn67c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "312791889198-9gmo7b7igt11in4nb9ujle7n95o2d60h.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

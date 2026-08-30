@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="savings_goals">Savings goals</string>
+    <string name="no_savings_goals_available">No savings goals yet\nTap + to start one</string>
+    <string name="target_on">Target %1$s</string>
+    <string name="no_target_date">No target date</string>
+    <string name="of_target">of %1$s</string>
+
+    <string name="create_savings_goal">Create Savings Goal</string>
+    <string name="edit_savings_goal">Edit Savings Goal</string>
+    <string name="delete_savings_goal">Delete savings goal</string>
+    <string name="save">Save</string>
+    <string name="saved_amount">Saved amount</string>
+    <string name="saved_so_far">Saved so far</string>
+    <string name="details">Details</string>
+    <string name="savings_goal_name">Goal name</string>
+    <string name="savings_goal_name_error">Goal name shouldn\'t be blank</string>
+    <string name="target_amount">Target amount</string>
+    <string name="initial_amount">Initial amount</string>
+    <string name="amount_error">Amount should be greater than 0</string>
+    <string name="notes">Notes</string>
+    <string name="funding_account">Funding account</string>
+    <string name="record_contribution">Record a contribution</string>
+    <string name="contribution">Contribution</string>
+    <string name="withdrawal">Withdrawal</string>
+    <string name="contribution_amount">Amount</string>
+    <string name="target_date">Target date</string>
+    <string name="clear">Clear</string>
+    <string name="achieved">Achieved</string>
+    <string name="achieved_message">Manually close this goal even if the saved amount isn\'t exactly at the target</string>
+</resources>

@@ -1,0 +1,55 @@
+package com.naveenapps.expensemanager.feature.transaction.create
+
+import androidx.compose.runtime.Stable
+import com.naveenapps.expensemanager.core.model.AccountUiModel
+import com.naveenapps.expensemanager.core.model.Amount
+import com.naveenapps.expensemanager.core.model.Category
+import com.naveenapps.expensemanager.core.model.Currency
+import com.naveenapps.expensemanager.core.model.TextFieldValue
+import com.naveenapps.expensemanager.core.model.TransactionType
+import java.util.Date
+
+@Stable
+data class TransactionCreateState(
+    val amount: TextFieldValue<String>,
+    val notes: TextFieldValue<String>,
+    val dateTime: Date,
+    val transactionType: TransactionType,
+    val currency: Currency,
+    val selectedCategory: Category,
+    val selectedFromAccount: AccountUiModel,
+    val selectedToAccount: AccountUiModel,
+    val accounts: List<AccountUiModel>,
+    val categories: List<Category>,
+    val accountSelection: AccountSelection,
+    val showDeleteDialog: Boolean,
+    val showDeleteButton: Boolean,
+    val showNumberPad: Boolean,
+    val showCategorySelection: Boolean,
+    val showAccountSelection: Boolean,
+    val showDateSelection: Boolean,
+    val showTimeSelection: Boolean,
+    val isSplit: Boolean,
+    val splitItems: List<TransactionSplitItemState>,
+    val splitCategorySelectionIndex: Int?,
+    val splitTotalError: Boolean,
+    val splitRemaining: Amount,
+    val isAiScanning: Boolean = false,
+    val aiScanError: String? = null,
+)
+
+data class TransactionSplitItemState(
+    val category: Category,
+    val amount: TextFieldValue<String>,
+    val notes: TextFieldValue<String>,
+)
+
+enum class AccountSelection {
+    FROM_ACCOUNT,
+    TO_ACCOUNT
+}
+
+data class TransactionCreateInitSetupState(
+    val isCategorySyncCompleted: Boolean,
+    val isAccountSyncCompleted: Boolean,
+)

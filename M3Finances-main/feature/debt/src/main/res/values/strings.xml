@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="debts">Debts</string>
+    <string name="no_debts_available">No debts yet\nTap + to record money lent or borrowed</string>
+    <string name="owes_you">Owes you</string>
+    <string name="you_owe">You owe</string>
+    <string name="due_on">Due %1$s</string>
+
+    <string name="create_debt">Create Debt</string>
+    <string name="edit_debt">Edit Debt</string>
+    <string name="delete_debt">Delete debt</string>
+    <string name="save">Save</string>
+    <string name="direction">Direction</string>
+    <string name="direction_lent">They owe me</string>
+    <string name="direction_borrowed">I owe them</string>
+    <string name="remaining_amount">Remaining amount</string>
+    <string name="details">Details</string>
+    <string name="person_name">Person</string>
+    <string name="person_name_error">Person name shouldn\'t be blank</string>
+    <string name="initial_amount">Initial amount</string>
+    <string name="amount_error">Amount should be greater than 0</string>
+    <string name="notes">Notes</string>
+    <string name="account">Account</string>
+    <string name="linked_to_account">Money actually advanced</string>
+    <string name="linked_to_account_message">Turn off if no money was taken from one of your accounts (e.g. work done, a service rendered)</string>
+    <string name="record_repayment">Record a repayment</string>
+    <string name="repayment_amount">Repaid amount</string>
+    <string name="due_date">Due date</string>
+    <string name="no_due_date">No due date</string>
+    <string name="clear">Clear</string>
+    <string name="settled">Settled</string>
+    <string name="settled_message">Manually close this debt even if the balance isn\'t exactly zero — for example when repaid in cash outside the app</string>
+    <string name="reminders">Reminders</string>
+    <string name="no_reminders">No reminder dates set</string>
+    <string name="add_reminder">Add reminder date</string>
+    <string name="delete_reminder">Delete reminder</string>
+</resources>

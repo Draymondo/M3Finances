@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="recurring_transactions">Transactions récurrentes</string>
+    <string name="no_recurring_transaction_available">Aucune transaction récurrente\nAppuyez sur + pour en programmer une</string>
+    <string name="recurring_transfer">Virement</string>
+
+    <string name="create_recurring_transaction">Créer une transaction récurrente</string>
+    <string name="edit_recurring_transaction">Modifier la transaction récurrente</string>
+
+    <string name="recurring_frequency_daily">Quotidien</string>
+    <string name="recurring_frequency_weekly">Hebdomadaire</string>
+    <string name="recurring_frequency_monthly">Mensuel</string>
+    <string name="recurring_frequency_yearly">Annuel</string>
+
+    <string name="recurring_every_n_days">Tous les %1$d jours</string>
+    <string name="recurring_every_n_weeks">Toutes les %1$d semaines</string>
+    <string name="recurring_every_n_months">Tous les %1$d mois</string>
+    <string name="recurring_every_n_years">Tous les %1$d ans</string>
+
+    <string name="frequency">Fréquence</string>
+    <string name="repeat_every">Répéter tous les</string>
+    <string name="start_date">Date de début</string>
+    <string name="end_date">Date de fin</string>
+    <string name="no_end_date">Pas de date de fin</string>
+    <string name="clear">Effacer</string>
+    <string name="schedule">Planification</string>
+
+    <string name="active">Actif</string>
+    <string name="active_recurring_message">Les transactions récurrentes en pause sont conservées mais ne créent plus de nouvelles transactions</string>
+
+    <string name="recurring_amount_error">Le montant doit être supérieur à 0</string>
+    <string name="recurring_transfer_account_error">Sélectionnez un compte de destination pour ce virement</string>
+</resources>

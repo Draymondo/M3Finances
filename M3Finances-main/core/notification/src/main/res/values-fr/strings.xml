@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_description">N\'oubliez pas d\'enregistrer vos dépenses</string>
+    <string name="notification_title">Ajouter une transaction</string>
+    <string name="notification_channel_description">Utilisé pour les rappels</string>
+    <string name="debt_reminder_channel_description">Rappels de dettes</string>
+    <string name="debt_reminder_title">Rappel de dette</string>
+    <string name="debt_reminder_content_lent">%1$s vous doit %2$s</string>
+    <string name="debt_reminder_content_borrowed">Vous devez %2$s à %1$s</string>
+    <string name="debt_overdue_title">Dette en retard</string>
+    <string name="debt_overdue_content_one">%1$s est en retard et pas encore réglée</string>
+    <string name="debt_overdue_content_other">%1$d dettes sont en retard et pas encore réglées</string>
+    <string name="budget_alert_channel_description">Alertes budget</string>
+    <string name="budget_exceeded_title">Budget dépassé</string>
+    <string name="budget_exceeded_content_one">%1$s a dépassé son budget</string>
+    <string name="budget_exceeded_content_other">%1$d budgets ont dépassé leur limite</string>
+    <string name="budget_approaching_title">Budget bientôt atteint</string>
+    <string name="budget_approaching_content_one">%1$s approche de sa limite</string>
+    <string name="budget_approaching_content_other">%1$d budgets approchent de leur limite</string>
+
+    <string name="daily_summary_title">Résumé quotidien</string>
+    <string name="daily_summary_budget_exceeded">Budgets dépassés : %1$d</string>
+    <string name="daily_summary_budget_approaching">Budgets proches de la limite : %1$d</string>
+    <string name="daily_summary_debt_reminder">Rappels de dettes aujourd\'hui : %1$d</string>
+    <string name="daily_summary_debt_overdue">Dettes en retard : %1$d</string>
+    <string name="daily_summary_recurring_processed">%1$d transactions récurrentes appliquées</string>
+</resources>

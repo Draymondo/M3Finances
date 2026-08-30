@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Static (long-press-on-launcher-icon) shortcuts. Each targets MainActivity with a
+    "shortcut_destination" extra — see MainActivity.landingScreenFromShortcut — which picks the
+    NavHost's start destination directly, skipping the normal Home screen. If the app is locked
+    (see AppLockScreen), the destination still applies after a successful unlock, since
+    MainActivity always computes it up front regardless of lock state.
+-->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <shortcut
+        android:shortcutId="new_transaction"
+        android:enabled="true"
+        android:icon="@drawable/ic_add"
+        android:shortcutShortLabel="@string/shortcut_new_transaction_short"
+        android:shortcutLongLabel="@string/shortcut_new_transaction_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.naveenapps.expensemanager"
+            android:targetClass="com.naveenapps.expensemanager.MainActivity">
+            <extra
+                android:name="shortcut_destination"
+                android:value="new_transaction" />
+        </intent>
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="debt_list"
+        android:enabled="true"
+        android:icon="@drawable/payments"
+        android:shortcutShortLabel="@string/shortcut_debt_list_short"
+        android:shortcutLongLabel="@string/shortcut_debt_list_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.naveenapps.expensemanager"
+            android:targetClass="com.naveenapps.expensemanager.MainActivity">
+            <extra
+                android:name="shortcut_destination"
+                android:value="debt_list" />
+        </intent>
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="shopping_list"
+        android:enabled="true"
+        android:icon="@drawable/shopping_cart"
+        android:shortcutShortLabel="@string/shortcut_shopping_list_short"
+        android:shortcutLongLabel="@string/shortcut_shopping_list_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.naveenapps.expensemanager"
+            android:targetClass="com.naveenapps.expensemanager.MainActivity">
+            <extra
+                android:name="shortcut_destination"
+                android:value="shopping_list" />
+        </intent>
+    </shortcut>
+
+</shortcuts>

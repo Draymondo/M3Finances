@@ -1,0 +1,39 @@
+rules_version = '2';
+
+// Règles de sécurité Firestore pour le projet m3notes-9712f.
+//
+// ⚠️ CE PROJET FIREBASE EST PARTAGÉ avec une autre app (com.m3notes.app, attestation).
+// Ce fichier ne documente QUE le bloc concernant M3Finances (voir le match ci-dessous).
+// Avant de coller ceci dans Firebase Console → Firestore Database → Règles :
+//   1. Copie d'abord les règles actuellement en ligne (bouton "Copier" dans la console)
+//   2. Retrouve le bloc qui concerne l'app d'attestation et GARDE-LE tel quel
+//   3. Ajoute/remplace uniquement le bloc `match /users/{userId}/{document=**}` ci-dessous
+//      à l'intérieur du même `service cloud.firestore { match /databases/{database}/documents { ... } }`
+// Ne remplace jamais la totalité des règles en ligne par le seul contenu de ce fichier —
+// ça couperait l'accès de l'app d'attestation à ses propres données.
+//
+// Ce que fait la règle : toutes les données de M3Finances vivent sous
+// /users/{userId}/... (comptes, catégories, transactions, budgets, et tout ce qui sera
+// ajouté plus tard — dettes, objectifs d'épargne, transactions récurrentes — puisque le
+// wildcard {document=**} couvre n'importe quelle sous-collection présente ou future sans
+// qu'il faille modifier cette règle). Une personne ne peut lire ou écrire que sous son
+// propre userId, authentifié via Google Sign-In (Firebase Auth) — voir
+// GoogleAuthRepositoryImpl.kt et CloudBackupRepositoryImpl.kt côté app.
+//
+// Tout ce qui n'est explicitement autorisé nulle part est refusé par défaut par Firestore
+// — inutile d'ajouter un `deny` explicite en fin de fichier.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- Bloc M3Finances ---
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // --- Bloc(s) de l'app d'attestation (com.m3notes.app) ---
+    // À recoller ici depuis les règles actuellement en ligne dans la console — non
+    // reconstitué dans ce fichier faute de visibilité sur le code de cette autre app.
+
+  }
+}

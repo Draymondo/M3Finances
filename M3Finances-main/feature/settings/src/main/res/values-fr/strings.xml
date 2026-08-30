@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings">Paramètres</string>
+    <string name="theme">Thème</string>
+    <string name="analysis">Analyse</string>
+    <string name="select_currency">Sélectionner la devise</string>
+    <string name="reminder_notification">Notification</string>
+    <string name="info">Infos</string>
+    <string name="rate_us_message">Cela nous aidera à nous améliorer</string>
+    <string name="currency">Personnaliser la devise</string>
+    <string name="selected_daily_reminder_time">Nous vous rappellerons d\'ajouter votre dépense à l\'heure définie</string>
+    <string name="recurring_transactions_settings">Transactions récurrentes</string>
+    <string name="recurring_transactions_settings_subtitle">Gérez vos factures, abonnements et autres transactions planifiées</string>
+    <string name="debts_settings">Dettes</string>
+    <string name="debts_settings_subtitle">Suivez l\'argent prêté ou emprunté</string>
+    <string name="savings_goals_settings">Objectifs d\'épargne</string>
+    <string name="savings_goals_settings_subtitle">Suivez la progression de vos objectifs d\'épargne</string>
+    <string name="shopping_lists_settings">Listes de courses</string>
+    <string name="shopping_lists_settings_subtitle">Prépare tes achats et enregistre-les au fur et à mesure</string>
+    <string name="rate_us">Évaluez-nous</string>
+    <string name="choose_web_browser">Choisir un navigateur web</string>
+
+    <string name="export">Exporter</string>
+    <string name="export_message">Exportez vos données et analysez-les dans le format de votre choix</string>
+
+    <string name="filter">Filtre</string>
+    <string name="filter_message">Vous pouvez sélectionner le filtre de date pour afficher les dépenses</string>
+
+    <string name="developed_by">Développé par Naveen Kumar Kuppan</string>
+    <string name="system_default">Par défaut du système</string>
+    <string name="app_version">Version : %s</string>
+    <string name="advanced">Avancé</string>
+    <string name="advanced_config_message">Gérer les configurations avancées de l\'application</string>
+    <string name="default_account">Compte par défaut</string>
+    <string name="default_expense_category">Catégorie de dépense par défaut</string>
+    <string name="default_income_category">Catégorie de revenu par défaut</string>
+    <string name="accounts_re_order">Réorganiser les comptes</string>
+    <string name="accounts_re_order_message">Vous pouvez modifier l\'ordre de la liste des comptes sur le tableau de bord.</string>
+    <string name="backup">Sauvegarde</string>
+    <string name="backup_message">Créez une sauvegarde de vos données et restaurez-les sur n\'importe quel appareil.</string>
+    <string name="restore">Restaurer</string>
+    <string name="restore_message">Restaurez vos données pour les récupérer sur vos appareils.</string>
+    <string name="defaults">Valeurs par défaut</string>
+    <string name="others">Autres paramètres</string>
+    <string name="tools_and_features">Outils de gestion</string>
+
+    <string name="personalization">Personnalisation</string>
+    <string name="notifications">Notifications</string>
+    <string name="data_and_backup"><![CDATA[Données & sauvegarde]]></string>
+    <string name="security">Sécurité</string>
+    <string name="cloud_backup">Sauvegarde cloud</string>
+    <string name="cloud_backup_message">Connecte Google pour sauvegarder automatiquement et récupérer tes données sur un nouveau téléphone</string>
+    <string name="cloud_backup_connected">Connecté — sauvegarde automatique active</string>
+    <string name="cloud_backup_syncing">Synchronisation…</string>
+    <string name="cloud_backup_last_synced">Dernière sauvegarde : %1$s</string>
+    <string name="cloud_sync_conflict_title">Conflit de synchronisation</string>
+    <string name="cloud_sync_conflict_message">Le téléphone et le cloud ont tous les deux des modifications. Rien ne sera écrasé tant que tu n\'auras pas choisi quelle version garder.</string>
+    <string name="cloud_sync_use_cloud">Utiliser les données du cloud</string>
+    <string name="cloud_sync_keep_phone">Garder les données du téléphone</string>
+    <string name="cloud_sync_conflict_pending">Sync en pause — choisis quelles données garder</string>
+    <string name="cloud_sync_restored">Téléphone mis à jour depuis le cloud</string>
+    <string name="support">Assistance</string>
+
+    <string name="compact_summary">Résumé compact</string>
+    <string name="compact_summary_message">Afficher un widget de résumé plus petit sur l\'écran d\'accueil</string>
+
+    <string name="app_lock">Verrouillage de l\'application</string>
+    <string name="app_lock_message">Exiger une authentification biométrique ou les identifiants de l\'appareil à l\'ouverture de l\'application</string>
+</resources>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="recurring_transactions">Recurring Transactions</string>
+    <string name="no_recurring_transaction_available">No recurring transactions yet\nTap + to schedule one</string>
+    <string name="recurring_transfer">Transfer</string>
+
+    <string name="create_recurring_transaction">Create Recurring Transaction</string>
+    <string name="edit_recurring_transaction">Edit Recurring Transaction</string>
+
+    <string name="recurring_frequency_daily">Daily</string>
+    <string name="recurring_frequency_weekly">Weekly</string>
+    <string name="recurring_frequency_monthly">Monthly</string>
+    <string name="recurring_frequency_yearly">Yearly</string>
+
+    <string name="recurring_every_n_days">Every %1$d days</string>
+    <string name="recurring_every_n_weeks">Every %1$d weeks</string>
+    <string name="recurring_every_n_months">Every %1$d months</string>
+    <string name="recurring_every_n_years">Every %1$d years</string>
+
+    <string name="frequency">Frequency</string>
+    <string name="repeat_every">Repeat every</string>
+    <string name="start_date">Start Date</string>
+    <string name="end_date">End Date</string>
+    <string name="no_end_date">No end date</string>
+    <string name="clear">Clear</string>
+    <string name="schedule">Schedule</string>
+
+    <string name="active">Active</string>
+    <string name="active_recurring_message">Paused recurring transactions are kept but never create new transactions</string>
+
+    <string name="recurring_amount_error">Amount should be greater than 0</string>
+    <string name="recurring_transfer_account_error">Select a destination account for this transfer</string>
+</resources>

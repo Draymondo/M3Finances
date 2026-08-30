@@ -1,0 +1,226 @@
+package com.naveenapps.expensemanager.initializer
+
+import android.content.Context
+import androidx.startup.Initializer
+import com.naveenapps.expensemanager.core.domain.usecase.account.AddAccountUseCase
+import com.naveenapps.expensemanager.core.domain.usecase.category.AddCategoryUseCase
+import com.naveenapps.expensemanager.core.domain.usecase.settings.onboarding.GetPreloadStatusUseCase
+import com.naveenapps.expensemanager.core.domain.usecase.settings.onboarding.SetPreloadStatusUseCase
+import com.naveenapps.expensemanager.core.data.R as CategoryStringsR
+import com.naveenapps.expensemanager.core.model.Account
+import com.naveenapps.expensemanager.core.model.AccountType
+import com.naveenapps.expensemanager.core.model.Category
+import com.naveenapps.expensemanager.core.model.CategoryType
+import com.naveenapps.expensemanager.core.model.StoredIcon
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import org.koin.core.context.GlobalContext
+import java.util.Calendar
+import java.util.Date
+
+val BASE_CATEGORY_LIST = listOf(
+    Category(
+        id = "1",
+        name = "Clothing",
+        type = CategoryType.EXPENSE,
+        storedIcon = StoredIcon(
+            name = "apparel",
+            backgroundColor = "#F44336",
+        ),
+        createdOn = Date(),
+        updatedOn = Date(),
+        titleResId = CategoryStringsR.string.category_clothing,
+    ),
+    Category(
+        id = "2",
+        name = "Entertainment",
+        type = CategoryType.EXPENSE,
+        storedIcon = StoredIcon(
+            name = "sports_esports",
+            backgroundColor = "#E91E63",
+        ),
+        createdOn = Date(),
+        updatedOn = Date(),
+        titleResId = CategoryStringsR.string.category_entertainment,
+    ),
+    Category(
+        id = "3",
+        name = "Food",
+        type = CategoryType.EXPENSE,
+        storedIcon = StoredIcon(
+            name = "restaurant",
+            backgroundColor = "#9C27B0",
+        ),
+        createdOn = Date(),
+        updatedOn = Date(),
+        titleResId = CategoryStringsR.string.category_food,
+    ),
+    Category(
+        id = "4",
+        name = "Health",
+        type = CategoryType.EXPENSE,
+        storedIcon = StoredIcon(
+            name = "home_health",
+            backgroundColor = "#673AB7",
+        ),
+        createdOn = Date(),
+        updatedOn = Date(),
+        titleResId = CategoryStringsR.string.category_health,
+    ),
+    Category(
+        id = "5",
+        name = "Leisure",
+        type = CategoryType.EXPENSE,
+        storedIcon = StoredIcon(
+            name = "flights_and_hotels",
+            backgroundColor = "#3F51B5",
+        ),
+        createdOn = Date(),
+        updatedOn = Date(),
+        titleResId = CategoryStringsR.string.category_leisure,
+    ),
+    Category(
+        id = "6",
+        name = "Shopping",
+        type = CategoryType.EXPENSE,
+        storedIcon = StoredIcon(
+            name = "shopping_cart",
+            backgroundColor = "#2196F3",
+        ),
+        createdOn = Date(),
+        updatedOn = Date(),
+        titleResId = CategoryStringsR.string.category_shopping,
+    ),
+    Category(
+        id = "7",
+        name = "Transportation",
+        type = CategoryType.EXPENSE,
+        storedIcon = StoredIcon(
+            name = "travel",
+            backgroundColor = "#03A9F4",
+        ),
+        createdOn = Date(),
+        updatedOn = Date(),
+        titleResId = CategoryStringsR.string.category_transportation,
+    ),
+    Category(
+        id = "8",
+        name = "Utilities",
+        type = CategoryType.EXPENSE,
+        storedIcon = StoredIcon(
+            name = "other_admission",
+            backgroundColor = "#00BCD4",
+        ),
+        createdOn = Date(),
+        updatedOn = Date(),
+        titleResId = CategoryStringsR.string.category_utilities,
+    ),
+    Category(
+        id = "9",
+        name = "Salary",
+        type = CategoryType.INCOME,
+        storedIcon = StoredIcon(
+            name = "savings",
+            backgroundColor = "#4CAF50",
+        ),
+        createdOn = Date(),
+        updatedOn = Date(),
+        titleResId = CategoryStringsR.string.category_salary,
+    ),
+    Category(
+        id = "10",
+        name = "Gift",
+        type = CategoryType.INCOME,
+        storedIcon = StoredIcon(
+            name = "featured_seasonal_and_gifts",
+            backgroundColor = "#E65100",
+        ),
+        createdOn = Date(),
+        updatedOn = Date(),
+        titleResId = CategoryStringsR.string.category_gift,
+    ),
+    Category(
+        id = "11",
+        name = "Coupons",
+        type = CategoryType.INCOME,
+        storedIcon = StoredIcon(
+            name = "redeem",
+            backgroundColor = "#3E2723",
+        ),
+        createdOn = Date(),
+        updatedOn = Date(),
+        titleResId = CategoryStringsR.string.category_coupons,
+    ),
+)
+
+val BASE_ACCOUNT_LIST = listOf(
+    Account(
+        "1",
+        "Cash",
+        AccountType.REGULAR,
+        storedIcon = StoredIcon(
+            name = "savings",
+            backgroundColor = "#4CAF50",
+        ),
+        Calendar.getInstance().time,
+        Calendar.getInstance().time,
+    ),
+    Account(
+        "2",
+        "Card-xxx",
+        AccountType.CREDIT,
+        storedIcon = StoredIcon(
+            name = "credit_card",
+            backgroundColor = "#4CAF50",
+        ),
+        Calendar.getInstance().time,
+        Calendar.getInstance().time,
+    ),
+    Account(
+        "3",
+        "Bank Account",
+        AccountType.REGULAR,
+        storedIcon = StoredIcon(
+            name = "account_balance",
+            backgroundColor = "#4CAF50",
+        ),
+        Calendar.getInstance().time,
+        Calendar.getInstance().time,
+    ),
+)
+
+class PreloadDatabaseInitializer : Initializer<Unit> {
+
+    override fun create(context: Context) {
+
+        val getPreloadStatusUseCase: GetPreloadStatusUseCase =  GlobalContext.get().get()
+        val setPreloadStatusUseCase: SetPreloadStatusUseCase =  GlobalContext.get().get()
+        val addAccountUseCase: AddAccountUseCase =  GlobalContext.get().get()
+        val addCategoryUseCase: AddCategoryUseCase =  GlobalContext.get().get()
+
+        CoroutineScope(SupervisorJob() + Dispatchers.Main).launch {
+            val isPreloaded = getPreloadStatusUseCase.invoke()
+
+            if (isPreloaded.not()) {
+                BASE_CATEGORY_LIST.forEach { value ->
+                    addCategoryUseCase.invoke(value)
+                }
+
+                BASE_ACCOUNT_LIST.forEach { value ->
+                    addAccountUseCase.invoke(value)
+                }
+
+                setPreloadStatusUseCase.invoke(true)
+            }
+        }
+    }
+
+    override fun dependencies(): List<Class<out Initializer<*>>> {
+        return listOf(
+            KoinInitializer::class.java,
+            WorkManagerInitializer::class.java
+        )
+    }
+}
