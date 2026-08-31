@@ -56,5 +56,14 @@ val TransactionViewModelModule = module {
         )
     }
     viewModel { NumberPadViewModel() }
+    viewModel {
+        com.naveenapps.expensemanager.feature.transaction.chat.ChatViewModel(
+            get(),
+            get(),
+            get(),
+            get(),
+            get()
+        )
+    }
 }
 

@@ -23,4 +23,6 @@ sealed class DashboardAction {
     data object OpenAccountList : DashboardAction()
 
     data object OpenPendingTransactions : DashboardAction()
+
+    data object OpenChat : DashboardAction()
 }

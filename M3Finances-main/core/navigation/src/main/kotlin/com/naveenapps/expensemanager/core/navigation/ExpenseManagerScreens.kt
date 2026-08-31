@@ -28,6 +28,9 @@ sealed class ExpenseManagerScreens {
     data object PendingTransactionList : ExpenseManagerScreens()
 
     @Serializable
+    data object Chat : ExpenseManagerScreens()
+
+    @Serializable
     data object TransactionSearch : ExpenseManagerScreens()
 
     @Serializable

@@ -42,7 +42,7 @@ class GeminiRepositoryImpl(
                     ?: return@withContext Resource.Error(Exception("Impossible de décoder l'image"))
 
                 val model = GenerativeModel(
-                    modelName = "gemini-3.5-flash",
+                    modelName = "gemini-3.1-flash-lite",
                     apiKey = apiKey,
                     generationConfig = generationConfig {
                         responseMimeType = "application/json"
@@ -123,7 +123,7 @@ class GeminiRepositoryImpl(
         withContext(dispatchers.io) {
             try {
                 val model = GenerativeModel(
-                    modelName = "gemini-3.5-flash",
+                    modelName = "gemini-3.1-flash-lite",
                     apiKey = apiKey,
                     generationConfig = generationConfig {
                         responseMimeType = "application/json"
@@ -186,7 +186,7 @@ class GeminiRepositoryImpl(
         withContext(dispatchers.io) {
             try {
                 val model = GenerativeModel(
-                    modelName = "gemini-3.5-flash",
+                    modelName = "gemini-3.1-flash-lite",
                     apiKey = apiKey,
                     generationConfig = generationConfig {
                         responseMimeType = "application/json"
@@ -217,47 +217,5 @@ class GeminiRepositoryImpl(
             }
         }
 
-    private data class InsightsResponse(
-        @SerializedName("insights") val insights: String
-    )
-
-    override suspend fun generateFinancialInsights(dataJson: String, apiKey: String): Resource<String> =
-        withContext(dispatchers.io) {
-            try {
-                val model = GenerativeModel(
-                    modelName = "gemini-3.5-flash",
-                    apiKey = apiKey,
-                    generationConfig = generationConfig {
-                        responseMimeType = "application/json"
-                    },
-                )
-
-                val prompt = """
-                    You are a helpful personal finance assistant. I will provide you with JSON data representing 
-                    the user's financial activity for the current period (income, expenses, top categories).
-                    
-                    Based on this data, write a short, friendly, and personalized financial insight or advice.
-                    - It must be written in FRENCH.
-                    - It must be 2 or 3 short sentences maximum.
-                    - Highlight a positive trend, a warning about high spending, or a general encouraging remark.
-                    
-                    Return ONLY a valid JSON object with exactly this field:
-                    - "insights": the generated text.
-                    
-                    Here is the data:
-                    $dataJson
-                """.trimIndent()
-
-                val response = model.generateContent(prompt)
-                val json = response.text ?: throw Exception("Empty response from Gemini")
-                val cleanJson = json.replace("```json", "").replace("```", "").trim()
-                
-                val parsed = Gson().fromJson(cleanJson, InsightsResponse::class.java)
-                
-                Resource.Success(parsed.insights)
-            } catch (e: Exception) {
-                Resource.Error(e)
-            }
-        }
 }
 

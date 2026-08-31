@@ -109,6 +109,9 @@ fun NavGraphBuilder.expenseManagerNavigation(
     composable<ExpenseManagerScreens.PendingTransactionList> {
         com.naveenapps.expensemanager.feature.transaction.pending.PendingTransactionListScreen()
     }
+    composable<ExpenseManagerScreens.Chat> {
+        com.naveenapps.expensemanager.feature.transaction.chat.ChatScreen()
+    }
     composable<ExpenseManagerScreens.TransactionSearch> {
         TransactionSearchScreen()
     }

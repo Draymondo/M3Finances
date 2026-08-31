@@ -63,7 +63,7 @@ sealed class TransactionCreateAction {
 
     data object ShowTimeSelection : TransactionCreateAction()
 
-    data class ScanReceipt(val imageBytes: ByteArray) : TransactionCreateAction()
+    data class ScanReceipt(val imageBytes: ByteArray, val imagePath: String? = null) : TransactionCreateAction()
 
     data object ClearAiScanError : TransactionCreateAction()
 }

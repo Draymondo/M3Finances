@@ -33,14 +33,7 @@ class AnalysisScreenViewModel(
     getDateRangeUseCase: GetDateRangeUseCase,
     settingsRepository: SettingsRepository,
     getNetWorthChartDataUseCase: GetNetWorthChartDataUseCase,
-    private val generateInsightsUseCase: com.naveenapps.expensemanager.core.domain.usecase.analysis.GenerateInsightsUseCase,
 ) : ViewModel() {
-
-    private val _aiInsight = MutableStateFlow<com.naveenapps.expensemanager.core.model.Resource<String>?>(null)
-    val aiInsight = _aiInsight.asStateFlow()
-
-    private val _isGeneratingInsight = MutableStateFlow(false)
-    val isGeneratingInsight = _isGeneratingInsight.asStateFlow()
 
     private val _currentTheme = MutableStateFlow(
         Theme(
@@ -139,27 +132,6 @@ class AnalysisScreenViewModel(
                 )
             }
         }.launchIn(viewModelScope)
-    }
-
-    fun generateInsight() {
-        if (_isGeneratingInsight.value) return
-        
-        viewModelScope.launch {
-            _isGeneratingInsight.value = true
-            
-            val amountData = _expenseFlowState.value
-            val dataJson = """
-                {
-                    "income": "${amountData.income}",
-                    "expense": "${amountData.expense}",
-                    "balance": "${amountData.balance}"
-                }
-            """.trimIndent()
-            
-            val result = generateInsightsUseCase.invoke(dataJson)
-            _aiInsight.value = result
-            _isGeneratingInsight.value = false
-        }
     }
 }
 

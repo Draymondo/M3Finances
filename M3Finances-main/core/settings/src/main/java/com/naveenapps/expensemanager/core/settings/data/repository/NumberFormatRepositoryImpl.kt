@@ -84,11 +84,33 @@ class NumberFormatRepositoryImpl(
         return if (raw.endsWith(".0")) raw.dropLast(2) else raw
     }
 
-    /**
-     * Parses localized string to Double
-     * Example: "1.234,5" (DE) → 1234.5
-     */
     override fun parseToDouble(localizedValue: String): Double? {
+        if (localizedValue.isBlank()) return null
+        
+        try {
+            // Robust parsing: strip spaces and standardise decimal separator
+            var clean = localizedValue.replace(" ", "").replace("\u00A0", "")
+            val lastComma = clean.lastIndexOf(',')
+            val lastDot = clean.lastIndexOf('.')
+            
+            if (lastComma > lastDot) {
+                // e.g. "1.234,50" -> "1234.50"
+                clean = clean.replace(".", "").replace(",", ".")
+            } else if (lastDot > lastComma) {
+                // e.g. "1,234.50" -> "1234.50"
+                clean = clean.replace(",", "")
+            } else {
+                // Only one type of separator or none, e.g. "12,50" or "12.50"
+                clean = clean.replace(",", ".")
+            }
+            
+            val value = clean.toDoubleOrNull()
+            if (value != null) return value
+        } catch (e: Exception) {
+            // Ignored
+        }
+
+        // Fallback to strict formatter
         val formatter = getFormatter()
         return try {
             formatter.parse(localizedValue)?.toDouble()

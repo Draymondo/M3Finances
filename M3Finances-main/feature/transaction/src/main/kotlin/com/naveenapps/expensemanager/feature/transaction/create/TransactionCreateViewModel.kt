@@ -253,6 +253,7 @@ class TransactionCreateViewModel(
                         ),
                         transactionType = transaction.type,
                         dateTime = transaction.createdOn,
+                        imagePath = transaction.imagePath,
                         notes = current.notes.copy(value = transaction.notes),
                         selectedCategory = transaction.category,
                         selectedFromAccount = transaction.fromAccount.toAccountUiModel(
@@ -341,7 +342,7 @@ class TransactionCreateViewModel(
             toAccountId = if (state.transactionType.isTransfer()) state.selectedToAccount.id else null,
             type = state.transactionType,
             amount = Amount(amountValue),
-            imagePath = "",
+            imagePath = state.imagePath,
             createdOn = state.dateTime,
             updatedOn = Calendar.getInstance().time,
             splitItems = if (state.isSplit) {
@@ -691,7 +692,10 @@ class TransactionCreateViewModel(
                                 } ?: current.selectedCategory
 
                                 val items = data.items
-                                val isSplitScan = items != null && items.size > 1
+                                val itemsSum = items?.sumOf { it.amount ?: 0.0 } ?: 0.0
+                                val totalAmount = data.amount ?: 0.0
+                                val sumMatches = Math.abs(itemsSum - totalAmount) < 0.01
+                                val isSplitScan = items != null && items.size > 1 && sumMatches
 
                                 val newSplitItems = if (isSplitScan) {
                                     items!!.map { aiItem ->
@@ -710,6 +714,7 @@ class TransactionCreateViewModel(
 
                                 current.copy(
                                     isAiScanning = false,
+                                    imagePath = action.imagePath ?: current.imagePath,
                                     amount = current.amount.copy(
                                         value = data.amount?.let { numberFormatRepository.formatForEditing(it) } ?: current.amount.value
                                     ),

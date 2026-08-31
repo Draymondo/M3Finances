@@ -9,7 +9,4 @@ interface GeminiRepository {
     suspend fun parseWaveNotification(notificationText: String, apiKey: String): Resource<com.naveenapps.expensemanager.core.model.PendingTransaction>
 
     suspend fun suggestCategory(note: String, categories: List<String>, apiKey: String): Resource<String>
-    
-    suspend fun generateFinancialInsights(dataJson: String, apiKey: String): Resource<String>
 }
-

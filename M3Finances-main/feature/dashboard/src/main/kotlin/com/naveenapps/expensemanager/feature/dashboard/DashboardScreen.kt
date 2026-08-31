@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -111,6 +112,16 @@ private fun DashboardScaffoldContent(
                                 contentDescription = "Transactions en attente",
                             )
                         }
+                    }
+                    IconButton(
+                        onClick = {
+                            onAction.invoke(DashboardAction.OpenChat)
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.ChatBubbleOutline,
+                            contentDescription = "Assistant",
+                        )
                     }
                     IconButton(
                         onClick = {

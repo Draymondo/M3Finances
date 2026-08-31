@@ -243,11 +243,16 @@ class DashboardViewModel(
             is DashboardAction.OpenTransactionEdit -> openTransactionCreate(action.transaction?.id)
             DashboardAction.OpenTransactionList -> openTransactionList()
             DashboardAction.OpenPendingTransactions -> openPendingTransactions()
+            DashboardAction.OpenChat -> openChat()
         }
     }
 
     private fun openPendingTransactions() {
         appComposeNavigator.navigate(ExpenseManagerScreens.PendingTransactionList)
+    }
+
+    private fun openChat() {
+        appComposeNavigator.navigate(ExpenseManagerScreens.Chat)
     }
 
     companion object {

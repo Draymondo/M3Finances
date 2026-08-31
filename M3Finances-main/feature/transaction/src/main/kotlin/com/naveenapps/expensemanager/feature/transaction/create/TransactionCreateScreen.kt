@@ -45,8 +45,10 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.Alignment
@@ -404,13 +406,32 @@ private fun TransactionCreateContent(
 
                     // AI Scan button
                     val context = LocalContext.current
+                    var tempUri by remember { mutableStateOf<android.net.Uri?>(null) }
+                    var tempFilePath by remember { mutableStateOf<String?>(null) }
+                    
                     val imageLauncher = rememberLauncherForActivityResult(
                         contract = ActivityResultContracts.GetContent()
                     ) { uri ->
                         uri?.let {
                             val bytes = context.contentResolver.openInputStream(it)?.readBytes()
                             if (bytes != null) {
-                                onAction.invoke(TransactionCreateAction.ScanReceipt(bytes))
+                                // Save a local copy in filesDir to preserve it permanently
+                                val file = java.io.File(context.filesDir, "receipt_${System.currentTimeMillis()}.jpg")
+                                file.writeBytes(bytes)
+                                onAction.invoke(TransactionCreateAction.ScanReceipt(bytes, file.absolutePath))
+                            }
+                        }
+                    }
+                    
+                    val cameraLauncher = rememberLauncherForActivityResult(
+                        contract = ActivityResultContracts.TakePicture()
+                    ) { success ->
+                        if (success) {
+                            tempUri?.let { uri ->
+                                val bytes = context.contentResolver.openInputStream(uri)?.readBytes()
+                                if (bytes != null) {
+                                    onAction.invoke(TransactionCreateAction.ScanReceipt(bytes, tempFilePath))
+                                }
                             }
                         }
                     }
@@ -418,16 +439,59 @@ private fun TransactionCreateContent(
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
-                        TextButton(onClick = { imageLauncher.launch("image/*") }) {
-                            Icon(
-                                imageVector = Icons.Outlined.PhotoCamera,
-                                contentDescription = null,
-                                modifier = Modifier.padding(end = 8.dp)
-                            )
-                            Text("Scanner un ticket de caisse")
+                        var showScanMenu by remember { mutableStateOf(false) }
+
+                        androidx.compose.foundation.layout.Box {
+                            TextButton(onClick = { showScanMenu = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = null,
+                                    modifier = Modifier.padding(end = 4.dp)
+                                )
+                                Text("Scanner un ticket")
+                            }
+
+                            androidx.compose.material3.DropdownMenu(
+                                expanded = showScanMenu,
+                                onDismissRequest = { showScanMenu = false }
+                            ) {
+                                androidx.compose.material3.DropdownMenuItem(
+                                    text = { Text("Caméra") },
+                                    leadingIcon = { Icon(Icons.Default.Add, contentDescription = null) },
+                                    onClick = {
+                                        showScanMenu = false
+                                        val file = java.io.File(context.filesDir, "receipt_${System.currentTimeMillis()}.jpg")
+                                        tempFilePath = file.absolutePath
+                                        val uri = androidx.core.content.FileProvider.getUriForFile(
+                                            context,
+                                            "${context.packageName}.fileprovider",
+                                            file
+                                        )
+                                        tempUri = uri
+                                        cameraLauncher.launch(uri)
+                                    }
+                                )
+                                androidx.compose.material3.DropdownMenuItem(
+                                    text = { Text("Photos") },
+                                    leadingIcon = { Icon(Icons.Default.Done, contentDescription = null) },
+                                    onClick = {
+                                        showScanMenu = false
+                                        imageLauncher.launch("image/*")
+                                    }
+                                )
+                                androidx.compose.material3.DropdownMenuItem(
+                                    text = { Text("Fichiers") },
+                                    leadingIcon = { Icon(Icons.Outlined.Calculate, contentDescription = null) }, // Reusing an existing import just to be safe
+                                    onClick = {
+                                        showScanMenu = false
+                                        imageLauncher.launch("*/*")
+                                    }
+                                )
+                            }
                         }
+
+                        Spacer(modifier = Modifier.weight(1f))
                         if (state.isAiScanning) {
                             CircularProgressIndicator(modifier = Modifier.padding(8.dp))
                         }
