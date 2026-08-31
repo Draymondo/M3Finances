@@ -26,6 +26,15 @@ val TransactionViewModelModule = module {
             feedbackRepository = get(),
             predictCategoryForNotesUseCase = get(),
             scanReceiptUseCase = get(),
+            pendingTransactionRepository = get(),
+            suggestCategoryUseCase = get(),
+        )
+    }
+    viewModel {
+        com.naveenapps.expensemanager.feature.transaction.pending.PendingTransactionListViewModel(
+            getPendingTransactionsUseCase = get(),
+            pendingTransactionRepository = get(),
+            appComposeNavigator = get(),
         )
     }
     viewModel {

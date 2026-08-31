@@ -60,8 +60,9 @@ const val DATABASE_FILE_NAME = "expense_manager_database.db"
         TransactionSplitItemEntity::class,
         ShoppingListEntity::class,
         ShoppingListItemEntity::class,
+        com.naveenapps.expensemanager.core.database.entity.PendingTransactionEntity::class,
     ],
-    version = 12,
+    version = 13,
     exportSchema = true,
 )
 @TypeConverters(
@@ -93,4 +94,6 @@ abstract class ExpenseManagerDatabase : RoomDatabase() {
     abstract fun shoppingListDao(): ShoppingListDao
 
     abstract fun shoppingListItemDao(): ShoppingListItemDao
+    
+    abstract fun pendingTransactionDao(): com.naveenapps.expensemanager.core.database.dao.PendingTransactionDao
 }

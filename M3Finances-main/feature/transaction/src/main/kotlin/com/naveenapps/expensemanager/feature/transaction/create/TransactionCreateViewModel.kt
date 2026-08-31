@@ -1,5 +1,6 @@
 package com.naveenapps.expensemanager.feature.transaction.create
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -71,6 +72,8 @@ class TransactionCreateViewModel(
     private val feedbackRepository: FeedbackRepository,
     private val predictCategoryForNotesUseCase: PredictCategoryForNotesUseCase,
     private val scanReceiptUseCase: ScanReceiptUseCase,
+    private val pendingTransactionRepository: com.naveenapps.expensemanager.core.repository.PendingTransactionRepository,
+    private val suggestCategoryUseCase: com.naveenapps.expensemanager.core.domain.usecase.transaction.SuggestCategoryUseCase,
 ) : ViewModel() {
 
     private val _event = Channel<TransactionCreateEvent>()
@@ -127,6 +130,7 @@ class TransactionCreateViewModel(
     // Non-null only when editing an existing transaction.
     private var editingTransaction: Transaction? = null
     private var isCategoryManuallySelected = false
+    private var loadedPendingTransactionId: String? = null
 
     init {
         observeAccountsAndCurrency(getCurrencyUseCase, getAllAccountsUseCase)
@@ -191,10 +195,42 @@ class TransactionCreateViewModel(
     }
 
     private fun loadTransactionWhenReady(savedStateHandle: SavedStateHandle) {
-        val transactionId = savedStateHandle.get<String>(ExpenseManagerArgsNames.ID) ?: return
+        val transactionId = savedStateHandle.get<String>(ExpenseManagerArgsNames.ID)
+        val pendingTransactionId = savedStateHandle.get<String>(ExpenseManagerArgsNames.PENDING_TRANSACTION_ID)
+        
+        if (transactionId == null && pendingTransactionId == null) return
+        
         viewModelScope.launch {
             syncState.first { it.isAccountSyncCompleted && it.isCategorySyncCompleted }
-            loadEditingTransaction(transactionId)
+            if (transactionId != null) {
+                loadEditingTransaction(transactionId)
+            } else if (pendingTransactionId != null) {
+                loadPendingTransaction(pendingTransactionId)
+            }
+        }
+    }
+
+    private suspend fun loadPendingTransaction(pendingId: String) {
+        val pendingTransaction = pendingTransactionRepository.getPendingTransactionById(pendingId).firstOrNull() ?: return
+        
+        loadedPendingTransactionId = pendingId
+        transactionType.value = pendingTransaction.transactionType
+        
+        _state.update { current ->
+            // Try to match suggested category
+            val suggestedCategory = current.categories.find { 
+                it.name.equals(pendingTransaction.suggestedCategory, ignoreCase = true) 
+            } ?: current.categories.firstOrNull() ?: defaultCategory
+
+            current.copy(
+                amount = current.amount.copy(
+                    value = numberFormatRepository.formatForEditing(pendingTransaction.amount)
+                ),
+                transactionType = pendingTransaction.transactionType,
+                dateTime = pendingTransaction.date,
+                notes = current.notes.copy(value = "${pendingTransaction.merchant} - (Frais suggérés: ${pendingTransaction.fee ?: 0.0})"),
+                selectedCategory = suggestedCategory,
+            )
         }
     }
 
@@ -257,14 +293,20 @@ class TransactionCreateViewModel(
         val amountText = currentState.amount.value
         val amountValue = numberFormatRepository.parseToDouble(amountText)
 
+        Log.d("TransactionCreate", "save() called: amountText='$amountText', amountValue=$amountValue, type=${currentState.transactionType}, fromAcc=${currentState.selectedFromAccount.id}, toAcc=${currentState.selectedToAccount.id}")
+
         if (amountText.isBlank() || amountValue == null || amountValue <= 0.0) {
+            Log.d("TransactionCreate", "save() BLOCKED: amount validation failed")
             _state.update { it.copy(amount = it.amount.copy(valueError = true)) }
             return
         }
 
         if (currentState.transactionType.isTransfer() &&
             currentState.selectedFromAccount.id == currentState.selectedToAccount.id
-        ) return
+        ) {
+            Log.d("TransactionCreate", "save() BLOCKED: transfer with same from/to account")
+            return
+        }
 
         if (currentState.isSplit) {
             val splitAmounts = currentState.splitItems.map {
@@ -328,6 +370,9 @@ class TransactionCreateViewModel(
                 addTransactionUseCase.invoke(transaction)
             }
             if (response is Resource.Success) {
+                loadedPendingTransactionId?.let { pendingId ->
+                    pendingTransactionRepository.deletePendingTransaction(pendingId)
+                }
                 if (isNewTransaction) {
                     onNewTransactionCreated()
                 }
@@ -393,15 +438,40 @@ class TransactionCreateViewModel(
         }
     }
 
+    private var aiCategoryJob: kotlinx.coroutines.Job? = null
+
     private fun setNotes(notes: String) {
         _state.update { it.copy(notes = it.notes.copy(value = notes)) }
         if (!isCategoryManuallySelected) {
-            viewModelScope.launch {
+            aiCategoryJob?.cancel()
+            aiCategoryJob = viewModelScope.launch {
+                // Try local first
                 val predictedCategoryId = predictCategoryForNotesUseCase.invoke(notes, transactionType.value)
                 if (predictedCategoryId != null) {
                     val matchedCategory = _state.value.categories.find { it.id == predictedCategoryId }
-                    if (matchedCategory != null) {
-                        _state.update { it.copy(selectedCategory = matchedCategory) }
+                    if (matchedCategory != null && _state.value.selectedCategory.id != matchedCategory.id) {
+                        _state.update { it.copy(selectedCategory = matchedCategory, isCategoryAutoSelected = true) }
+                        return@launch
+                    }
+                }
+                
+                // If local fails, and note is long enough, try AI
+                if (notes.length >= 3) {
+                    kotlinx.coroutines.delay(1000) // Debounce 1 second
+                    val categoryNames = _state.value.categories.map { it.name }
+                    when (val result = suggestCategoryUseCase.invoke(notes, categoryNames)) {
+                        is com.naveenapps.expensemanager.core.model.Resource.Success -> {
+                            val suggestedName = result.data
+                            val matchedAiCategory = _state.value.categories.find { 
+                                it.name.equals(suggestedName, ignoreCase = true) 
+                            }
+                            if (matchedAiCategory != null && !isCategoryManuallySelected && _state.value.selectedCategory.id != matchedAiCategory.id) {
+                                _state.update { it.copy(selectedCategory = matchedAiCategory, isCategoryAutoSelected = true) }
+                            }
+                        }
+                        is com.naveenapps.expensemanager.core.model.Resource.Error -> {
+                            // Silently ignore AI prediction errors for notes
+                        }
                     }
                 }
             }
@@ -562,7 +632,7 @@ class TransactionCreateViewModel(
             is TransactionCreateAction.SelectCategory -> {
                 isCategoryManuallySelected = true
                 _state.update {
-                    it.copy(selectedCategory = action.category, showCategorySelection = false, splitCategorySelectionIndex = null)
+                    it.copy(selectedCategory = action.category, showCategorySelection = false, splitCategorySelectionIndex = null, isCategoryAutoSelected = false)
                 }
             }
 
@@ -619,17 +689,52 @@ class TransactionCreateViewModel(
                                         it.name.equals(suggestion, ignoreCase = true)
                                     }
                                 } ?: current.selectedCategory
+
+                                val items = data.items
+                                val isSplitScan = items != null && items.size > 1
+
+                                val newSplitItems = if (isSplitScan) {
+                                    items!!.map { aiItem ->
+                                        val itemMatchedCategory = aiItem.suggestedCategory?.let { cat ->
+                                            current.categories.firstOrNull { it.name.equals(cat, ignoreCase = true) }
+                                        } ?: current.categories.firstOrNull() ?: defaultCategory
+                                        createSplitItemState(
+                                            category = itemMatchedCategory,
+                                            amount = aiItem.amount ?: 0.0,
+                                            notes = aiItem.name ?: ""
+                                        )
+                                    }
+                                } else {
+                                    current.splitItems
+                                }
+
                                 current.copy(
                                     isAiScanning = false,
                                     amount = current.amount.copy(
-                                        value = data.amount?.toString() ?: current.amount.value
+                                        value = data.amount?.let { numberFormatRepository.formatForEditing(it) } ?: current.amount.value
                                     ),
                                     notes = current.notes.copy(
                                         value = data.merchantName ?: current.notes.value
                                     ),
                                     dateTime = data.date ?: current.dateTime,
                                     selectedCategory = matchedCategory,
+                                    isSplit = isSplitScan,
+                                    splitItems = newSplitItems,
                                 )
+                            }
+                            
+                            // Calculate split remaining if it's split
+                            _state.update { current ->
+                                if (current.isSplit) {
+                                    current.copy(
+                                        splitRemaining = calculateSplitRemaining(
+                                            current, 
+                                            numberFormatRepository.parseToDouble(current.amount.value)
+                                        )
+                                    )
+                                } else {
+                                    current
+                                }
                             }
                         }
                         is com.naveenapps.expensemanager.core.model.Resource.Error -> {

@@ -267,4 +267,9 @@ val RepositoryModule = module {
             cloudBackupRepository = get(),
         )
     }
+    single<com.naveenapps.expensemanager.core.repository.PendingTransactionRepository> {
+        com.naveenapps.expensemanager.core.data.repository.PendingTransactionRepositoryImpl(
+            pendingTransactionDao = get()
+        )
+    }
 }

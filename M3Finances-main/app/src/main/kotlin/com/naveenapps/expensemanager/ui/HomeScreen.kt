@@ -5,8 +5,11 @@ import android.os.Build
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBarItem
@@ -18,10 +21,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import kotlinx.coroutines.launch
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -100,6 +105,9 @@ fun NavGraphBuilder.expenseManagerNavigation(
     }
     composable<ExpenseManagerScreens.TransactionList> {
         TransactionListScreen(showBackNavigationIcon = true)
+    }
+    composable<ExpenseManagerScreens.PendingTransactionList> {
+        com.naveenapps.expensemanager.feature.transaction.pending.PendingTransactionListScreen()
     }
     composable<ExpenseManagerScreens.TransactionSearch> {
         TransactionSearchScreen()
@@ -180,6 +188,7 @@ fun NavGraphBuilder.expenseManagerNavigation(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = koinViewModel()
@@ -188,6 +197,21 @@ fun HomeScreen(
     val context = LocalActivity.current
 
     val homeScreenBottomBarItems by viewModel.homeScreenBottomBarItems.collectAsState()
+    val pages = HomeScreenBottomBarItems.entries
+    val pagerState = rememberPagerState(
+        initialPage = pages.indexOf(homeScreenBottomBarItems).coerceAtLeast(0),
+        pageCount = { pages.size }
+    )
+
+    val coroutineScope = rememberCoroutineScope()
+
+    // Sync: when user swipes pager → update ViewModel ONLY when the swipe settles
+    LaunchedEffect(pagerState.settledPage) {
+        val currentItem = pages[pagerState.settledPage]
+        if (homeScreenBottomBarItems != currentItem) {
+            viewModel.setUISystem(currentItem)
+        }
+    }
 
     var hasNotificationPermission by remember { mutableStateOf(false) }
 
@@ -212,8 +236,11 @@ fun HomeScreen(
     }
 
     BackHandler {
-        if (homeScreenBottomBarItems != HomeScreenBottomBarItems.Home) {
+        if (pagerState.currentPage != 0) {
             viewModel.setUISystem(HomeScreenBottomBarItems.Home)
+            coroutineScope.launch {
+                pagerState.animateScrollToPage(0)
+            }
         } else {
             context?.finish()
         }
@@ -232,10 +259,15 @@ fun HomeScreen(
     Scaffold(
         bottomBar = {
             BottomAppBar {
-                HomeScreenBottomBarItems.entries.forEach { uiSystem ->
+                pages.forEachIndexed { index, uiSystem ->
                     NavigationBarItem(
-                        selected = homeScreenBottomBarItems == uiSystem,
-                        onClick = { viewModel.setUISystem(uiSystem) },
+                        selected = pagerState.currentPage == index,
+                        onClick = { 
+                            viewModel.setUISystem(uiSystem)
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(index)
+                            }
+                        },
                         icon = {
                             Icon(
                                 painterResource(uiSystem.iconResourceID),
@@ -248,12 +280,14 @@ fun HomeScreen(
             }
         },
     ) { paddingValues ->
-        Column(
+        HorizontalPager(
+            state = pagerState,
             modifier = Modifier.padding(
                 bottom = paddingValues.calculateBottomPadding(),
             ),
-        ) {
-            when (homeScreenBottomBarItems) {
+            beyondViewportPageCount = 3,
+        ) { page ->
+            when (pages[page]) {
                 HomeScreenBottomBarItems.Home -> {
                     DashboardScreen()
                 }

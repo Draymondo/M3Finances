@@ -232,3 +232,21 @@ internal val MIGRATION_11_12 = object : Migration(11, 12) {
         )
     }
 }
+
+internal val MIGRATION_12_13 = object : Migration(12, 13) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `pending_transaction` (" +
+                "`id` TEXT NOT NULL, " +
+                "`amount` REAL NOT NULL, " +
+                "`fee` REAL, " +
+                "`merchant` TEXT, " +
+                "`date` INTEGER NOT NULL, " +
+                "`transaction_type` INTEGER NOT NULL, " +
+                "`suggested_category` TEXT, " +
+                "`raw_notification` TEXT, " +
+                "`created_on` INTEGER NOT NULL, " +
+                "PRIMARY KEY(`id`))"
+        )
+    }
+}

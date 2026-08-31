@@ -25,6 +25,9 @@ sealed class ExpenseManagerScreens {
     data object TransactionList : ExpenseManagerScreens()
 
     @Serializable
+    data object PendingTransactionList : ExpenseManagerScreens()
+
+    @Serializable
     data object TransactionSearch : ExpenseManagerScreens()
 
     @Serializable
@@ -67,7 +70,7 @@ sealed class ExpenseManagerScreens {
     data class BudgetDetails(val id: String?) : ExpenseManagerScreens()
 
     @Serializable
-    data class TransactionCreate(val id: String?) : ExpenseManagerScreens()
+    data class TransactionCreate(val id: String?, val pendingTransactionId: String? = null) : ExpenseManagerScreens()
 
     @Serializable
     data object RecurringTransactionList : ExpenseManagerScreens()
@@ -99,4 +102,5 @@ sealed class ExpenseManagerScreens {
 
 object ExpenseManagerArgsNames {
     const val ID: String = "id"
+    const val PENDING_TRANSACTION_ID: String = "pendingTransactionId"
 }

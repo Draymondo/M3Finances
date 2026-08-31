@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -90,6 +91,27 @@ private fun DashboardScaffoldContent(
             ExpenseManagerTopAppBar(
                 title = stringResource(id = R.string.home),
                 actions = {
+                    IconButton(onClick = {
+                        onAction.invoke(DashboardAction.OpenPendingTransactions)
+                    }) {
+                        androidx.compose.material3.BadgedBox(
+                            badge = {
+                                if (state.pendingTransactionsCount > 0) {
+                                    androidx.compose.material3.Badge(
+                                        containerColor = androidx.compose.material3.MaterialTheme.colorScheme.error,
+                                        contentColor = androidx.compose.material3.MaterialTheme.colorScheme.onError
+                                    ) {
+                                        Text(text = state.pendingTransactionsCount.toString())
+                                    }
+                                }
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = "Transactions en attente",
+                            )
+                        }
+                    }
                     IconButton(
                         onClick = {
                             onAction.invoke(DashboardAction.OpenSettings)

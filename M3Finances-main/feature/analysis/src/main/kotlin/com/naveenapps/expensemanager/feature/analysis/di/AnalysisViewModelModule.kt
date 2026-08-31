@@ -14,6 +14,7 @@ val AnalysisViewModelModule = module {
             getDateRangeUseCase = get(),
             settingsRepository = get(),
             getNetWorthChartDataUseCase = get(),
+            generateInsightsUseCase = get(),
         )
     }
 }

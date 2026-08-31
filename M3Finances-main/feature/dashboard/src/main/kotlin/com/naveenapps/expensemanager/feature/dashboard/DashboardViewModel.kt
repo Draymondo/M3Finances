@@ -49,6 +49,7 @@ class DashboardViewModel(
     appCoroutineDispatchers: AppCoroutineDispatchers,
     getDateRangeUseCase: GetDateRangeUseCase,
     settingsRepository: SettingsRepository,
+    getPendingTransactionsUseCase: com.naveenapps.expensemanager.core.domain.usecase.transaction.GetPendingTransactionsUseCase,
     private val appComposeNavigator: AppComposeNavigator
 ) : ViewModel() {
 
@@ -145,7 +146,11 @@ class DashboardViewModel(
                 pieChartData = it.pieChartData.take(4),
                 categoryTransactions = it.categoryTransactions.take(4),
             )
-            _state.update { it.copy(categoryTransactionState = categoryTransaction) }
+            _state.update { state -> state.copy(categoryTransactionState = categoryTransaction) }
+        }.launchIn(viewModelScope)
+
+        getPendingTransactionsUseCase.invoke().onEach { pendingList ->
+            _state.update { it.copy(pendingTransactionsCount = pendingList.size) }
         }.launchIn(viewModelScope)
 
         combine(
@@ -237,7 +242,12 @@ class DashboardViewModel(
             DashboardAction.OpenSettings -> openSettings()
             is DashboardAction.OpenTransactionEdit -> openTransactionCreate(action.transaction?.id)
             DashboardAction.OpenTransactionList -> openTransactionList()
+            DashboardAction.OpenPendingTransactions -> openPendingTransactions()
         }
+    }
+
+    private fun openPendingTransactions() {
+        appComposeNavigator.navigate(ExpenseManagerScreens.PendingTransactionList)
     }
 
     companion object {

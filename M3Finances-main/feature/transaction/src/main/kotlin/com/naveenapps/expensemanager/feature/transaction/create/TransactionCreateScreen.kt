@@ -23,10 +23,12 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.Calculate
 import androidx.compose.material.icons.outlined.EditCalendar
+import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -419,7 +421,12 @@ private fun TransactionCreateContent(
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         TextButton(onClick = { imageLauncher.launch("image/*") }) {
-                            Text("📷 Scanner le ticket avec l'IA")
+                            Icon(
+                                imageVector = Icons.Outlined.PhotoCamera,
+                                contentDescription = null,
+                                modifier = Modifier.padding(end = 8.dp)
+                            )
+                            Text("Scanner un ticket de caisse")
                         }
                         if (state.isAiScanning) {
                             CircularProgressIndicator(modifier = Modifier.padding(8.dp))
@@ -459,7 +466,16 @@ private fun TransactionCreateContent(
                         onAction.invoke(TransactionCreateAction.ShowCategorySelection)
                     },
                     trailingContent = {
-                        CategoryItemDefaults.ChevronTrailing()
+                        if (state.isCategoryAutoSelected) {
+                            Icon(
+                                imageVector = Icons.Filled.Star,
+                                contentDescription = "Auto sélectionné",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(end = 8.dp)
+                            )
+                        } else {
+                            CategoryItemDefaults.ChevronTrailing()
+                        }
                     },
                 )
             }

@@ -17,4 +17,5 @@ data class DashboardState(
     val categoryTransactionState: CategoryTransactionState,
     val isCompactSummary: Boolean = false,
     val showCreateBudgetForMonth: String? = null,
+    val pendingTransactionsCount: Int = 0,
 )

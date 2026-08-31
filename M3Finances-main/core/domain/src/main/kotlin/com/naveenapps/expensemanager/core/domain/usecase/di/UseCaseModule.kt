@@ -28,5 +28,6 @@ val UseCaseModule = module {
         SavingsGoalUseCaseModule,
         NetWorthUseCaseModule,
         ShoppingListUseCaseModule,
+        com.naveenapps.expensemanager.core.domain.usecase.analysis.AnalysisUseCaseModule,
     )
 }
