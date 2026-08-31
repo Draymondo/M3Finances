@@ -42,6 +42,7 @@ val TransactionViewModelModule = module {
             getCurrencyUseCase = get(),
             getFormattedAmountUseCase = get(),
             getTransactionWithFilterUseCase = get(),
+            deleteTransactionUseCase = get(),
             appCoroutineDispatchers = get(),
             appComposeNavigator = get()
         )
@@ -58,6 +59,13 @@ val TransactionViewModelModule = module {
     viewModel { NumberPadViewModel() }
     viewModel {
         com.naveenapps.expensemanager.feature.transaction.chat.ChatViewModel(
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
             get(),
             get(),
             get(),

@@ -408,7 +408,7 @@ private fun SettingsScreenContent(
                 var showGeminiDialog by remember { mutableStateOf(false) }
                 SettingRow(
                     onClick = { showGeminiDialog = true },
-                    title = "Clé d'API Gemini 3.5 Flash",
+                    title = "Clé API Gemini",
                     subtitle = if (state.geminiApiKey.isBlank()) {
                         "Non configurée (cliquer pour ajouter)"
                     } else {

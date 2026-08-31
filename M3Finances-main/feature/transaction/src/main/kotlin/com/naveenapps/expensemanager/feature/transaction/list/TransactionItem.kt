@@ -10,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -59,6 +60,7 @@ import com.naveenapps.expensemanager.core.model.TransactionType
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun TransactionItem(
     categoryName: String,
@@ -77,9 +79,11 @@ fun TransactionItem(
     transactionType: TransactionType = TransactionType.EXPENSE,
     isSplit: Boolean = false,
     splitLabel: String? = null,
+    isSelected: Boolean = false,
     onEdit: (() -> Unit)? = null,
     onDelete: (() -> Unit)? = null,
     onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
 ) {
     val isTransfer = toAccountName?.isNotBlank() == true
 
@@ -93,6 +97,8 @@ fun TransactionItem(
         label = "swipe",
     )
     val revealFraction = (abs(animatedOffset) / swipeMax).coerceIn(0f, 1f)
+    
+    val backgroundColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surface
 
     Box(
         modifier = modifier
@@ -139,7 +145,7 @@ fun TransactionItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .offset { IntOffset(animatedOffset.roundToInt(), 0) }
-                .background(MaterialTheme.colorScheme.surface)
+                .background(backgroundColor)
                 .then(
                     if (onEdit != null || onDelete != null) {
                         Modifier.pointerInput(Unit) {
@@ -155,13 +161,12 @@ fun TransactionItem(
                     } else Modifier,
                 )
                 .then(
-                    if (onClick != null) {
-                        Modifier.clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = onClick,
-                        )
-                    } else Modifier,
+                    Modifier.combinedClickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = { onClick?.invoke() },
+                        onLongClick = onLongClick
+                    )
                 )
                 .padding(horizontal = 16.dp, vertical = 12.dp)
                 .animateContentSize(),

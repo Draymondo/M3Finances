@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.naveenapps.expensemanager.core.domain.usecase.account.GetAllAccountsUseCase
 import com.naveenapps.expensemanager.core.domain.usecase.category.GetAllCategoryUseCase
+import com.naveenapps.expensemanager.core.domain.usecase.category.matchCategory
 import com.naveenapps.expensemanager.core.domain.usecase.settings.currency.GetCurrencyUseCase
 import com.naveenapps.expensemanager.core.domain.usecase.settings.currency.GetDefaultCurrencyUseCase
 import com.naveenapps.expensemanager.core.domain.usecase.settings.currency.GetFormattedAmountUseCase
@@ -130,7 +131,7 @@ class TransactionCreateViewModel(
     // Non-null only when editing an existing transaction.
     private var editingTransaction: Transaction? = null
     private var isCategoryManuallySelected = false
-    private var loadedPendingTransactionId: String? = null
+    private var loadedPendingTransaction: com.naveenapps.expensemanager.core.model.PendingTransaction? = null
 
     init {
         observeAccountsAndCurrency(getCurrencyUseCase, getAllAccountsUseCase)
@@ -213,14 +214,23 @@ class TransactionCreateViewModel(
     private suspend fun loadPendingTransaction(pendingId: String) {
         val pendingTransaction = pendingTransactionRepository.getPendingTransactionById(pendingId).firstOrNull() ?: return
         
-        loadedPendingTransactionId = pendingId
+        loadedPendingTransaction = pendingTransaction
         transactionType.value = pendingTransaction.transactionType
         
         _state.update { current ->
             // Try to match suggested category
-            val suggestedCategory = current.categories.find { 
-                it.name.equals(pendingTransaction.suggestedCategory, ignoreCase = true) 
-            } ?: current.categories.firstOrNull() ?: defaultCategory
+            val suggestedCategory = current.categories.matchCategory(pendingTransaction.suggestedCategory)
+                ?: defaultCategory
+
+            // Select Mobile Money account if possible
+            val mmAccount = current.accounts.find {
+                it.name.contains("Wave", ignoreCase = true) ||
+                it.name.contains("Orange", ignoreCase = true) ||
+                it.name.contains("MTN", ignoreCase = true) ||
+                it.name.contains("MoMo", ignoreCase = true) ||
+                it.name.contains("Mobile Money", ignoreCase = true)
+            }
+            val targetAccount = mmAccount ?: current.selectedFromAccount
 
             current.copy(
                 amount = current.amount.copy(
@@ -228,8 +238,10 @@ class TransactionCreateViewModel(
                 ),
                 transactionType = pendingTransaction.transactionType,
                 dateTime = pendingTransaction.date,
-                notes = current.notes.copy(value = "${pendingTransaction.merchant} - (Frais suggérés: ${pendingTransaction.fee ?: 0.0})"),
+                notes = current.notes.copy(value = pendingTransaction.merchant ?: ""),
                 selectedCategory = suggestedCategory,
+                selectedFromAccount = targetAccount,
+                selectedToAccount = targetAccount
             )
         }
     }
@@ -306,6 +318,7 @@ class TransactionCreateViewModel(
             currentState.selectedFromAccount.id == currentState.selectedToAccount.id
         ) {
             Log.d("TransactionCreate", "save() BLOCKED: transfer with same from/to account")
+            _state.update { it.copy(saveError = "Les comptes source et destination doivent être différents") }
             return
         }
 
@@ -370,14 +383,40 @@ class TransactionCreateViewModel(
             } else {
                 addTransactionUseCase.invoke(transaction)
             }
-            if (response is Resource.Success) {
-                loadedPendingTransactionId?.let { pendingId ->
-                    pendingTransactionRepository.deletePendingTransaction(pendingId)
+            if (response is com.naveenapps.expensemanager.core.model.Resource.Success) {
+                loadedPendingTransaction?.let { pending ->
+                    val fee = pending.fee ?: 0.0
+                    if (fee > 0.0) {
+                        val feeCategory = _state.value.categories.find {
+                            it.name.contains("Utilities", ignoreCase = true) ||
+                            it.name.contains("Bills", ignoreCase = true) ||
+                            it.name.contains("Frais", ignoreCase = true) ||
+                            it.name.contains("Bank", ignoreCase = true)
+                        } ?: _state.value.categories.firstOrNull { it.type == com.naveenapps.expensemanager.core.model.CategoryType.EXPENSE } ?: defaultCategory
+
+                        val feeTransaction = com.naveenapps.expensemanager.core.model.Transaction(
+                            id = java.util.UUID.randomUUID().toString(),
+                            notes = "Frais : ${pending.merchant}",
+                            categoryId = feeCategory.id,
+                            fromAccountId = transaction.fromAccountId,
+                            toAccountId = null,
+                            type = com.naveenapps.expensemanager.core.model.TransactionType.EXPENSE,
+                            amount = com.naveenapps.expensemanager.core.model.Amount(fee),
+                            imagePath = "",
+                            createdOn = transaction.createdOn,
+                            updatedOn = java.util.Calendar.getInstance().time,
+                        )
+                        addTransactionUseCase.invoke(feeTransaction)
+                    }
+                    pendingTransactionRepository.deletePendingTransaction(pending.id)
                 }
                 if (isNewTransaction) {
                     onNewTransactionCreated()
                 }
                 closePage()
+            } else if (response is com.naveenapps.expensemanager.core.model.Resource.Error) {
+                val errorMsg = response.exception.message ?: "Une erreur inconnue est survenue"
+                _state.update { it.copy(saveError = errorMsg) }
             }
         }
     }
@@ -685,29 +724,52 @@ class TransactionCreateViewModel(
                         is com.naveenapps.expensemanager.core.model.Resource.Success -> {
                             val data = result.data
                             _state.update { current ->
-                                val matchedCategory = data.suggestedCategory?.let { suggestion ->
-                                    current.categories.firstOrNull {
-                                        it.name.equals(suggestion, ignoreCase = true)
-                                    }
-                                } ?: current.selectedCategory
+                                val matchedCategory = current.categories.matchCategory(data.suggestedCategory)
+                                    ?: current.selectedCategory
 
                                 val items = data.items
-                                val itemsSum = items?.sumOf { it.amount ?: 0.0 } ?: 0.0
                                 val totalAmount = data.amount ?: 0.0
-                                val sumMatches = Math.abs(itemsSum - totalAmount) < 0.01
-                                val isSplitScan = items != null && items.size > 1 && sumMatches
+                                
+                                var isSplitScan = items != null && items.size > 1
+                                val finalSplitItems = mutableListOf<TransactionSplitItemState>()
+
+                                if (isSplitScan) {
+                                    items!!.forEach { aiItem ->
+                                        val itemAmount = aiItem.amount ?: 0.0
+                                        if (itemAmount > 0.0) {
+                                            val itemMatchedCategory = current.categories.matchCategory(aiItem.suggestedCategory) ?: current.selectedCategory
+                                            finalSplitItems.add(
+                                                createSplitItemState(
+                                                    category = itemMatchedCategory,
+                                                    amount = itemAmount,
+                                                    notes = aiItem.name ?: ""
+                                                )
+                                            )
+                                        }
+                                    }
+
+                                    // Check sum and add adjustment if needed
+                                    val itemsSum = finalSplitItems.sumOf { numberFormatRepository.parseToDouble(it.amount.value) ?: 0.0 }
+                                    if (itemsSum < totalAmount - 0.01) {
+                                        finalSplitItems.add(
+                                            createSplitItemState(
+                                                category = current.selectedCategory,
+                                                amount = totalAmount - itemsSum,
+                                                notes = "Ajustement (Taxes/Frais)"
+                                            )
+                                        )
+                                    } else if (itemsSum > totalAmount + 0.01) {
+                                        // Over sum is problematic because split amounts must be positive
+                                        // We will just let the user fix it manually instead of silently failing
+                                    }
+
+                                    if (finalSplitItems.size < 2) {
+                                        isSplitScan = false
+                                    }
+                                }
 
                                 val newSplitItems = if (isSplitScan) {
-                                    items!!.map { aiItem ->
-                                        val itemMatchedCategory = aiItem.suggestedCategory?.let { cat ->
-                                            current.categories.firstOrNull { it.name.equals(cat, ignoreCase = true) }
-                                        } ?: current.categories.firstOrNull() ?: defaultCategory
-                                        createSplitItemState(
-                                            category = itemMatchedCategory,
-                                            amount = aiItem.amount ?: 0.0,
-                                            notes = aiItem.name ?: ""
-                                        )
-                                    }
+                                    finalSplitItems
                                 } else {
                                     current.splitItems
                                 }
@@ -755,6 +817,8 @@ class TransactionCreateViewModel(
             }
 
             TransactionCreateAction.ClearAiScanError -> _state.update { it.copy(aiScanError = null) }
+            
+            TransactionCreateAction.ClearSaveError -> _state.update { it.copy(saveError = null) }
         }
     }
 

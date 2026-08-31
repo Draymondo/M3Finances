@@ -55,13 +55,13 @@ class GeminiRepositoryImpl(
                     - "amount": the total amount as a number (double), or null if not found
                     - "merchant_name": the store/merchant name as a string, or null if not found
                     - "date": the transaction date in YYYY-MM-DD format as a string, or null if not found
-                    - "category": suggest ONE global category from this list that best matches the whole receipt: 
-                      Food, Transport, Shopping, Health, Entertainment, Bills, Education, Travel, Other
+                    - "category": suggest ONE global category from this exact list that best matches the whole receipt: 
+                      Food, Transportation, Shopping, Health, Entertainment, Utilities, Leisure, Clothing, Education, Salary, Gift, Coupons
                       Return null if unsure.
                     - "items": a JSON array of individual items found on the receipt. For each item, include:
                         - "name": the product name as a string
                         - "amount": the price of the item as a number (double)
-                        - "category": suggest ONE category from the list above for this specific item.
+                        - "category": suggest ONE category from the exact list above for this specific item.
                     
                     Example response: {"amount": 42.50, "merchant_name": "Carrefour", "date": "2024-01-15", "category": "Food", "items": [{"name": "Milk", "amount": 2.50, "category": "Food"}, {"name": "Magazine", "amount": 5.00, "category": "Entertainment"}]}
                 """.trimIndent()
@@ -75,15 +75,20 @@ class GeminiRepositoryImpl(
 
                 val responseText = response.text
                     ?: return@withContext Resource.Error(Exception("Réponse vide de Gemini"))
-
-                val parsed = Gson().fromJson(responseText, GeminiReceiptResponse::class.java)
+                    
+                val cleanJson = responseText.replace("```json", "").replace("```", "").trim()
+                val parsed = Gson().fromJson(cleanJson, GeminiReceiptResponse::class.java)
 
                 val parsedDate = parsed.date?.let { dateStr ->
-                    try {
-                        SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(dateStr)
-                    } catch (e: Exception) {
-                        null
+                    val formats = listOf("yyyy-MM-dd", "dd/MM/yyyy", "dd-MM-yyyy", "yyyy/MM/dd")
+                    var date: java.util.Date? = null
+                    for (format in formats) {
+                        try {
+                            date = SimpleDateFormat(format, Locale.US).parse(dateStr)
+                            if (date != null) break
+                        } catch (e: Exception) { }
                     }
+                    date
                 }
 
                 val parsedItems = parsed.items?.map {
@@ -113,6 +118,7 @@ class GeminiRepositoryImpl(
         @SerializedName("amount") val amount: Double? = null,
         @SerializedName("fee") val fee: Double? = null,
         @SerializedName("merchant") val merchant: String? = null,
+        @SerializedName("date") val date: String? = null,
         @SerializedName("category") val category: String? = null,
     )
 
@@ -140,16 +146,18 @@ class GeminiRepositoryImpl(
                     - "amount": the transaction amount as a number (double), excluding fees
                     - "fee": the fee amount as a number (double) or null if none
                     - "merchant": the name of the recipient, sender, or merchant
-                    - "category": suggest ONE global category (e.g., Food, Transport, Shopping, Health, Entertainment, Bills, Education, Travel, Family, Personal, Other)
+                    - "date": the date and time from the notification if present, in "yyyy-MM-dd HH:mm" format, or null if not found
+                    - "category": suggest ONE global category (e.g., Food, Transportation, Shopping, Health, Entertainment, Utilities, Leisure, Clothing, Education, Salary, Gift, Coupons)
                     
-                    Example response: {"type": "EXPENSE", "amount": 1000, "fee": 10, "merchant": "Pharmacie de la Paix", "category": "Health"}
+                    Example response: {"type": "EXPENSE", "amount": 1000, "fee": 10, "merchant": "Pharmacie de la Paix", "date": "2023-10-27 14:30", "category": "Health"}
                 """.trimIndent()
 
                 val response = model.generateContent(prompt)
                 val responseText = response.text
                     ?: return@withContext Resource.Error(Exception("Réponse vide de Gemini"))
-
-                val parsed = Gson().fromJson(responseText, GeminiWaveResponse::class.java)
+                    
+                val cleanJson = responseText.replace("```json", "").replace("```", "").trim()
+                val parsed = Gson().fromJson(cleanJson, GeminiWaveResponse::class.java)
                 
                 if (parsed.amount == null) {
                     return@withContext Resource.Error(Exception("Montant introuvable dans la notification"))
@@ -160,6 +168,14 @@ class GeminiRepositoryImpl(
                     "TRANSFER" -> com.naveenapps.expensemanager.core.model.TransactionType.TRANSFER
                     else -> com.naveenapps.expensemanager.core.model.TransactionType.EXPENSE
                 }
+                
+                val parsedDate = parsed.date?.let { dateStr ->
+                    try {
+                        SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).parse(dateStr)
+                    } catch (e: Exception) {
+                        null
+                    }
+                } ?: java.util.Date()
 
                 Resource.Success(
                     com.naveenapps.expensemanager.core.model.PendingTransaction(
@@ -167,7 +183,7 @@ class GeminiRepositoryImpl(
                         amount = parsed.amount,
                         fee = parsed.fee,
                         merchant = parsed.merchant,
-                        date = java.util.Date(),
+                        date = parsedDate,
                         transactionType = transactionType,
                         suggestedCategory = parsed.category,
                         rawNotification = notificationText

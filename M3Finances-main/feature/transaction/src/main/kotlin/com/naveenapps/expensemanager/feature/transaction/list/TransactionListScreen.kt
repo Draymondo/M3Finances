@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -78,41 +79,66 @@ private fun TransactionListScreenContent(
 ) {
     Scaffold(
         topBar = {
-            ExpenseManagerTopAppBar(
-                title = stringResource(R.string.transaction),
-                navigationIcon = if (showBackNavigationIcon) {
-                    Icons.AutoMirrored.Default.ArrowBack
-                } else {
-                    null
-                },
-                navigationBackClick = {
-                    onAction(TransactionListAction.ClosePage)
-                },
-                actions = {
-                    IconButton(onClick = { onAction(TransactionListAction.OpenSearch) }) {
-                        Icon(
-                            imageVector = Icons.Outlined.Search,
-                            contentDescription = stringResource(R.string.search_transactions),
-                        )
-                    }
-                },
-            )
+            if (state.isSelectionMode) {
+                @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+                androidx.compose.material3.TopAppBar(
+                    title = { Text(text = "${state.selectedTransactions.size} sélectionnés") },
+                    navigationIcon = {
+                        IconButton(onClick = { onAction(TransactionListAction.ClearSelection) }) {
+                            Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Clear")
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = { onAction(TransactionListAction.DeleteSelected) }) {
+                            Icon(Icons.Outlined.Delete, contentDescription = "Delete")
+                        }
+                    },
+                    colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        actionIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                )
+            } else {
+                ExpenseManagerTopAppBar(
+                    title = stringResource(R.string.transaction),
+                    navigationIcon = if (showBackNavigationIcon) {
+                        Icons.AutoMirrored.Default.ArrowBack
+                    } else {
+                        null
+                    },
+                    navigationBackClick = {
+                        onAction(TransactionListAction.ClosePage)
+                    },
+                    actions = {
+                        IconButton(onClick = { onAction(TransactionListAction.OpenSearch) }) {
+                            Icon(
+                                imageVector = Icons.Outlined.Search,
+                                contentDescription = stringResource(R.string.search_transactions),
+                            )
+                        }
+                    },
+                )
+            }
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { onAction(TransactionListAction.OpenCreateTransaction) },
-                shape = RoundedCornerShape(16.dp),
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                elevation = FloatingActionButtonDefaults.elevation(
-                    defaultElevation = 6.dp,
-                    pressedElevation = 10.dp,
-                ),
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = stringResource(R.string.add_transaction),
-                )
+            if (!state.isSelectionMode) {
+                FloatingActionButton(
+                    onClick = { onAction(TransactionListAction.OpenCreateTransaction) },
+                    shape = RoundedCornerShape(16.dp),
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    elevation = FloatingActionButtonDefaults.elevation(
+                        defaultElevation = 6.dp,
+                        pressedElevation = 10.dp,
+                    ),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = stringResource(R.string.add_transaction),
+                    )
+                }
             }
         },
     ) { innerPadding ->
@@ -121,9 +147,13 @@ private fun TransactionListScreenContent(
                 .fillMaxSize()
                 .padding(top = innerPadding.calculateTopPadding()),
             state = state,
-        ) { transaction ->
-            onAction(TransactionListAction.OpenEdiTransaction(transaction.id))
-        }
+            onItemClick = { transaction ->
+                onAction(TransactionListAction.OpenEdiTransaction(transaction.id))
+            },
+            onItemLongClick = { transaction ->
+                onAction(TransactionListAction.ToggleSelection(transaction.id))
+            }
+        )
     }
 }
 
@@ -136,6 +166,7 @@ private fun TransactionListScreen(
     state: TransactionListState,
     modifier: Modifier = Modifier,
     onItemClick: ((TransactionUiItem) -> Unit)? = null,
+    onItemLongClick: ((TransactionUiItem) -> Unit)? = null,
 ) {
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
@@ -178,7 +209,9 @@ private fun TransactionListScreen(
                         item(key = "group_$sectionIndex") {
                             TransactionGroupCard(
                                 transactions = section.items,
+                                selectedTransactions = state.selectedTransactions,
                                 onItemClick = onItemClick,
+                                onItemLongClick = onItemLongClick
                             )
                         }
                     }
@@ -227,7 +260,9 @@ private fun buildSections(items: List<TransactionListItem>): List<Section> {
 @Composable
 private fun TransactionGroupCard(
     transactions: List<TransactionUiItem>,
+    selectedTransactions: Set<String>,
     onItemClick: ((TransactionUiItem) -> Unit)?,
+    onItemLongClick: ((TransactionUiItem) -> Unit)?,
 ) {
     Column(
         modifier = Modifier
@@ -255,8 +290,12 @@ private fun TransactionGroupCard(
                     toAccountName = item.toAccountName,
                     toAccountIcon = item.toAccountIcon?.name,
                     toAccountColor = item.toAccountIcon?.backgroundColor,
+                    isSelected = selectedTransactions.contains(item.id),
                     onClick = {
                         onItemClick?.invoke(item)
+                    },
+                    onLongClick = {
+                        onItemLongClick?.invoke(item)
                     }
                 )
 

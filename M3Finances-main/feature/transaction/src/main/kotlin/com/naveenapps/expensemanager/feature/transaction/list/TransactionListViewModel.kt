@@ -24,22 +24,29 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.update
 
 
+import kotlinx.coroutines.launch
+import com.naveenapps.expensemanager.core.domain.usecase.transaction.DeleteTransactionUseCase
+
 class TransactionListViewModel(
     getCurrencyUseCase: GetCurrencyUseCase,
     getFormattedAmountUseCase: GetFormattedAmountUseCase,
     getTransactionWithFilterUseCase: GetTransactionWithFilterUseCase,
-    appCoroutineDispatchers: AppCoroutineDispatchers,
+    private val deleteTransactionUseCase: DeleteTransactionUseCase,
+    private val appCoroutineDispatchers: AppCoroutineDispatchers,
     private val appComposeNavigator: AppComposeNavigator,
 ) : ViewModel() {
 
     private val _transactions = MutableStateFlow(TransactionListState(emptyList()))
     val state = _transactions.asStateFlow()
 
+    private var allTransactions: List<Transaction> = emptyList()
+
     init {
         combine(
             getCurrencyUseCase.invoke(),
             getTransactionWithFilterUseCase.invoke(),
         ) { currency, transactions ->
+            allTransactions = transactions ?: emptyList()
 
             val groupedItem = transactions?.groupBy {
                 it.createdOn.toCompleteDateWithDate()
@@ -83,12 +90,56 @@ class TransactionListViewModel(
         appComposeNavigator.popBackStack()
     }
 
+    private fun toggleSelection(transactionId: String) {
+        _transactions.update { state ->
+            val currentSelected = state.selectedTransactions
+            val newSelected = if (currentSelected.contains(transactionId)) {
+                currentSelected - transactionId
+            } else {
+                currentSelected + transactionId
+            }
+            state.copy(
+                selectedTransactions = newSelected,
+                isSelectionMode = newSelected.isNotEmpty()
+            )
+        }
+    }
+
+    private fun clearSelection() {
+        _transactions.update {
+            it.copy(selectedTransactions = emptySet(), isSelectionMode = false)
+        }
+    }
+
+    private fun deleteSelected() {
+        val selectedIds = _transactions.value.selectedTransactions
+        if (selectedIds.isEmpty()) return
+
+        val transactionsToDelete = allTransactions.filter { selectedIds.contains(it.id) }
+
+        viewModelScope.launch(appCoroutineDispatchers.io) {
+            transactionsToDelete.forEach { transaction ->
+                deleteTransactionUseCase.invoke(transaction)
+            }
+            clearSelection()
+        }
+    }
+
     fun processAction(action: TransactionListAction) {
         when (action) {
             TransactionListAction.ClosePage -> closePage()
             TransactionListAction.OpenCreateTransaction -> openCreateScreen()
             TransactionListAction.OpenSearch -> openSearchScreen()
-            is TransactionListAction.OpenEdiTransaction -> openCreateScreen(action.transactionId)
+            is TransactionListAction.OpenEdiTransaction -> {
+                if (_transactions.value.isSelectionMode) {
+                    toggleSelection(action.transactionId)
+                } else {
+                    openCreateScreen(action.transactionId)
+                }
+            }
+            is TransactionListAction.ToggleSelection -> toggleSelection(action.transactionId)
+            TransactionListAction.ClearSelection -> clearSelection()
+            TransactionListAction.DeleteSelected -> deleteSelected()
         }
     }
 }

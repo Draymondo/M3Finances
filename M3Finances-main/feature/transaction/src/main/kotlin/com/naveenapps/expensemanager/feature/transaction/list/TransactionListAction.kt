@@ -9,4 +9,10 @@ sealed class TransactionListAction {
     data object OpenSearch : TransactionListAction()
 
     data class OpenEdiTransaction(val transactionId: String) : TransactionListAction()
+
+    data class ToggleSelection(val transactionId: String) : TransactionListAction()
+
+    data object ClearSelection : TransactionListAction()
+
+    data object DeleteSelected : TransactionListAction()
 }

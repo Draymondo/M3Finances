@@ -37,6 +37,7 @@ data class TransactionCreateState(
     val splitRemaining: Amount,
     val isAiScanning: Boolean = false,
     val aiScanError: String? = null,
+    val saveError: String? = null,
     val isCategoryAutoSelected: Boolean = false,
 )
 

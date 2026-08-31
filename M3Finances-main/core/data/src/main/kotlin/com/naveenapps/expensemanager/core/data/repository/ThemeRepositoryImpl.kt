@@ -61,7 +61,6 @@ class ThemeRepositoryImpl(
             versionCheckerRepository.isAndroidQAndAbove() -> listOf(
                 Theme(AppCompatDelegate.MODE_NIGHT_NO, R.string.light),
                 Theme(AppCompatDelegate.MODE_NIGHT_YES, R.string.dark),
-                Theme(AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY, R.string.set_by_battery_saver),
                 Theme(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM, R.string.system_default),
             )
 

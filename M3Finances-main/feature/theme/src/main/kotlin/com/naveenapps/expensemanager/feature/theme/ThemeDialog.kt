@@ -145,10 +145,7 @@ fun ThemeDialogViewPreview() {
                     AppCompatDelegate.MODE_NIGHT_YES,
                     R.string.choose_theme,
                 ),
-                Theme(
-                    AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY,
-                    R.string.choose_theme,
-                ),
+
                 Theme(
                     AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM,
                     R.string.choose_theme,

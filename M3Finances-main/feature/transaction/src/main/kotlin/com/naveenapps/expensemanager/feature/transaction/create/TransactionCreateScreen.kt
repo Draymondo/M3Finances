@@ -43,6 +43,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -142,6 +143,20 @@ private fun TransactionCreateScreenContent(
         CategorySelectionView(state, onAction)
     } else if (state.showAccountSelection) {
         AccountSelectionView(state, onAction)
+    }
+
+    LaunchedEffect(state.saveError) {
+        state.saveError?.let { errorMsg ->
+            snackbarHostState.showSnackbar(errorMsg)
+            onAction.invoke(TransactionCreateAction.ClearSaveError)
+        }
+    }
+
+    LaunchedEffect(state.splitTotalError) {
+        if (state.splitTotalError) {
+            snackbarHostState.showSnackbar("Le montant total ne correspond pas à la somme des détails du split")
+            // No clear needed for splitTotalError because it's cleared on next amount edit automatically
+        }
     }
 
     Scaffold(
@@ -413,11 +428,9 @@ private fun TransactionCreateContent(
                         contract = ActivityResultContracts.GetContent()
                     ) { uri ->
                         uri?.let {
-                            val bytes = context.contentResolver.openInputStream(it)?.readBytes()
+                            val file = java.io.File(context.filesDir, "receipt_${System.currentTimeMillis()}.jpg")
+                            val bytes = com.naveenapps.expensemanager.core.common.utils.ImageUtils.resizeAndCompressImage(context, it, file)
                             if (bytes != null) {
-                                // Save a local copy in filesDir to preserve it permanently
-                                val file = java.io.File(context.filesDir, "receipt_${System.currentTimeMillis()}.jpg")
-                                file.writeBytes(bytes)
                                 onAction.invoke(TransactionCreateAction.ScanReceipt(bytes, file.absolutePath))
                             }
                         }
@@ -428,9 +441,12 @@ private fun TransactionCreateContent(
                     ) { success ->
                         if (success) {
                             tempUri?.let { uri ->
-                                val bytes = context.contentResolver.openInputStream(uri)?.readBytes()
-                                if (bytes != null) {
-                                    onAction.invoke(TransactionCreateAction.ScanReceipt(bytes, tempFilePath))
+                                tempFilePath?.let { path -> 
+                                    val file = java.io.File(path)
+                                    val bytes = com.naveenapps.expensemanager.core.common.utils.ImageUtils.resizeAndCompressImage(context, uri, file)
+                                    if (bytes != null) {
+                                        onAction.invoke(TransactionCreateAction.ScanReceipt(bytes, tempFilePath))
+                                    }
                                 }
                             }
                         }
