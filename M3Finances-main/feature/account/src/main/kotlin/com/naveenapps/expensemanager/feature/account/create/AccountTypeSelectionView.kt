@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountBalance
 import androidx.compose.material.icons.rounded.AccountBalanceWallet
 import androidx.compose.material.icons.rounded.CreditCard
+import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
@@ -66,11 +67,19 @@ fun AccountTypeSelectionView(
                 labelRes = R.string.mobile_money,
                 icon = Icons.Rounded.AccountBalanceWallet,
             ),
+            AccountTypeUi(
+                type = AccountType.VAULT,
+                labelRes = R.string.vault,
+                icon = Icons.Rounded.Lock,
+            ),
         )
     }
 
+    val scrollState = androidx.compose.foundation.rememberScrollState()
     SingleChoiceSegmentedButtonRow(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .androidx.compose.foundation.horizontalScroll(scrollState),
     ) {
         accountTypes.forEachIndexed { index, item ->
             val isSelected = selectedAccountType == item.type

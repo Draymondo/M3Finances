@@ -26,6 +26,11 @@ enum class AccountType {
      * balance; only reachable through the savings goal feature itself.
      */
     SAVINGS_GOAL,
+    
+    /**
+     * Account type for "Coffre" (Vault/Safe)
+     */
+    VAULT
 }
 
 fun AccountType.isRegular() = this == AccountType.REGULAR
@@ -37,3 +42,5 @@ fun AccountType.isMobileMoney() = this == AccountType.MOBILE_MONEY
 fun AccountType.isDebt() = this == AccountType.DEBT
 
 fun AccountType.isSavingsGoal() = this == AccountType.SAVINGS_GOAL
+
+fun AccountType.isVault() = this == AccountType.VAULT

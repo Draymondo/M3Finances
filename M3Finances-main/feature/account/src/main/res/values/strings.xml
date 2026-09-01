@@ -17,6 +17,7 @@
     <string name="bank_account">Bank account</string>
     <string name="credit">Credit</string>
     <string name="mobile_money">Mobile money</string>
+    <string name="vault">Vault</string>
     <string name="select_account">Select Account</string>
     <string name="account_selection_message">Should select at least one account to proceed</string>
     <string name="clear_all">Clear All</string>

@@ -122,6 +122,74 @@ class GeminiRepositoryImpl(
         @SerializedName("category") val category: String? = null,
     )
 
+    private fun isExplicitWaveTransfer(notificationText: String): Boolean {
+        val text = notificationText.lowercase(Locale.US)
+        val transferWords = listOf(
+            "envoyer",
+            "envoyé",
+            "vous avez envoyé",
+            "a envoyé"
+        )
+        return transferWords.any { text.contains(it) }
+    }
+
+    companion object {
+        fun resolveWaveFee(
+            notificationText: String,
+            parsedType: String?,
+            parsedFee: Double?,
+            amount: Double? = null,
+        ): Double? {
+            if (parsedFee != null) {
+                return if (parsedFee > 0.0) parsedFee else null
+            }
+
+            if (parsedType?.uppercase(Locale.US) != "TRANSFER") {
+                return null
+            }
+
+            if (!isExplicitWaveTransfer(notificationText)) {
+                return null
+            }
+
+            val safeAmount = amount ?: return null
+            return safeAmount * 0.01
+        }
+
+        private fun isExplicitWaveTransfer(notificationText: String): Boolean {
+            val text = notificationText.lowercase(Locale.US)
+            val transferWords = listOf(
+                "envoyer",
+                "envoyé",
+                "vous avez envoyé",
+                "a envoyé"
+            )
+            return transferWords.any { text.contains(it) }
+        }
+    }
+
+    private fun resolveWaveFee(
+        notificationText: String,
+        parsedType: String?,
+        parsedFee: Double?,
+        amount: Double?
+    ): Double? {
+        if (parsedFee != null) {
+            return if (parsedFee > 0.0) parsedFee else null
+        }
+
+        if (parsedType?.uppercase(Locale.US) != "TRANSFER") {
+            return null
+        }
+
+        if (!isExplicitWaveTransfer(notificationText)) {
+            return null
+        }
+
+        val safeAmount = amount ?: return null
+        return safeAmount * 0.01
+    }
+
     override suspend fun parseWaveNotification(
         notificationText: String,
         apiKey: String
@@ -139,7 +207,11 @@ class GeminiRepositoryImpl(
                 val prompt = """
                     Parse this Wave (mobile money) notification in French: "$notificationText"
                     
-                    Important rule: Wave usually charges 1% fee for transfers. If it's a transfer and no fee is explicitly mentioned, calculate fee as 1% of the amount. If explicitly mentioned, use that.
+                    Important rules:
+                    1. If the notification explicitly mentions a fee amount, use that exact fee value.
+                    2. Otherwise, apply 1% only when the text clearly indicates a transfer sent by the user (for example: "vous avez envoyé", "transfert", "transfer", "envoyer").
+                    3. Do not apply 1% to payments, purchases, or other non-transfer transactions.
+                    4. If there is no fee and it is not a clear transfer, return "fee": null.
                     
                     Return a JSON object with exactly these fields:
                     - "type": "EXPENSE", "INCOME", or "TRANSFER"
@@ -163,6 +235,13 @@ class GeminiRepositoryImpl(
                     return@withContext Resource.Error(Exception("Montant introuvable dans la notification"))
                 }
 
+                val resolvedFee = resolveWaveFee(
+                    notificationText = notificationText,
+                    parsedType = parsed.type,
+                    parsedFee = parsed.fee,
+                    amount = parsed.amount,
+                )
+
                 val transactionType = when (parsed.type?.uppercase()) {
                     "INCOME" -> com.naveenapps.expensemanager.core.model.TransactionType.INCOME
                     "TRANSFER" -> com.naveenapps.expensemanager.core.model.TransactionType.TRANSFER
@@ -181,7 +260,7 @@ class GeminiRepositoryImpl(
                     com.naveenapps.expensemanager.core.model.PendingTransaction(
                         id = java.util.UUID.randomUUID().toString(),
                         amount = parsed.amount,
-                        fee = parsed.fee,
+                        fee = resolvedFee,
                         merchant = parsed.merchant,
                         date = parsedDate,
                         transactionType = transactionType,

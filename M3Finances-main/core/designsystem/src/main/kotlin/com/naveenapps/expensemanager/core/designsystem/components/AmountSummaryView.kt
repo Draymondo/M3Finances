@@ -155,7 +155,7 @@ fun AmountInfoWidget(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 SummaryCard(
-                    label = "Entrée",
+                    label = "Sortie",
                     amount = expenseAmount,
                     icon = Icons.Default.ArrowUpward,
                     tintColor = expenseColor,
@@ -163,7 +163,7 @@ fun AmountInfoWidget(
                     cardColor = Color(0xFF1E2429),
                 )
                 SummaryCard(
-                    label = "Sortie",
+                    label = "Entrée",
                     amount = incomeAmount,
                     icon = Icons.Default.ArrowDownward,
                     tintColor = incomeColor,

@@ -17,6 +17,7 @@
     <string name="bank_account">Compte bancaire</string>
     <string name="credit">Crédit</string>
     <string name="mobile_money">Mobile money</string>
+    <string name="vault">Coffre</string>
     <string name="select_account">Sélectionner un compte</string>
     <string name="account_selection_message">Vous devez sélectionner au moins un compte pour continuer</string>
     <string name="clear_all">Tout effacer</string>

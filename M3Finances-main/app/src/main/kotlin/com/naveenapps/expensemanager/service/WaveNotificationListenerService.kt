@@ -17,7 +17,19 @@ class WaveNotificationListenerService : NotificationListenerService() {
 
     private val parseWaveNotificationUseCase: ParseWaveNotificationUseCase by inject()
     private val pendingTransactionRepository: PendingTransactionRepository by inject()
-    
+
+    private val supportedPackageNames = setOf(
+        "com.wave.personal",
+        "com.djamo.app",
+        "ci.moovmoney.mmpayapi",
+        "com.mobiblanc.moov.mymoov_ci",
+        "mtnft.momo.consumer",
+        "com.orange.myorange.oci",
+        "com.paypal.android.p2pmobile",
+        "com.google.android.apps.messaging",
+        "com.samsung.android.messaging"
+    )
+
     private val job = SupervisorJob()
     private val scope = CoroutineScope(Dispatchers.IO + job)
 
@@ -25,9 +37,8 @@ class WaveNotificationListenerService : NotificationListenerService() {
         super.onNotificationPosted(sbn)
         sbn ?: return
 
-        // Wave package name is usually com.wave.personal
         val packageName = sbn.packageName
-        if (packageName == "com.wave.personal") {
+        if (packageName in supportedPackageNames) {
             val extras = sbn.notification.extras
             val title = extras.getString(Notification.EXTRA_TITLE) ?: ""
             val text = extras.getString(Notification.EXTRA_TEXT) ?: ""
@@ -36,7 +47,7 @@ class WaveNotificationListenerService : NotificationListenerService() {
             val fullText = "$title\n$text\n$bigText".trim()
 
             if (fullText.isNotBlank()) {
-                Log.d("WaveNotification", "Intercepted Wave Notification: \$fullText")
+                Log.d("WaveNotification", "Intercepted notification from: $packageName -> $fullText")
                 processNotification(fullText)
             }
         }
