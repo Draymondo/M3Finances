@@ -48,89 +48,105 @@ import com.naveenapps.designsystem.utils.AppPreviewsLightAndDarkMode
 import com.naveenapps.expensemanager.core.designsystem.R
 
 val colors = listOf(
-    // Reds
-    "#F44336",
-    "#E53935",
-    "#D32F2F",
+    // Neutrals / basics
+    "#000000",
+    "#212121",
+    "#424242",
+    "#616161",
+    "#757575",
+    "#9E9E9E",
+    "#E0E0E0",
+    "#FFFFFF",
+
+    // Blues
+    "#0D47A1",
+    "#1565C0",
+    "#1976D2",
+    "#1E88E5",
+    "#2196F3",
+    "#29B6F6",
+    "#03A9F4",
+    "#0288D1",
+    "#0277BD",
+    "#00BCD4",
+    "#00ACC1",
+    "#0097A7",
+    "#26C6DA",
+
+    // Teals / Greens
+    "#00695C",
+    "#00796B",
+    "#00897B",
+    "#009688",
+    "#00E676",
+    "#1DE9B6",
+    "#2E7D32",
+    "#388E3C",
+    "#43A047",
+    "#4CAF50",
+    "#66BB6A",
+    "#7CB342",
+    "#8BC34A",
+    "#C8E6C9",
+
+    // Yellows / Oranges / Ambers
+    "#F9A825",
+    "#FBC02D",
+    "#FDD835",
+    "#FFEB3B",
+    "#FFB300",
+    "#FFCA28",
+    "#FFC107",
+    "#FFA000",
+    "#FF9800",
+    "#FB8C00",
+    "#F57C00",
+    "#EF6C00",
+    "#FF5722",
+    "#F4511E",
+    "#E64A19",
+    "#D84315",
+    "#FFF9C4",
+
+    // Reds / Pinks / Purples / Violets
     "#B71C1C",
-
-    // Pinks
-    "#E91E63",
-    "#D81B60",
-    "#C2185B",
+    "#C62828",
+    "#D32F2F",
+    "#E53935",
+    "#F44336",
+    "#FF1744",
     "#AD1457",
-
-    // Purples
-    "#9C27B0",
-    "#8E24AA",
-    "#7B1FA2",
+    "#C2185B",
+    "#D81B60",
+    "#E91E63",
+    "#F06292",
+    "#F8BBD0",
+    "#FFCDD2",
     "#6A1B9A",
-
-    // Deep Purples
-    "#673AB7",
+    "#7B1FA2",
+    "#8E24AA",
+    "#9C27B0",
+    "#A64BFF",
+    "#D500F9",
+    "#7E57C2",
     "#5E35B1",
+    "#673AB7",
     "#512DA8",
     "#4527A0",
-
-    // Indigo
     "#3F51B5",
     "#3949AB",
     "#303F9F",
     "#283593",
 
-    // Blues
-    "#2196F3",
-    "#1E88E5",
-    "#1976D2",
-    "#1565C0",
-
-    // Teal
-    "#009688",
-    "#00897B",
-    "#00796B",
-    "#00695C",
-
-    // Greens
-    "#4CAF50",
-    "#43A047",
-    "#388E3C",
-    "#2E7D32",
-
-    // Lime / Yellow-Green
-    "#7CB342",
-    "#689F38",
-    "#558B2F",
-    "#33691E",
-
-    // Orange
-    "#FF9800",
-    "#FB8C00",
-    "#F57C00",
-    "#EF6C00",
-
-    // Deep Orange
-    "#FF5722",
-    "#F4511E",
-    "#E64A19",
-    "#D84315",
-
-    // Brown
-    "#795548",
-    "#6D4C41",
-    "#5D4037",
+    // Browns / greys warm
     "#4E342E",
-
-    // Blue Grey
-    "#607D8B",
-    "#546E7A",
-    "#455A64",
+    "#5D4037",
+    "#6D4C41",
+    "#795548",
     "#37474F",
-
-    // Grey / Neutral
-    "#757575",
-    "#616161",
-    "#424242",
-    "#212121",
+    "#455A64",
+    "#546E7A",
+    "#607D8B",
 )
 
 @Composable
