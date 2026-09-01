@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import com.naveenapps.expensemanager.core.designsystem.ui.components.AppFilterChip
 import androidx.compose.material.icons.rounded.AccountBalance
 import androidx.compose.material.icons.rounded.AccountBalanceWallet
 import androidx.compose.material.icons.rounded.CreditCard
@@ -78,36 +79,20 @@ fun AccountTypeSelectionView(
     }
 
     val scrollState = rememberScrollState()
-    SingleChoiceSegmentedButtonRow(
+    Row(
         modifier = modifier
             .fillMaxWidth()
             .horizontalScroll(scrollState),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        accountTypes.forEachIndexed { index, item ->
+        accountTypes.forEach { item ->
             val isSelected = selectedAccountType == item.type
 
-            SegmentedButton(
-                selected = isSelected,
-                onClick = { onAccountTypeChange.invoke(item.type) },
-                shape = SegmentedButtonDefaults.itemShape(
-                    index = index,
-                    count = accountTypes.size,
-                ),
-                icon = {
-                    SegmentedButtonDefaults.Icon(active = isSelected) {
-                        Icon(
-                            imageVector = item.icon,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                        )
-                    }
-                },
-                label = {
-                    Text(
-                        text = stringResource(id = item.labelRes),
-                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                    )
-                },
+            AppFilterChip(
+                filterName = stringResource(id = item.labelRes),
+                isSelected = isSelected,
+                filterIcon = item.icon,
+                onClick = { onAccountTypeChange.invoke(item.type) }
             )
         }
     }
