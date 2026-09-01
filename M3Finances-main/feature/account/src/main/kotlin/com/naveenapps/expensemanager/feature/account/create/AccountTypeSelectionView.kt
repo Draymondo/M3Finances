@@ -9,12 +9,14 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountBalance
@@ -75,11 +77,11 @@ fun AccountTypeSelectionView(
         )
     }
 
-    val scrollState = androidx.compose.foundation.rememberScrollState()
+    val scrollState = rememberScrollState()
     SingleChoiceSegmentedButtonRow(
         modifier = modifier
             .fillMaxWidth()
-            .androidx.compose.foundation.horizontalScroll(scrollState),
+            .horizontalScroll(scrollState),
     ) {
         accountTypes.forEachIndexed { index, item ->
             val isSelected = selectedAccountType == item.type
