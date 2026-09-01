@@ -42,7 +42,7 @@ class GeminiRepositoryImpl(
                     ?: return@withContext Resource.Error(Exception("Impossible de décoder l'image"))
 
                 val model = GenerativeModel(
-                    modelName = "gemini-3.1-flash-lite",
+                    modelName = "gemini-3.6-flash",
                     apiKey = apiKey,
                     generationConfig = generationConfig {
                         responseMimeType = "application/json"

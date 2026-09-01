@@ -78,6 +78,7 @@ fun ChatScreen(
                 onBackClick = { appComposeNavigator.popBackStack() }
             )
         },
+        contentWindowInsets = WindowInsets.safeDrawing,
         containerColor = BgColor
     ) { innerPadding ->
         Column(
@@ -85,6 +86,7 @@ fun ChatScreen(
                 .padding(innerPadding)
                 .fillMaxSize()
                 .background(BgColor)
+                .imePadding()
         ) {
             LazyColumn(
                 state = listState,
@@ -269,34 +271,27 @@ private fun AiMessage(message: ChatMessage, viewModel: ChatViewModel) {
             // Proposal Cards
             message.proposedTransaction?.let { proposed ->
                 Spacer(modifier = Modifier.height(12.dp))
-                TransactionProposalCard(
-                    amount = proposed.amount,
-                    categoryName = proposed.categoryName,
-                    accountName = proposed.accountName,
-                    note = proposed.note,
-                    onConfirm = { viewModel.confirmTransaction(proposed) },
+                EditableTransactionProposalCard(
+                    proposal = proposed,
+                    onConfirm = { edited -> viewModel.confirmTransaction(edited) },
                     onReject = { viewModel.rejectTransaction() }
                 )
             }
-            
+
             message.proposedCategory?.let { proposed ->
                 Spacer(modifier = Modifier.height(12.dp))
-                GenericProposalCard(
-                    title = "CATÉGORIE",
-                    mainText = proposed.name,
-                    items = listOf("Type" to proposed.type),
-                    onConfirm = { viewModel.confirmCategory(proposed) },
+                EditableCategoryProposalCard(
+                    proposal = proposed,
+                    onConfirm = { edited -> viewModel.confirmCategory(edited) },
                     onReject = { viewModel.rejectCategory() }
                 )
             }
-            
+
             message.proposedAccount?.let { proposed ->
                 Spacer(modifier = Modifier.height(12.dp))
-                GenericProposalCard(
-                    title = "COMPTE",
-                    mainText = proposed.name,
-                    items = listOf("Type" to proposed.type.name),
-                    onConfirm = { viewModel.confirmAccount(proposed) },
+                EditableAccountProposalCard(
+                    proposal = proposed,
+                    onConfirm = { edited -> viewModel.confirmAccount(edited) },
                     onReject = { viewModel.rejectAccount() }
                 )
             }
@@ -361,6 +356,257 @@ private fun AiMessage(message: ChatMessage, viewModel: ChatViewModel) {
 }
 
 @Composable
+private fun EditableTransactionProposalCard(
+    proposal: ProposedTransaction,
+    onConfirm: (ProposedTransaction) -> Unit,
+    onReject: () -> Unit
+) {
+    var amountText by remember { mutableStateOf(proposal.amount.toString()) }
+    var categoryText by remember { mutableStateOf(proposal.categoryName) }
+    var accountText by remember { mutableStateOf(proposal.accountName ?: "") }
+    var noteText by remember { mutableStateOf(proposal.note) }
+
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = SurfaceColor),
+        border = androidx.compose.foundation.BorderStroke(1.dp, BorderColor),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("DÉPENSE", fontSize = 11.sp, color = TextTertiary, fontWeight = FontWeight.SemiBold)
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(
+                value = amountText,
+                onValueChange = { amountText = it },
+                label = { Text("Montant") },
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = BorderColor,
+                    unfocusedBorderColor = BorderColor,
+                    focusedLabelColor = TextSecondary,
+                    unfocusedLabelColor = TextSecondary,
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedTextField(
+                value = categoryText,
+                onValueChange = { categoryText = it },
+                label = { Text("Catégorie") },
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = BorderColor,
+                    unfocusedBorderColor = BorderColor,
+                    focusedLabelColor = TextSecondary,
+                    unfocusedLabelColor = TextSecondary,
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedTextField(
+                value = accountText,
+                onValueChange = { accountText = it },
+                label = { Text("Compte") },
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = BorderColor,
+                    unfocusedBorderColor = BorderColor,
+                    focusedLabelColor = TextSecondary,
+                    unfocusedLabelColor = TextSecondary,
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedTextField(
+                value = noteText,
+                onValueChange = { noteText = it },
+                label = { Text("Note") },
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = BorderColor,
+                    unfocusedBorderColor = BorderColor,
+                    focusedLabelColor = TextSecondary,
+                    unfocusedLabelColor = TextSecondary,
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+            HorizontalDivider(color = BorderColor)
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                TextButton(onClick = onReject) {
+                    Text("Annuler", color = TextSecondary)
+                }
+                TextButton(onClick = {
+                    val updated = proposal.copy(
+                        amount = amountText.toDoubleOrNull() ?: proposal.amount,
+                        categoryName = categoryText.ifBlank { proposal.categoryName },
+                        accountName = accountText.ifBlank { proposal.accountName },
+                        note = noteText.ifBlank { proposal.note }
+                    )
+                    onConfirm(updated)
+                }) {
+                    Text("Enregistrer", color = SuccessColor)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EditableCategoryProposalCard(
+    proposal: ProposedCategory,
+    onConfirm: (ProposedCategory) -> Unit,
+    onReject: () -> Unit
+) {
+    var nameText by remember { mutableStateOf(proposal.name) }
+    var typeText by remember { mutableStateOf(proposal.type) }
+
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = SurfaceColor),
+        border = androidx.compose.foundation.BorderStroke(1.dp, BorderColor),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("CATÉGORIE", fontSize = 11.sp, color = TextTertiary, fontWeight = FontWeight.SemiBold)
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(
+                value = nameText,
+                onValueChange = { nameText = it },
+                label = { Text("Nom") },
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = BorderColor,
+                    unfocusedBorderColor = BorderColor,
+                    focusedLabelColor = TextSecondary,
+                    unfocusedLabelColor = TextSecondary,
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedTextField(
+                value = typeText,
+                onValueChange = { typeText = it },
+                label = { Text("Type") },
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = BorderColor,
+                    unfocusedBorderColor = BorderColor,
+                    focusedLabelColor = TextSecondary,
+                    unfocusedLabelColor = TextSecondary,
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            HorizontalDivider(color = BorderColor)
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                TextButton(onClick = onReject) {
+                    Text("Annuler", color = TextSecondary)
+                }
+                TextButton(onClick = { onConfirm(proposal.copy(name = nameText.ifBlank { proposal.name }, type = typeText.ifBlank { proposal.type })) }) {
+                    Text("Enregistrer", color = SuccessColor)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EditableAccountProposalCard(
+    proposal: ProposedAccount,
+    onConfirm: (ProposedAccount) -> Unit,
+    onReject: () -> Unit
+) {
+    var nameText by remember { mutableStateOf(proposal.name) }
+    var typeText by remember { mutableStateOf(proposal.type.name) }
+
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = SurfaceColor),
+        border = androidx.compose.foundation.BorderStroke(1.dp, BorderColor),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("COMPTE", fontSize = 11.sp, color = TextTertiary, fontWeight = FontWeight.SemiBold)
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(
+                value = nameText,
+                onValueChange = { nameText = it },
+                label = { Text("Nom") },
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = BorderColor,
+                    unfocusedBorderColor = BorderColor,
+                    focusedLabelColor = TextSecondary,
+                    unfocusedLabelColor = TextSecondary,
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedTextField(
+                value = typeText,
+                onValueChange = { typeText = it },
+                label = { Text("Type") },
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = BorderColor,
+                    unfocusedBorderColor = BorderColor,
+                    focusedLabelColor = TextSecondary,
+                    unfocusedLabelColor = TextSecondary,
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            HorizontalDivider(color = BorderColor)
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                TextButton(onClick = onReject) {
+                    Text("Annuler", color = TextSecondary)
+                }
+                TextButton(onClick = {
+                    val resolvedType = when (typeText.uppercase()) {
+                        "CREDIT" -> com.naveenapps.expensemanager.core.model.AccountType.CREDIT
+                        "MOBILE_MONEY" -> com.naveenapps.expensemanager.core.model.AccountType.MOBILE_MONEY
+                        else -> com.naveenapps.expensemanager.core.model.AccountType.REGULAR
+                    }
+                    onConfirm(proposal.copy(name = nameText.ifBlank { proposal.name }, type = resolvedType))
+                }) {
+                    Text("Enregistrer", color = SuccessColor)
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun TransactionProposalCard(
     amount: Double,
     categoryName: String,
@@ -378,14 +624,13 @@ private fun TransactionProposalCard(
         Column(modifier = Modifier.padding(16.dp)) {
             Text("DÉPENSE", fontSize = 11.sp, color = TextTertiary, fontWeight = FontWeight.SemiBold)
             Spacer(modifier = Modifier.height(4.dp))
-            
-            // Format format nicely without crashing
+
             Text(if (amount % 1.0 == 0.0) "${amount.toLong()}" else "$amount", fontSize = 22.sp, color = TextPrimary, fontWeight = FontWeight.SemiBold)
-            
+
             Spacer(modifier = Modifier.height(16.dp))
             HorizontalDivider(color = BorderColor)
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             ProposalRow("Catégorie", categoryName)
             if (accountName != null) {
                 Spacer(modifier = Modifier.height(8.dp))
@@ -393,10 +638,10 @@ private fun TransactionProposalCard(
             }
             Spacer(modifier = Modifier.height(8.dp))
             ProposalRow("Note", note.ifBlank { "Aucune" })
-            
+
             Spacer(modifier = Modifier.height(16.dp))
             HorizontalDivider(color = BorderColor)
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
@@ -538,6 +783,8 @@ private fun ChatInputArea(
             .fillMaxWidth()
             .background(BgColor)
             .padding(horizontal = 16.dp, vertical = 12.dp)
+            .navigationBarsPadding()
+            .windowInsetsPadding(WindowInsets.ime)
     ) {
         selectedImage?.let {
             Box(modifier = Modifier.padding(bottom = 12.dp)) {

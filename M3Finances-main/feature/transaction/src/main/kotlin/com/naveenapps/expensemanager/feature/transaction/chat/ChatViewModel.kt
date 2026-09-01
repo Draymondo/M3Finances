@@ -47,6 +47,65 @@ import com.naveenapps.expensemanager.core.model.RecurrenceFrequency
 import com.naveenapps.expensemanager.core.model.BudgetPeriod
 import com.naveenapps.expensemanager.core.common.utils.toMonthAndYearKey
 
+fun parseTransactionCommand(raw: String): ProposedTransaction? {
+    val cleaned = raw.trim()
+    if (cleaned.isEmpty()) return null
+
+    val payload = cleaned
+        .removePrefix("TRANSACTION|")
+        .removePrefix("TRANSACTION_SPLIT|")
+        .trim()
+
+    val parts = payload.split("|").map { it.trim() }.filter { it.isNotEmpty() }
+    if (parts.size < 3) return null
+
+    val amount = parts[0].toDoubleOrNull() ?: return null
+    val categoryName = parts[1]
+    val note = parts.drop(2).joinToString("|")
+
+    return ProposedTransaction(
+        amount = amount,
+        categoryName = categoryName,
+        note = note
+    )
+}
+
+fun parseCategoryCommand(raw: String): ProposedCategory? {
+    val payload = raw.trim().removePrefix("CATEGORY|").trim()
+    val parts = payload.split("|").map { it.trim() }.filter { it.isNotEmpty() }
+    if (parts.size < 2) return null
+    return ProposedCategory(name = parts[0], type = parts[1])
+}
+
+fun parseAccountCommand(raw: String): ProposedAccount? {
+    val payload = raw.trim().removePrefix("ACCOUNT|").trim()
+    val parts = payload.split("|").map { it.trim() }.filter { it.isNotEmpty() }
+    if (parts.size < 2) return null
+
+    val type = when (parts[1].uppercase()) {
+        "CREDIT" -> AccountType.CREDIT
+        "MOBILE_MONEY" -> AccountType.MOBILE_MONEY
+        else -> AccountType.REGULAR
+    }
+
+    return ProposedAccount(name = parts[0], type = type)
+}
+
+fun parseRecurringCommand(raw: String): ProposedRecurring? {
+    val payload = raw.trim().removePrefix("RECURRING|").trim()
+    val parts = payload.split("|").map { it.trim() }.filter { it.isNotEmpty() }
+    if (parts.size < 3) return null
+
+    val amount = parts[1].toDoubleOrNull() ?: return null
+    val type = if (parts[2].equals("INCOME", ignoreCase = true)) {
+        TransactionType.INCOME
+    } else {
+        TransactionType.EXPENSE
+    }
+
+    return ProposedRecurring(name = parts[0], amount = amount, type = type)
+}
+
 class ChatViewModel(
     private val settingsRepository: SettingsRepository,
     private val addTransactionUseCase: AddTransactionUseCase,
@@ -90,26 +149,72 @@ class ChatViewModel(
 
     private fun setupGenerativeModel(apiKey: String) {
         generativeModel = GenerativeModel(
-            modelName = "gemini-3.1-flash-lite",
+            modelName = "gemini-3.6-flash",
             apiKey = apiKey,
             generationConfig = generationConfig {
-                temperature = 0.0f
+                temperature = 0.2f
+                topP = 0.9f
+                maxOutputTokens = 1024
             },
             systemInstruction = content {
                 text("""
-                    Assistant financier francais. Reponses courtes.
-                    Pour creer une transaction simple: TRANSACTION|montant|categorie|note
-                    Pour creer une transaction scindee (plusieurs articles): TRANSACTION_SPLIT|montant_total|note_globale|montant1|categorie1|note1|montant2|categorie2|note2...
-                    Pour creer une categorie: CATEGORY|nom|EXPENSE ou CATEGORY|nom|INCOME
-                    Pour creer un compte: ACCOUNT|nom|REGULAR ou ACCOUNT|nom|CREDIT ou ACCOUNT|nom|MOBILE_MONEY
-                    Pour creer une liste de courses: SHOPPING_LIST|nom de la liste|article1|article2|article3...
-                    Pour creer un objectif d'epargne: SAVINGS_GOAL|nom|montant_cible
-                    Pour creer un budget mensuel global: BUDGET|montant
-                    Pour creer une dette/emprunt: DEBT|nom_de_la_personne|montant|LENT (si on m'a emprunte) ou BORROWED (si j'ai emprunte)
-                    Pour creer une transaction recurrente (abonnement): RECURRING|nom|montant|EXPENSE ou RECURRING|nom|montant|INCOME
-                    
-                    Use ONLY these exact categories when proposing a transaction: Food, Transportation, Shopping, Health, Entertainment, Utilities, Leisure, Clothing, Education, Salary, Gift, Coupons.
-                    If none match, fallback to Other or propose to create a new one.
+                    Tu es un assistant financier expert, francais, très utile, proactif et orienté résultat.
+                    Tu aides l'utilisateur à gérer ses finances dans cette application mobile avec logique, précision et bon sens.
+
+                    Ton objectif principal:
+                    - comprendre les demandes naturelles de l'utilisateur,
+                    - les convertir en une action exploitable dans l'application,
+                    - ou répondre en conseil court et concret si ce n'est pas une action de création.
+
+                    Règles prioritaires:
+                    - Réponds toujours en francais.
+                    - Les réponses doivent être courtes, claires, utiles et actionnables.
+                    - Ne donne jamais de réponse vague ou inutile.
+                    - Si une donnée manque, pose UNE question courte et précise, pas plusieurs.
+                    - Quand l'utilisateur demande une action, construis la bonne commande structurée et rien d'autre.
+
+                    Profil de l'assistant:
+                    - expert en budget personnel, comptes, dépenses, revenus, objectifs d'épargne, dettes, liste de courses et abonnements.
+                    - comprend le contexte financier de la vie quotidienne.
+                    - sait détecter quand il faut créer une dépense, une catégorie, un compte, un objectif, un budget, ou une liste.
+                    - peut interpréter des phrases naturelles comme: salaire, facture, paiement, loyer, supermarché, prise en charge, remboursement, achat, abonnement, transfert, etc.
+
+                    Types d'actions supportés dans cette app:
+                    1) TRANSACTION|montant|categorie|note
+                    2) TRANSACTION_SPLIT|montant_total|note_globale|montant1|categorie1|note1|montant2|categorie2|note2...
+                    3) CATEGORY|nom|EXPENSE ou CATEGORY|nom|INCOME
+                    4) ACCOUNT|nom|REGULAR ou ACCOUNT|nom|CREDIT ou ACCOUNT|nom|MOBILE_MONEY
+                    5) SHOPPING_LIST|nom de la liste|article1|article2|article3...
+                    6) SAVINGS_GOAL|nom|montant_cible
+                    7) BUDGET|montant
+                    8) DEBT|nom_de_la_personne|montant|LENT ou BORROWED
+                    9) RECURRING|nom|montant|EXPENSE ou RECURRING|nom|montant|INCOME
+
+                    Règles de raisonnement financier:
+                    - Un salaire, bonus, revenu ou remise en argent = INCOME.
+                    - Loyer, nourriture, transport, courses, santé, abonnement, loisirs, énergie, téléphone, vêtements, cadeaux = EXPENSE.
+                    - Si la phrase contient “liste de courses”, “market”, “supermarché”, “achat de produits” -> SHOPPING_LIST si c'est une liste, ou TRANSACTION si c'est un achat unique.
+                    - Si la phrase contient “abonnement”, “streaming”, “muscu”, “assurance”, “forfait” -> RECURRING.
+                    - Si la phrase contient “j'ai prêté”, “on me doit”, “remboursement reçu”, “argent dû” -> DEBT avec LENT si l'autre me doit, BORROWED si je dois à l'autre.
+                    - Si la phrase contient “objectif”, “épargne”, “cible”, “bourse”, “vacances”, “achat futur” -> SAVINGS_GOAL.
+                    - Si c'est un budget global mensuel -> BUDGET.
+                    - Si c'est une catégorie à créer -> CATEGORY.
+                    - Si c'est un compte spécifique -> ACCOUNT.
+
+                    Catégories autorisées:
+                    Food, Transportation, Shopping, Health, Entertainment, Utilities, Leisure, Clothing, Education, Salary, Gift, Coupons, Other.
+                    Utilise exactement ces noms quand possible.
+                    Si la catégorie n'est pas claire, utilise Other.
+
+                    Format de sortie strict:
+                    - Lorsque l'utilisateur demande une action, renvoie UNIQUEMENT la commande structurée correspondante, sans texte autour.
+                    - Exemple: TRANSACTION|42.50|Food|Courses supermarché
+                    - Exemple: SHOPPING_LIST|Semaine|Lait|Pain|Oeufs
+                    - Exemple: BUDGET|600
+                    - Exemple: DEBT|Paul|120|LENT
+                    - Exemple: CATEGORY|Restaurant|EXPENSE
+                    - Si l'utilisateur demande un simple conseil sans création, réponds en francais en 1 à 3 phrases utiles.
+                    - Ne mélange surtout pas le format d'action avec le texte libre.
                 """.trimIndent())
             }
         )
@@ -181,7 +286,7 @@ class ChatViewModel(
                         } else {
                             val category = if (isSplit) "Multiple" else parts[1].trim()
                             val note = if (isSplit) parts[1].trim() else parts.drop(2).joinToString("|").trim()
-                            
+
                             val splitItems = mutableListOf<ProposedSplitItem>()
                             if (isSplit) {
                                 var i = 2
@@ -196,29 +301,27 @@ class ChatViewModel(
                                 }
                             }
 
-                            // Select best account
                             val accounts = accountRepository.getAccounts().firstOrNull() ?: emptyList()
                             val isMobileMoney = note.contains("Wave", ignoreCase = true) ||
-                                                note.contains("Orange", ignoreCase = true) ||
-                                                note.contains("MTN", ignoreCase = true) ||
-                                                note.contains("MoMo", ignoreCase = true)
-                                                
+                                note.contains("Orange", ignoreCase = true) ||
+                                note.contains("MTN", ignoreCase = true) ||
+                                note.contains("MoMo", ignoreCase = true)
+
                             var selectedAccount = if (isMobileMoney) {
                                 accounts.find {
                                     it.name.contains("Wave", ignoreCase = true) ||
-                                    it.name.contains("Orange", ignoreCase = true) ||
-                                    it.name.contains("MTN", ignoreCase = true) ||
-                                    it.name.contains("MoMo", ignoreCase = true)
+                                        it.name.contains("Orange", ignoreCase = true) ||
+                                        it.name.contains("MTN", ignoreCase = true) ||
+                                        it.name.contains("MoMo", ignoreCase = true)
                                 }
                             } else null
-                            
-                            // fallback to REGULAR, then non-DEBT/SAVINGS, then first
+
                             if (selectedAccount == null) {
                                 selectedAccount = accounts.firstOrNull { it.type == com.naveenapps.expensemanager.core.model.AccountType.REGULAR }
-                                    ?: accounts.firstOrNull { 
-                                        it.type != com.naveenapps.expensemanager.core.model.AccountType.CREDIT && 
-                                        it.type != com.naveenapps.expensemanager.core.model.AccountType.DEBT &&
-                                        it.type != com.naveenapps.expensemanager.core.model.AccountType.SAVINGS_GOAL 
+                                    ?: accounts.firstOrNull {
+                                        it.type != com.naveenapps.expensemanager.core.model.AccountType.CREDIT &&
+                                            it.type != com.naveenapps.expensemanager.core.model.AccountType.DEBT &&
+                                            it.type != com.naveenapps.expensemanager.core.model.AccountType.SAVINGS_GOAL
                                     }
                                     ?: accounts.firstOrNull()
                             }
@@ -231,59 +334,41 @@ class ChatViewModel(
                                     )
                                 }
                             } else {
+                                val parsedProposal = ProposedTransaction(
+                                    amount = if (isSplit && splitItems.isNotEmpty()) splitItems.sumOf { it.amount } else amount,
+                                    categoryName = category,
+                                    note = note,
+                                    accountId = selectedAccount.id,
+                                    accountName = selectedAccount.name,
+                                    splitItems = if (isSplit && splitItems.isNotEmpty()) splitItems else null
+                                )
+
                                 updateMessage(streamId) {
                                     it.copy(
                                         text = if (isSplit) "J'ai préparé cette transaction scindée :" else "J'ai préparé cette transaction :",
-                                        proposedTransaction = ProposedTransaction(
-                                            amount = if (isSplit && splitItems.isNotEmpty()) splitItems.sumOf { it.amount } else amount,
-                                            categoryName = category,
-                                            note = note,
-                                            accountId = selectedAccount.id,
-                                            accountName = selectedAccount.name,
-                                            splitItems = if (isSplit && splitItems.isNotEmpty()) splitItems else null
-                                        )
+                                        proposedTransaction = parsedProposal
                                     )
                                 }
                             }
                         }
                     }
                 } else if (finalText.contains("CATEGORY|")) {
-                    val commandStr = finalText.substringAfter("CATEGORY|").substringBefore("\n").replace("`", "").trim()
-                    val parts = commandStr.split("|")
-                    if (parts.size >= 2) {
-                        val name = parts[0].trim()
-                        val type = parts[1].trim()
-
+                    val parsedCategory = parseCategoryCommand(finalText)
+                    if (parsedCategory != null) {
                         updateMessage(streamId) {
                             it.copy(
                                 text = "Nouvelle categorie proposee :",
-                                proposedCategory = ProposedCategory(
-                                    name = name,
-                                    type = type
-                                )
+                                proposedCategory = parsedCategory
                             )
                         }
                     }
                 } else if (finalText.contains("ACCOUNT|")) {
-                    val commandStr = finalText.substringAfter("ACCOUNT|").substringBefore("\n").replace("`", "").trim()
-                    val parts = commandStr.split("|")
-                    if (parts.size >= 2) {
-                        val name = parts[0].trim()
-                        val typeStr = parts[1].trim().uppercase()
-                        
-                        val type = when (typeStr) {
-                            "CREDIT" -> com.naveenapps.expensemanager.core.model.AccountType.CREDIT
-                            "MOBILE_MONEY" -> com.naveenapps.expensemanager.core.model.AccountType.MOBILE_MONEY
-                            else -> com.naveenapps.expensemanager.core.model.AccountType.REGULAR
-                        }
-
+                    val parsedAccount = parseAccountCommand(finalText)
+                    if (parsedAccount != null) {
                         updateMessage(streamId) {
                             it.copy(
                                 text = "Nouveau compte proposé :",
-                                proposedAccount = ProposedAccount(
-                                    name = name,
-                                    type = type
-                                )
+                                proposedAccount = parsedAccount
                             )
                         }
                     }

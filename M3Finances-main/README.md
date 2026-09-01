@@ -1,102 +1,201 @@
-# M3Finances
+﻿# M3Finances
 
-M3Finances est une version personnalisée de **Expense Manager**, une application open-source de gestion financière pour Android. Ce document liste tout ce qui a été changé, ajouté ou retiré par rapport à la version d'origine.
+M3Finances est une application Android de gestion financière personnelle, construite en Kotlin avec Jetpack Compose, Room, Koin et Google Gemini. Elle vise à centraliser les comptes, les transactions, les budgets, les objectifs, les dettes, les listes de courses et l’assistant IA pour gérer son budget au quotidien.
+
+## Audit complet de l’application
+
+### 1. Vue d’ensemble
+
+L’application est une version personnalisée et fortement étendue d’un gestionnaire de dépenses Android. La base du projet repose sur une architecture multi-modules :
+
+- `app` : application Android principale
+- `core/*` : modèles, repository, data, datastore, design system, notifications, settings
+- `feature/*` : écrans par domaine métier (dashboard, transaction, budget, category, account, savings, recurring, debt, shopping, settings, etc.)
+
+La stack technique actuelle est cohérente pour une app de finance personnelle :
+
+- Kotlin + Jetpack Compose
+- Room pour la persistance locale
+- Flow / StateFlow pour l’état UI
+- Koin pour l’injection de dépendances
+- Material 3 pour le design
+- Firebase / Firestore pour la sauvegarde cloud
+- Gemini via Google Generative AI SDK pour OCR, aide au classement, parsing de notifications et assistant chat
+
+### 2. Fonctionnalités déjà présentes
+
+#### Gestion courante
+- Comptes bancaires et comptes de type Mobile Money
+- Transactions de type revenu / dépense / transfert
+- Catégories personnalisables
+- Budgets mensuels
+- Recherche de transactions
+- Analyse du dashboard (solde total, revenus, dépenses, évolution)
+- Transactions scindées (split)
+- Paramétrage des filtres et de la période
+- Gestion des comptes, catégories, export, thèmes et langues
+
+#### Gestion avancée de finances personnelles
+- Dettes avec direction, échéance, suivi et relance
+- Transactions récurrentes et abonnements
+- Objectifs d’épargne
+- Listes de courses
+- Comptes/transactions spécifiques à une logique de suivi d’argent personnel
+
+#### IA et automatisation
+- Assistant de chat financier en français
+- Analyse de reçus par image (OCR + structuration des données)
+- Parsing de notifications SMS / Wave
+- Suggestion de catégorie automatique à partir d’une note de transaction
+- Propositions éditables avant validation
+
+### 3. Architecture technique
+
+Le projet suit un découpage propre par couches :
+
+- `core/model` : modèles de données du domaine
+- `core/domain` : use cases métier
+- `core/data` : implémentations repository + intégrations externes
+- `core/database` : schéma Room + DAO
+- `core/repository` : interfaces de repository
+- `core/designsystem` : composants UI réutilisables
+- `feature/*` : écrans et ViewModels
+
+Cette organisation facilite la maintenance et permet d’ajouter des fonctionnalités sans casser le reste de l’application.
+
+### 4. État du code et qualité
+
+#### Points forts
+- Architecture modulaire claire et extensible
+- UI moderne en Compose
+- Séparation des responsabilités
+- Modules bien séparés par domaine
+- Assistant IA intégré dans le flux de création de données
+- Cohérence entre données, repository et écrans
+
+#### Points à surveiller
+- Le projet reste orienté “usage personnel” et n’est pas pensé pour une distribution publique générale
+- Certaines zones sont très personnalisées à la logique du projet (comptes Mobile Money, règles métier spécifiques)
+- Le chat IA dépend d’une clé Gemini valide et du comportement des prompts
+- Des éléments de configuration restent spécifiques au projet local (keystore, Firebase, OAuth)
+
+### 5. Sécurité et configuration
+
+Le dépôt est configuré pour un usage personnel, avec des éléments propres à ce projet :
+
+- `keys/debug.keystore` : utilisé pour signer les builds debug
+- `google-services.json` : configuration Firebase locale
+- `firestore.rules` : règles de sécurité versionnées dans le dépôt
+- `credentials.properties` / Play Publishing si disponibles localement
+
+Cette configuration est fonctionnelle pour un usage personnel, mais elle n’est pas prête pour une publication publique standard sans revue et nettoyage des credentials.
+
+### 6. IA / Gemini : choix de modèles
+
+Le projet applique une stratégie de coût / performance selon le cas d’usage :
+
+- `scanReceipt` : `gemini-3.6-flash` pour l’analyse multimodale de reçu (image + OCR + structuration)
+- `parseWaveNotification` : `gemini-3.1-flash-lite` pour un texte de notification simple
+- `suggestCategory` : `gemini-3.1-flash-lite` pour une classification rapide de texte
+
+Cette séparation est cohérente pour équilibrer précision, vitesse et coût de tokens.
+
+### 7. Build et validation
+
+Le projet est conçu pour fonctionner en debug sur appareil Android local, avec installation depuis Gradle. La validation récente confirme que le build de l’application est fonctionnel :
+
+- `:app:installDebug`
+- Résultat attendu : `BUILD SUCCESSFUL`
+- Installation sur appareil Android détectée
+
+### 8. Conclusion de l’audit
+
+L’application est dans un état global solide pour un usage personnel avancé :
+
+- architecture saine,
+- UX assez complète,
+- fonctionnalités de finance personnelle bien présentes,
+- IA intégrée de façon utile,
+- app déjà bien stabilisée sur Android.
+
+Le principal point de vigilance reste le contexte “personnel / local” du projet, surtout côté credentials et settings Firebase.
 
 ---
 
-## 🧾 Pour tout le monde : qu'est-ce qui a changé ?
+## Structure du projet
 
-### 🆕 Nouvelles fonctionnalités
+```text
+M3Finances-main/
+├── app/
+├── core/
+├── feature/
+├── gradle/
+├── keys/
+├── build.gradle.kts
+├── settings.gradle.kts
+├── README.md
+├── firestore.rules
+├── codemagic.yaml
+├── .github/
+└── .gitignore
+```
 
-- **Comptes Mobile Money** — En plus des comptes bancaires classiques, tu peux maintenant créer des comptes de type Wave, MTN Money ou Orange Money, très utilisés en Côte d'Ivoire.
+Modules principaux :
 
-- **Gestion des dettes** — Un nouvel écran permet d'enregistrer une dette (que tu doives de l'argent ou qu'on t'en doive), de suivre son remboursement petit à petit, et d'enregistrer des rappels à des dates que tu choisis toi-même (avec relance automatique tant qu'une dette en retard n'est pas réglée).
-
-- **Transactions récurrentes / abonnements** — Tu peux enregistrer une dépense ou un revenu qui se répète automatiquement (loyer, abonnement, salaire...) sans avoir à la ressaisir chaque mois.
-
-- **Recherche de transactions** — Une barre de recherche en texte libre permet de retrouver rapidement une transaction précise.
-
-- **Objectifs d'épargne** — Tu peux te fixer un objectif d'épargne (montant à atteindre, date cible optionnelle), enregistrer des contributions ou des retraits, et suivre ta progression.
-
-- **Transactions scindées (split)** — Une seule dépense peut maintenant être répartie sur plusieurs catégories (par exemple : un ticket de supermarché scindé entre "Alimentation" et "Hygiène").
-
-- **Graphique d'évolution du patrimoine net** — Un nouveau graphique dans les analyses montre l'évolution de ton solde total (patrimoine) dans le temps.
-
-- **Sauvegarde automatique dans le cloud** — Toutes tes données (comptes, catégories, transactions, budgets, dettes, objectifs d'épargne, transactions récurrentes...) sont sauvegardées automatiquement et en continu via un compte Google, pour ne rien perdre en cas de changement de téléphone.
-
-### 🎨 Changements visuels
-
-- Nouveau nom : **M3Finances**
-- Nouvelle icône : monogramme "M3" blanc sur fond bleu nuit
-- Toute l'application est désormais **traduite en français à 100 %** (auparavant certains textes restaient en anglais)
-
-### 🗑️ Fonctionnalités retirées
-
-- **Aucun suivi ni statistiques d'usage** envoyés à des serveurs externes (l'app n'"espionne" plus l'utilisation — Firebase Analytics et Crashlytics ont été retirés)
-- Options **Sauvegarde/Restauration manuelle** et **"Noter l'application"** retirées du menu Réglages (elles n'avaient plus d'utilité pour un usage personnel)
-- Écran **"À propos"** retiré
-
-### 🐛 Corrections de bugs
-
-Plusieurs bugs présents dans la version d'origine ont été corrigés : calculs de soldes incorrects dans certains cas, écrans qui pouvaient planter, formulaires qui acceptaient des données invalides, et un bug qui empêchait d'enregistrer un remboursement partiel de dette.
-
-### 🔒 Sécurité
-
-Une revue de sécurité a été faite sur l'ensemble du code (recherche de secrets exposés, configuration réseau/permissions Android, règles d'accès aux données cloud). Rien de critique trouvé ; les règles de sécurité qui protègent les données cloud (accessibles uniquement par leur propriétaire, personne d'autre) sont désormais versionnées dans le dépôt (`firestore.rules`) au lieu de vivre uniquement dans la console Firebase.
+- `core:data` : repository impls, cloud sync, AI parsing
+- `core:database` : Room database
+- `core:designsystem` : composants UI réutilisables
+- `core:model` : modèles de données
+- `feature:transaction` : transactions, scan, assistant IA
+- `feature:dashboard` : écran d’accueil et synthèse
+- `feature:budget` : budget
+- `feature:debt` : dettes
+- `feature:savings` : objectifs d’épargne
+- `feature:shopping` : liste de courses
+- `feature:settings` : réglages
 
 ---
 
-## 🛠️ Pour les développeurs
+## Démarrage rapide
 
-### Contexte
+### Prérequis
+- Android Studio
+- JDK 17+
+- Android SDK 35 / compatible
+- Git
+- Clé Gemini configurée dans les paramètres de l’application si l’IA est utilisée
 
-M3Finances est un fork de [expensemanager (naveenapps)](https://github.com/naveenapps/expensemanager), une app Android multi-module basée sur **Jetpack Compose**, **Room** et **Koin**, en architecture Clean/MVI (`core/*` pour la logique partagée, `feature/*` pour chaque écran métier).
+### Lancer le projet
 
-### Nouveaux modules Gradle
+```bash
+./gradlew :app:installDebug
+```
 
-| Module | Contenu |
-|---|---|
-| `feature/debt` | Écrans de gestion des dettes |
-| `feature/recurring` | Écrans des transactions récurrentes |
-| `feature/savings` | Écrans des objectifs d'épargne |
+### Vérifier le build
 
-Module retiré : `feature/about`.
-
-### Base de données (Room)
-
-- Migration jusqu'à `version = 11` (voir `core/database/schemas/`)
-- Nouvelles entités : `DebtEntity`, `DebtReminderEntity`, `RecurringTransactionEntity`, `SavingsGoalEntity`, `TransactionSplitItemEntity`
-- Nouveaux DAO correspondants : `DebtDao`, `DebtReminderDao`, `RecurringTransactionDao`, `SavingsGoalDao`
-- La fonctionnalité Dettes et la fonctionnalité Objectifs d'épargne réutilisent toutes les deux le mécanisme de virement existant (`AccountType.DEBT` / `AccountType.SAVINGS_GOAL` = comptes cachés), pas de table dédiée à la logique de solde — le montant est toujours dérivé des transactions plutôt que stocké en double
-
-### Couche domaine / data / repository
-
-Nouveaux `UseCase`, `Repository` (interface `core/repository`) et `RepositoryImpl` (`core/data`) pour chacune des nouvelles fonctionnalités : `debt/`, `recurringtransaction/`, `savingsgoal/`, `networth/`, ainsi que `SearchTransactionsUseCase` pour la recherche et la logique de validation pour le split de transactions.
-
-### Sauvegarde cloud (Firebase Firestore)
-
-- Une collection Firestore par table Room (`GoogleAuthRepositoryImpl`, `CloudBackupRepository` / `Impl` dans `core/data/.../cloudbackup`) — couvre désormais comptes, catégories, transactions, transactions scindées, budgets, dettes, rappels de dette, objectifs d'épargne et transactions récurrentes
-- Authentification via **Credential Manager + Firebase Auth** (Google Sign-In)
-- Déclenchement automatique de la synchronisation via `InvalidationTracker` de Room (`DatabaseChangeCloudBackupTrigger`) — pas de bouton "sauvegarder" manuel
-- Règles de sécurité Firestore scopées par utilisateur (`/users/{userId}/...`), versionnées dans `firestore.rules` à la racine du dépôt — ce fichier documente aussi le partage du projet Firebase avec une autre app personnelle (`com.m3notes.app`)
-
-### Build & CI/CD
-
-- **Firebase Analytics / Crashlytics / AppDistribution** entièrement retirés de `app/build.gradle.kts` (plus aucun tracking passif)
-- **Restriction ABI** : `abiFilters += "arm64-v8a"` — build limité aux appareils arm64 modernes, réduit la taille de l'APK (usage personnel uniquement, à retirer si compatibilité 32-bit/x86 nécessaire)
-- **Keystore debug committé** (`keys/debug.keystore`) et explicitement branché sur le build type `debug`, pour que chaque build (local ou CI) soit signé avec le même SHA-1 — indispensable pour que le Google Sign-In fonctionne de façon stable en CI
-- `applicationIdSuffix ".debug"` retiré : le client OAuth Google n'est enregistré que pour `com.naveenapps.expensemanager` sans suffixe
-- Pipeline **GitHub Actions** (`.github/workflows/build.yml`) pour la compilation et les tests à chaque push
-
-### Identité visuelle
-
-- `app_name` → `M3Finances`
-- `ic_launcher_background` → `#07052A` (au lieu de `#FFFFFF`)
-- Icônes `mipmap-*` (debug et release) régénérées
-- Nouvelles icônes vectorielles ajoutées dans `core/designsystem/.../drawable` (catégories de dépenses : maison, transport, loisirs, etc., dont une icône `djamo.xml` spécifique à Mobile Money Côte d'Ivoire)
+```bash
+./gradlew :app:assembleDebug
+```
 
 ---
 
-## ⚠️ Usage personnel uniquement
+## Points de vigilance / recommandations
 
-Ce dépôt est un fork personnel configuré avec des identifiants et une configuration Firebase propres à un usage individuel (clé OAuth Google, projet Firestore, keystore debug commité). Il n'est **pas destiné à être publié, redistribué ou réutilisé tel quel**.
+1. Nettoyer les fichiers de configuration spécifiques au projet avant une sortie publique.
+2. Vérifier régulièrement la compatibilité des modèles Gemini avec la version du SDK.
+3. Ajouter des tests de régression sur les flux IA et les parsing de texte/image.
+4. Évaluer la sécurité et la stratégie de sauvegarde cloud avant un usage partagé.
+5. Garder un esprit “personnel” si l’app reste destinée à un seul utilisateur.
+
+---
+
+## Statut du projet
+
+État actuel :
+- Application fonctionnelle en debug
+- IA intégrée et utilisée dans plusieurs flux
+- Dashboard et assistant finance déjà renforcés
+- Build Android validée sur appareil
+- Projet orienté usage personnel robuste et personnalisable
+
+Ce dépôt est donc dans un état de développement avancé, fonctionnel et cohérent pour un usage personnel sérieux.
