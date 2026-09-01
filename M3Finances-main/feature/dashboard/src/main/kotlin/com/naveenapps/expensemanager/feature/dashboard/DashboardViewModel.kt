@@ -37,6 +37,8 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import java.util.Date
+import java.util.Locale
+import kotlin.math.abs
 
 
 class DashboardViewModel(
@@ -75,8 +77,9 @@ class DashboardViewModel(
             getCurrencyUseCase.invoke(),
             getTransactionWithFilterUseCase.invoke(),
             getAllAccountsUseCase.invoke(),
+            settingsRepository.getAccounts(),
             getDateRangeUseCase.invoke(),
-        ) { currency, transactions, accounts, dateRange ->
+        ) { currency, transactions, accounts, selectedAccountIds, dateRange ->
 
             val filteredTransactions = (transactions?.map {
                 it.toTransactionUIModel(
@@ -87,7 +90,13 @@ class DashboardViewModel(
                 )
             } ?: emptyList()).take(MAX_TRANSACTIONS_IN_LIST)
 
-            val accountsConverted = accounts.map {
+            val filteredAccounts = if (selectedAccountIds.isNullOrEmpty()) {
+                accounts
+            } else {
+                accounts.filter { account -> account.id in selectedAccountIds }
+            }
+
+            val accountsConverted = filteredAccounts.map {
                 it.toAccountUiModel(
                     getFormattedAmountUseCase.invoke(
                         it.amount,
@@ -104,6 +113,8 @@ class DashboardViewModel(
                 )
             }
 
+            val totalAccountBalance = filteredAccounts.sumOf { it.amount }
+
             val incomeValue = transactions?.filter { it.type == TransactionType.INCOME }?.sumOf {
                 it.amount.amount
             } ?: 0.0
@@ -112,6 +123,45 @@ class DashboardViewModel(
                 it.amount.amount
             } ?: 0.0
 
+            val currentStart = dateRange.dateRanges.getOrNull(0) ?: 0L
+            val currentEnd = dateRange.dateRanges.getOrNull(1) ?: currentStart
+            val previousRangeLength = maxOf(1L, currentEnd - currentStart)
+            val previousEnd = currentStart - 1
+            val previousStart = maxOf(0L, previousEnd - previousRangeLength)
+
+            val currentPeriodDelta = transactions
+                ?.filter { it.createdOn.time in currentStart..currentEnd }
+                ?.sumOf { transaction ->
+                    when (transaction.type) {
+                        TransactionType.INCOME -> transaction.amount.amount
+                        TransactionType.EXPENSE -> -transaction.amount.amount
+                        else -> 0.0
+                    }
+                } ?: 0.0
+
+            val previousPeriodDelta = transactions
+                ?.filter { it.createdOn.time in previousStart..previousEnd }
+                ?.sumOf { transaction ->
+                    when (transaction.type) {
+                        TransactionType.INCOME -> transaction.amount.amount
+                        TransactionType.EXPENSE -> -transaction.amount.amount
+                        else -> 0.0
+                    }
+                } ?: 0.0
+
+            val trendPercent = when {
+                dateRange.type == DateRangeType.ALL || currentEnd <= currentStart || previousRangeLength <= 0L -> 0.0
+                abs(previousPeriodDelta) < 0.01 -> 0.0
+                else -> ((currentPeriodDelta - previousPeriodDelta) / abs(previousPeriodDelta)) * 100.0
+            }
+
+            val trendText = if (trendPercent == 0.0) {
+                "0.00%"
+            } else {
+                val sign = if (trendPercent >= 0) "+" else "-"
+                val absolutePercent = abs(trendPercent)
+                "$sign${String.format(Locale.US, "%.2f", absolutePercent)}%"
+            }
 
             _state.update {
                 it.copy(
@@ -125,9 +175,10 @@ class DashboardViewModel(
                             currency,
                         ).amountString.orEmpty(),
                         balance = getFormattedAmountUseCase.invoke(
-                            (incomeValue - expenseValue),
+                            totalAccountBalance,
                             currency,
                         ).amountString.orEmpty(),
+                        trendText = trendText,
                     ),
                     transactions = filteredTransactions,
                     accounts = accountsConverted,

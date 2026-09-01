@@ -431,6 +431,7 @@ fun IncomeExpenseBalanceView(
             incomeAmount = expenseFlowState.income,
             balanceAmount = expenseFlowState.balance,
             transactionPeriod = transactionPeriod,
+            trendText = expenseFlowState.trendText,
         )
     }
 }

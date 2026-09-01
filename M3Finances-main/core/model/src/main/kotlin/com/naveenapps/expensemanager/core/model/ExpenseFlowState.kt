@@ -7,4 +7,5 @@ data class ExpenseFlowState(
     val income: String = "",
     val expense: String = "",
     val balance: String = "",
+    val trendText: String = "0.00%",
 )

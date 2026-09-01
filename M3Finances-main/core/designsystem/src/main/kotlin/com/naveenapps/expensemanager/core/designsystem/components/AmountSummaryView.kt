@@ -1,5 +1,6 @@
 package com.naveenapps.expensemanager.core.designsystem.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +17,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -83,6 +86,7 @@ fun AmountInfoWidget(
     incomeAmount: String,
     balanceAmount: String,
     transactionPeriod: String,
+    trendText: String = "0.00%",
     modifier: Modifier = Modifier,
 ) {
     val incomeColor = colorResource(
@@ -92,68 +96,79 @@ fun AmountInfoWidget(
         id = com.naveenapps.expensemanager.core.common.R.color.red_500,
     )
 
-    AppCardView(modifier = modifier) {
+    AppCardView(
+        modifier = modifier,
+        shape = RoundedCornerShape(28.dp),
+        border = BorderStroke(0.dp, Color.Transparent),
+    ) {
         Column(
-            modifier = Modifier.padding(18.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFF15191D))
+                .padding(18.dp),
         ) {
-            WidgetHeader(
-                title = stringResource(id = R.string.transaction_summary),
-                subTitle = transactionPeriod,
+            Text(
+                text = "Total",
+                style = MaterialTheme.typography.labelLarge.copy(
+                    fontWeight = FontWeight.Medium,
+                ),
+                color = Color(0xFFB7BDC3),
             )
+
+            Spacer(Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                Text(
+                    text = balanceAmount,
+                    style = MaterialTheme.typography.headlineLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = (-0.8).sp,
+                    ),
+                    color = Color(0xFFF4F6F8),
+                )
+                Spacer(Modifier.width(12.dp))
+                val trendColor = if (trendText.startsWith("-")) expenseColor else incomeColor
+                val trendBackground = if (trendText.startsWith("-")) Color(0xFF3A1D22) else Color(0xFF163A2B)
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(trendBackground)
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                ) {
+                    Text(
+                        text = trendText,
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontWeight = FontWeight.SemiBold,
+                        ),
+                        color = trendColor,
+                    )
+                }
+            }
 
             Spacer(Modifier.height(16.dp))
 
-            // ── Income & Expense — side by side ────────────────────
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 SummaryCard(
-                    label = stringResource(id = R.string.income),
-                    amount = incomeAmount,
-                    icon = Icons.Default.ArrowDownward,
-                    tintColor = incomeColor,
-                    modifier = Modifier.weight(1f),
-                )
-                SummaryCard(
-                    label = stringResource(id = R.string.expense),
+                    label = "Entrée",
                     amount = expenseAmount,
                     icon = Icons.Default.ArrowUpward,
                     tintColor = expenseColor,
                     modifier = Modifier.weight(1f),
+                    cardColor = Color(0xFF1E2429),
                 )
-            }
-
-            Spacer(Modifier.height(14.dp))
-
-            // ── Balance row ────────────────────────────────────────
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(
-                        MaterialTheme.colorScheme.surfaceContainerHighest
-                            .copy(alpha = 0.5f),
-                    )
-                    .padding(horizontal = 14.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = stringResource(id = R.string.total),
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.Medium,
-                    ),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                        .copy(alpha = 0.6f),
-                )
-                Spacer(Modifier.weight(1f))
-                Text(
-                    text = balanceAmount,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = (-0.3).sp,
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface,
+                SummaryCard(
+                    label = "Sortie",
+                    amount = incomeAmount,
+                    icon = Icons.Default.ArrowDownward,
+                    tintColor = incomeColor,
+                    modifier = Modifier.weight(1f),
+                    cardColor = Color(0xFF1E2429),
                 )
             }
         }
@@ -167,17 +182,18 @@ private fun SummaryCard(
     icon: ImageVector,
     tintColor: Color,
     modifier: Modifier = Modifier,
+    cardColor: Color = Color(0xFF1E2429),
 ) {
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(10.dp))
-            .background(tintColor.copy(alpha = 0.08f))
+            .clip(RoundedCornerShape(12.dp))
+            .background(cardColor)
             .padding(14.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
-                    .size(28.dp)
+                    .size(26.dp)
                     .clip(RoundedCornerShape(8.dp))
                     .background(tintColor.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center,
@@ -186,7 +202,7 @@ private fun SummaryCard(
                     imageVector = icon,
                     contentDescription = null,
                     tint = tintColor,
-                    modifier = Modifier.size(16.dp),
+                    modifier = Modifier.size(14.dp),
                 )
             }
             Spacer(Modifier.width(8.dp))
@@ -195,8 +211,7 @@ private fun SummaryCard(
                 style = MaterialTheme.typography.bodySmall.copy(
                     fontWeight = FontWeight.Medium,
                 ),
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-                    .copy(alpha = 0.6f),
+                color = Color(0xFFB7BDC3),
             )
         }
 
@@ -208,7 +223,7 @@ private fun SummaryCard(
                 fontWeight = FontWeight.Bold,
                 letterSpacing = (-0.3).sp,
             ),
-            color = tintColor,
+            color = Color(0xFFF4F6F8),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
