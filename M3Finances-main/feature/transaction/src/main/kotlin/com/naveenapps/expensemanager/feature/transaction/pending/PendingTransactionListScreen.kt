@@ -17,6 +17,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.naveenapps.expensemanager.core.designsystem.ui.components.ExpenseManagerTopAppBar
 import com.naveenapps.expensemanager.core.model.PendingTransaction
+import com.naveenapps.expensemanager.core.model.TransactionSource
 import com.naveenapps.expensemanager.feature.transaction.R
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -79,6 +80,11 @@ fun PendingTransactionItem(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
+                    text = sourceLabel(transaction.source),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
                     text = transaction.merchant ?: "Inconnu",
                     style = MaterialTheme.typography.titleMedium
                 )
@@ -97,6 +103,14 @@ fun PendingTransactionItem(
                     text = "Catégorie suggérée: ${transaction.suggestedCategory ?: "Aucune"}",
                     style = MaterialTheme.typography.bodySmall
                 )
+                val confidence = transaction.confidence
+                if (confidence != null) {
+                    Text(
+                        text = "Confiance: ${(confidence * 100).toInt()}%",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
             IconButton(onClick = onDelete) {
                 Icon(imageVector = Icons.Default.Delete, contentDescription = "Supprimer")
@@ -105,3 +119,17 @@ fun PendingTransactionItem(
     }
 }
 
+
+
+private fun sourceLabel(source: TransactionSource): String {
+    return when (source) {
+        TransactionSource.WAVE -> "🔵 Wave"
+        TransactionSource.ORANGE_MONEY -> "🟠 Orange Money"
+        TransactionSource.MTN_MOMO -> "🟡 MTN MoMo"
+        TransactionSource.MOOV_MONEY -> "🟢 Moov Money"
+        TransactionSource.DJAMO -> "🔷 Djamo"
+        TransactionSource.PAYPAL -> "🔵 PayPal"
+        TransactionSource.SMS -> "✉️ SMS"
+        TransactionSource.UNKNOWN -> "❓ Source inconnue"
+    }
+}

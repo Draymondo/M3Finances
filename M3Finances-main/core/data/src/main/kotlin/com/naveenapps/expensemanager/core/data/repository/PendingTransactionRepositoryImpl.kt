@@ -59,7 +59,9 @@ class PendingTransactionRepositoryImpl(
             date = Date(date),
             transactionType = transactionType,
             suggestedCategory = suggestedCategory,
-            rawNotification = rawNotification
+            rawNotification = rawNotification,
+            source = source,
+            confidence = confidence
         )
     }
 
@@ -73,6 +75,8 @@ class PendingTransactionRepositoryImpl(
             transactionType = transactionType,
             suggestedCategory = suggestedCategory,
             rawNotification = rawNotification,
+            source = source,
+            confidence = confidence,
             createdOn = System.currentTimeMillis()
         )
     }

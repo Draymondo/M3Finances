@@ -6,6 +6,7 @@ import android.service.notification.StatusBarNotification
 import android.util.Log
 import com.naveenapps.expensemanager.core.domain.usecase.transaction.ParseWaveNotificationUseCase
 import com.naveenapps.expensemanager.core.model.Resource
+import com.naveenapps.expensemanager.core.model.TransactionSource
 import com.naveenapps.expensemanager.core.repository.PendingTransactionRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -13,7 +14,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
-class WaveNotificationListenerService : NotificationListenerService() {
+class MobileMoneyNotificationListenerService : NotificationListenerService() {
 
     private val parseWaveNotificationUseCase: ParseWaveNotificationUseCase by inject()
     private val pendingTransactionRepository: PendingTransactionRepository by inject()
@@ -47,22 +48,35 @@ class WaveNotificationListenerService : NotificationListenerService() {
             val fullText = "$title\n$text\n$bigText".trim()
 
             if (fullText.isNotBlank()) {
-                Log.d("WaveNotification", "Intercepted notification from: $packageName -> $fullText")
-                processNotification(fullText)
+                Log.d("MobileMoneyNotification", "Intercepted notification from: $packageName -> $fullText")
+                processNotification(fullText, resolveSource(packageName))
             }
         }
     }
 
-    private fun processNotification(text: String) {
+    private fun resolveSource(packageName: String): TransactionSource {
+        return when (packageName) {
+            "com.wave.personal" -> TransactionSource.WAVE
+            "com.orange.myorange.oci" -> TransactionSource.ORANGE_MONEY
+            "mtnft.momo.consumer" -> TransactionSource.MTN_MOMO
+            "ci.moovmoney.mmpayapi", "com.mobiblanc.moov.mymoov_ci" -> TransactionSource.MOOV_MONEY
+            "com.djamo.app" -> TransactionSource.DJAMO
+            "com.paypal.android.p2pmobile" -> TransactionSource.PAYPAL
+            "com.google.android.apps.messaging", "com.samsung.android.messaging" -> TransactionSource.SMS
+            else -> TransactionSource.UNKNOWN
+        }
+    }
+
+    private fun processNotification(text: String, source: TransactionSource) {
         scope.launch {
-            when (val result = parseWaveNotificationUseCase.invoke(text)) {
+            when (val result = parseWaveNotificationUseCase.invoke(text, source)) {
                 is Resource.Success -> {
                     val pendingTx = result.data
                     pendingTransactionRepository.addPendingTransaction(pendingTx)
-                    Log.d("WaveNotification", "Saved Pending Transaction: \$pendingTx")
+                    Log.d("MobileMoneyNotification", "Saved Pending Transaction: \$pendingTx")
                 }
                 is Resource.Error -> {
-                    Log.e("WaveNotification", "Error parsing Wave notification", result.exception)
+                    Log.e("MobileMoneyNotification", "Error parsing Wave notification", result.exception)
                 }
             }
         }

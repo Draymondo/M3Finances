@@ -192,6 +192,7 @@ class GeminiRepositoryImpl(
 
     override suspend fun parseWaveNotification(
         notificationText: String,
+        source: com.naveenapps.expensemanager.core.model.TransactionSource,
         apiKey: String
     ): Resource<com.naveenapps.expensemanager.core.model.PendingTransaction> =
         withContext(dispatchers.io) {
@@ -256,6 +257,13 @@ class GeminiRepositoryImpl(
                     }
                 } ?: java.util.Date()
 
+                val filledFieldCount = listOfNotNull(
+                    parsed.merchant?.takeIf { it.isNotBlank() },
+                    parsed.date,
+                    parsed.category,
+                ).size
+                val confidence = (0.4f + filledFieldCount * 0.2f).coerceAtMost(1f)
+
                 Resource.Success(
                     com.naveenapps.expensemanager.core.model.PendingTransaction(
                         id = java.util.UUID.randomUUID().toString(),
@@ -265,7 +273,9 @@ class GeminiRepositoryImpl(
                         date = parsedDate,
                         transactionType = transactionType,
                         suggestedCategory = parsed.category,
-                        rawNotification = notificationText
+                        rawNotification = notificationText,
+                        source = source,
+                        confidence = confidence
                     )
                 )
             } catch (e: Exception) {

@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.naveenapps.expensemanager.core.model.TransactionType
+import com.naveenapps.expensemanager.core.model.TransactionSource
 
 @Entity(tableName = "pending_transaction")
 data class PendingTransactionEntity(
@@ -24,6 +25,10 @@ data class PendingTransactionEntity(
     val suggestedCategory: String?,
     @ColumnInfo(name = "raw_notification")
     val rawNotification: String?,
+    @ColumnInfo(name = "source")
+    val source: TransactionSource,
+    @ColumnInfo(name = "confidence")
+    val confidence: Float?,
     @ColumnInfo(name = "created_on")
     val createdOn: Long
 )

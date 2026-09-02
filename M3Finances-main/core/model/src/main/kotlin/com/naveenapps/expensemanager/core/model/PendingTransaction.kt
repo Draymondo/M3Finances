@@ -11,5 +11,7 @@ data class PendingTransaction(
     val transactionType: TransactionType,
     val suggestedCategory: String?,
     val rawNotification: String?,
+    val source: TransactionSource = TransactionSource.UNKNOWN,
+    val confidence: Float? = null,
 )
 

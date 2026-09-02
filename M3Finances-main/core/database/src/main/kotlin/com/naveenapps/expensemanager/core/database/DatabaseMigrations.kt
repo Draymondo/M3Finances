@@ -250,3 +250,14 @@ internal val MIGRATION_12_13 = object : Migration(12, 13) {
         )
     }
 }
+
+internal val MIGRATION_13_14 = object : Migration(13, 14) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "ALTER TABLE `pending_transaction` ADD COLUMN `source` INTEGER NOT NULL DEFAULT 7"
+        )
+        db.execSQL(
+            "ALTER TABLE `pending_transaction` ADD COLUMN `confidence` REAL"
+        )
+    }
+}

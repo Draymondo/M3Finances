@@ -32,6 +32,7 @@ import com.naveenapps.expensemanager.core.database.utils.DateConverter
 import com.naveenapps.expensemanager.core.database.utils.DebtDirectionConverter
 import com.naveenapps.expensemanager.core.database.utils.RecurrenceFrequencyConverter
 import com.naveenapps.expensemanager.core.database.utils.TransactionTypeConverter
+import com.naveenapps.expensemanager.core.database.utils.TransactionSourceConverter
 
 /**
  * File name of the Room database on disk, relative to `Context.getDatabasePath(...)`. Public so
@@ -62,7 +63,7 @@ const val DATABASE_FILE_NAME = "expense_manager_database.db"
         ShoppingListItemEntity::class,
         com.naveenapps.expensemanager.core.database.entity.PendingTransactionEntity::class,
     ],
-    version = 13,
+    version = 14,
     exportSchema = true,
 )
 @TypeConverters(
@@ -72,6 +73,7 @@ const val DATABASE_FILE_NAME = "expense_manager_database.db"
     AccountTypeConverter::class,
     RecurrenceFrequencyConverter::class,
     DebtDirectionConverter::class,
+    TransactionSourceConverter::class,
 )
 abstract class ExpenseManagerDatabase : RoomDatabase() {
 
