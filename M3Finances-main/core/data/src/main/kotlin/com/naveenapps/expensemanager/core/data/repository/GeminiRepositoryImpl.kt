@@ -42,7 +42,7 @@ class GeminiRepositoryImpl(
                     ?: return@withContext Resource.Error(Exception("Impossible de décoder l'image"))
 
                 val model = GenerativeModel(
-                    modelName = "gemini-3.6-flash",
+                    modelName = "gemini-3.1-flash-lite",
                     apiKey = apiKey,
                     generationConfig = generationConfig {
                         responseMimeType = "application/json"
@@ -120,6 +120,7 @@ class GeminiRepositoryImpl(
         @SerializedName("merchant") val merchant: String? = null,
         @SerializedName("date") val date: String? = null,
         @SerializedName("category") val category: String? = null,
+        @SerializedName("transaction_id") val transactionId: String? = null,
     )
 
     private fun isExplicitWaveTransfer(notificationText: String): Boolean {
@@ -221,8 +222,9 @@ class GeminiRepositoryImpl(
                     - "merchant": the name of the recipient, sender, or merchant
                     - "date": the date and time from the notification if present, in "yyyy-MM-dd HH:mm" format, or null if not found
                     - "category": suggest ONE global category (e.g., Food, Transportation, Shopping, Health, Entertainment, Utilities, Leisure, Clothing, Education, Salary, Gift, Coupons)
+                    - "transaction_id": the unique transaction ID / reference provided in the notification as a string, or null if not found
                     
-                    Example response: {"type": "EXPENSE", "amount": 1000, "fee": 10, "merchant": "Pharmacie de la Paix", "date": "2023-10-27 14:30", "category": "Health"}
+                    Example response: {"type": "EXPENSE", "amount": 1000, "fee": 10, "merchant": "Pharmacie de la Paix", "date": "2023-10-27 14:30", "category": "Health", "transaction_id": "CI123456789"}
                 """.trimIndent()
 
                 val response = model.generateContent(prompt)
@@ -264,9 +266,14 @@ class GeminiRepositoryImpl(
                 ).size
                 val confidence = (0.4f + filledFieldCount * 0.2f).coerceAtMost(1f)
 
+                // Deduplication strategy: Use extracted transaction_id, or fallback to hash of key fields, or fallback to UUID
+                val generatedId = parsed.transactionId 
+                    ?: "${parsed.amount}_${parsed.merchant}_${parsed.date}".hashCode().toString().takeIf { parsed.merchant != null } 
+                    ?: java.util.UUID.randomUUID().toString()
+
                 Resource.Success(
                     com.naveenapps.expensemanager.core.model.PendingTransaction(
-                        id = java.util.UUID.randomUUID().toString(),
+                        id = generatedId,
                         amount = parsed.amount,
                         fee = resolvedFee,
                         merchant = parsed.merchant,

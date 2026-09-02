@@ -40,6 +40,7 @@ class KoinInitializer : Initializer<KoinApplication> {
                 RecurringTransactionNotificationModule,
                 DebtNotificationModule,
                 BudgetNotificationModule,
+                com.naveenapps.expensemanager.di.WorkerModule,
             )
         }
     }

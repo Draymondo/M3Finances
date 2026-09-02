@@ -4,7 +4,7 @@ import java.util.Properties
 
 plugins {
     id("naveenapps.plugin.android.app")
-    id("com.google.android.gms.oss-licenses-plugin")
+    // id("com.google.android.gms.oss-licenses-plugin")
     id("naveenapps.plugin.kotlin.basic")
     id("naveenapps.plugin.compose")
     id("naveenapps.plugin.di")
@@ -216,6 +216,9 @@ dependencies {
     implementation(libs.androidx.biometric)
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.glance.material3)
+    
+    implementation(libs.androidx.work.ktx)
+    implementation(libs.koin.android.work.manager)
 
     testImplementation(project(":core:testing"))
     androidTestImplementation(project(":core:testing"))

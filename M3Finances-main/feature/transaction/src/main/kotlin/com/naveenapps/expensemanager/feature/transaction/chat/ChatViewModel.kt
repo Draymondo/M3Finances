@@ -149,7 +149,7 @@ class ChatViewModel(
 
     private fun setupGenerativeModel(apiKey: String) {
         generativeModel = GenerativeModel(
-            modelName = "gemini-3.6-flash",
+            modelName = "gemini-3.1-flash-lite",
             apiKey = apiKey,
             generationConfig = generationConfig {
                 temperature = 0.2f
@@ -227,6 +227,22 @@ class ChatViewModel(
                 text = "Bonjour ! Comment puis-je vous aider ?"
             )
         )
+    }
+
+    
+    private fun removeProposal(messageId: String) {
+        updateMessage(messageId) {
+            it.copy(
+                proposedTransaction = null,
+                proposedCategory = null,
+                proposedAccount = null,
+                proposedShoppingList = null,
+                proposedSavingsGoal = null,
+                proposedBudget = null,
+                proposedDebt = null,
+                proposedRecurring = null
+            )
+        }
     }
 
     private fun addMessage(message: ChatMessage) {
@@ -458,7 +474,8 @@ class ChatViewModel(
         }
     }
 
-    fun confirmTransaction(proposed: ProposedTransaction) {
+    fun confirmTransaction(messageId: String, proposed: ProposedTransaction) {
+        removeProposal(messageId)
         viewModelScope.launch {
             try {
                 val categories = getAllCategoryUseCase.invoke().firstOrNull() ?: emptyList()
@@ -517,11 +534,13 @@ class ChatViewModel(
         }
     }
 
-    fun rejectTransaction() {
+    fun rejectTransaction(messageId: String) {
+        removeProposal(messageId)
         addMessage(ChatMessage(isUser = false, text = "Transaction annulee."))
     }
 
-    fun confirmCategory(proposed: ProposedCategory) {
+    fun confirmCategory(messageId: String, proposed: ProposedCategory) {
+        removeProposal(messageId)
         viewModelScope.launch {
             try {
                 val catType = if (proposed.type.equals("INCOME", ignoreCase = true)) CategoryType.INCOME else CategoryType.EXPENSE
@@ -543,7 +562,8 @@ class ChatViewModel(
         }
     }
 
-    fun confirmAccount(proposed: ProposedAccount) {
+    fun confirmAccount(messageId: String, proposed: ProposedAccount) {
+        removeProposal(messageId)
         viewModelScope.launch {
             try {
                 val account = Account(
@@ -566,7 +586,8 @@ class ChatViewModel(
         }
     }
 
-    fun confirmShoppingList(proposed: ProposedShoppingList) {
+    fun confirmShoppingList(messageId: String, proposed: ProposedShoppingList) {
+        removeProposal(messageId)
         viewModelScope.launch {
             try {
                 // Find a default account and category
@@ -619,7 +640,8 @@ class ChatViewModel(
         }
     }
 
-    fun confirmSavingsGoal(proposed: ProposedSavingsGoal) {
+    fun confirmSavingsGoal(messageId: String, proposed: ProposedSavingsGoal) {
+        removeProposal(messageId)
         viewModelScope.launch {
             try {
                 val goal = SavingsGoal(
@@ -641,7 +663,8 @@ class ChatViewModel(
         }
     }
     
-    fun confirmBudget(proposed: ProposedBudget) {
+    fun confirmBudget(messageId: String, proposed: ProposedBudget) {
+        removeProposal(messageId)
         viewModelScope.launch {
             try {
                 val budget = Budget(
@@ -664,7 +687,8 @@ class ChatViewModel(
         }
     }
     
-    fun confirmDebt(proposed: ProposedDebt) {
+    fun confirmDebt(messageId: String, proposed: ProposedDebt) {
+        removeProposal(messageId)
         viewModelScope.launch {
             try {
                 val debt = Debt(
@@ -686,7 +710,8 @@ class ChatViewModel(
         }
     }
     
-    fun confirmRecurring(proposed: ProposedRecurring) {
+    fun confirmRecurring(messageId: String, proposed: ProposedRecurring) {
+        removeProposal(messageId)
         viewModelScope.launch {
             try {
                 val accounts = accountRepository.getAccounts().firstOrNull() ?: emptyList()
@@ -724,31 +749,38 @@ class ChatViewModel(
         }
     }
 
-    fun rejectCategory() {
+    fun rejectCategory(messageId: String) {
+        removeProposal(messageId)
         addMessage(ChatMessage(isUser = false, text = "Création de catégorie annulée."))
     }
     
-    fun rejectAccount() {
+    fun rejectAccount(messageId: String) {
+        removeProposal(messageId)
         addMessage(ChatMessage(isUser = false, text = "Création de compte annulée."))
     }
     
-    fun rejectShoppingList() {
+    fun rejectShoppingList(messageId: String) {
+        removeProposal(messageId)
         addMessage(ChatMessage(isUser = false, text = "Création de liste de courses annulée."))
     }
     
-    fun rejectSavingsGoal() {
+    fun rejectSavingsGoal(messageId: String) {
+        removeProposal(messageId)
         addMessage(ChatMessage(isUser = false, text = "Création d'objectif d'épargne annulée."))
     }
     
-    fun rejectBudget() {
+    fun rejectBudget(messageId: String) {
+        removeProposal(messageId)
         addMessage(ChatMessage(isUser = false, text = "Création de budget annulée."))
     }
     
-    fun rejectDebt() {
+    fun rejectDebt(messageId: String) {
+        removeProposal(messageId)
         addMessage(ChatMessage(isUser = false, text = "Création de dette annulée."))
     }
     
-    fun rejectRecurring() {
+    fun rejectRecurring(messageId: String) {
+        removeProposal(messageId)
         addMessage(ChatMessage(isUser = false, text = "Création de transaction récurrente annulée."))
     }
 }

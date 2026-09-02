@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,17 +47,7 @@ import androidx.compose.ui.unit.sp
 import com.naveenapps.expensemanager.core.navigation.AppComposeNavigator
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
-
-// Theme colors hardcoded for dark minimalist style
-private val BgColor = Color(0xFF0C0C0E)
-private val SurfaceColor = Color(0xFF141416)
-private val UserBubbleColor = Color(0xFF2A2A30)
-private val BorderColor = Color.White.copy(alpha = 0.07f)
-private val TextPrimary = Color(0xFFECECEF)
-private val TextSecondary = Color(0xFF8E8E96)
-private val TextTertiary = Color(0xFF5C5C66)
 private val SuccessColor = Color(0xFF3ECF8E)
-private val ErrorColor = Color(0xFFF07178)
 
 @Composable
 fun ChatScreen(
@@ -66,8 +57,10 @@ fun ChatScreen(
     val messages by viewModel.messages.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val listState = rememberLazyListState()
+    
+    val lastMessageTextLength = messages.lastOrNull()?.text?.length ?: 0
 
-    LaunchedEffect(messages.size) {
+    LaunchedEffect(messages.size, lastMessageTextLength) {
         if (messages.isNotEmpty()) {
             listState.animateScrollToItem(messages.size - 1)
         }
@@ -80,14 +73,13 @@ fun ChatScreen(
             )
         },
         contentWindowInsets = WindowInsets.safeDrawing,
-        containerColor = BgColor
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .background(BgColor)
-                .imePadding()
+                .background(MaterialTheme.colorScheme.background)
         ) {
             LazyColumn(
                 state = listState,
@@ -128,18 +120,18 @@ private fun ChatTopBar(onBackClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(BgColor)
+            .background(MaterialTheme.colorScheme.background)
             .windowInsetsPadding(WindowInsets.statusBars)
             .height(64.dp)
             .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(onClick = onBackClick) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Retour", tint = TextPrimary)
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Retour", tint = MaterialTheme.colorScheme.onBackground)
         }
         Column(modifier = Modifier.weight(1f).padding(horizontal = 8.dp)) {
-            Text("Assistant", color = TextPrimary, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-            Text("Gemini", color = TextSecondary, fontSize = 12.sp)
+            Text("Assistant", color = MaterialTheme.colorScheme.onBackground, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            Text("Gemini", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
         }
     }
 }
@@ -151,11 +143,11 @@ private fun HintChips(onHintClick: (String) -> Unit) {
         hints.forEach { hint ->
             Box(
                 modifier = Modifier
-                    .border(1.dp, BorderColor, RoundedCornerShape(16.dp))
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
                     .clickable { onHintClick(hint) }
                     .padding(horizontal = 16.dp, vertical = 10.dp)
             ) {
-                Text(hint, color = TextPrimary, fontSize = 14.sp)
+                Text(hint, color = MaterialTheme.colorScheme.onBackground, fontSize = 14.sp)
             }
         }
     }
@@ -183,7 +175,7 @@ private fun UserMessage(message: ChatMessage) {
             modifier = Modifier
                 .widthIn(max = 280.dp)
                 .background(
-                    color = UserBubbleColor,
+                    color = MaterialTheme.colorScheme.primaryContainer,
                     shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 18.dp, bottomEnd = 4.dp)
                 )
                 .padding(horizontal = 14.dp, vertical = 10.dp)
@@ -202,7 +194,7 @@ private fun UserMessage(message: ChatMessage) {
             if (!message.text.isNullOrBlank()) {
                 Text(
                     text = message.text,
-                    color = TextPrimary,
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontSize = 15.sp,
                     lineHeight = 22.sp
                 )
@@ -236,7 +228,7 @@ private fun AiMessage(message: ChatMessage, viewModel: ChatViewModel) {
             if (message.isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(20.dp),
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     strokeWidth = 2.dp
                 )
                 return@Column
@@ -252,12 +244,12 @@ private fun AiMessage(message: ChatMessage, viewModel: ChatViewModel) {
             }
 
             if (!message.text.isNullOrBlank()) {
-                val color = if (message.isError) ErrorColor else TextPrimary
+                val color = if (message.isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onBackground
                 val annotatedText = formatMarkdown(message.text)
                 
                 Row(verticalAlignment = Alignment.Top) {
                     if (message.isError) {
-                        Icon(Icons.Default.Warning, contentDescription = null, tint = ErrorColor, modifier = Modifier.size(16.dp).padding(top = 2.dp))
+                        Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(16.dp).padding(top = 2.dp))
                         Spacer(modifier = Modifier.width(6.dp))
                     }
                     Text(
@@ -274,8 +266,8 @@ private fun AiMessage(message: ChatMessage, viewModel: ChatViewModel) {
                 Spacer(modifier = Modifier.height(12.dp))
                 EditableTransactionProposalCard(
                     proposal = proposed,
-                    onConfirm = { edited -> viewModel.confirmTransaction(edited) },
-                    onReject = { viewModel.rejectTransaction() }
+                    onConfirm = { edited -> viewModel.confirmTransaction(message.id, edited) },
+                    onReject = { viewModel.rejectTransaction(message.id) }
                 )
             }
 
@@ -283,8 +275,8 @@ private fun AiMessage(message: ChatMessage, viewModel: ChatViewModel) {
                 Spacer(modifier = Modifier.height(12.dp))
                 EditableCategoryProposalCard(
                     proposal = proposed,
-                    onConfirm = { edited -> viewModel.confirmCategory(edited) },
-                    onReject = { viewModel.rejectCategory() }
+                    onConfirm = { edited -> viewModel.confirmCategory(message.id, edited) },
+                    onReject = { viewModel.rejectCategory(message.id) }
                 )
             }
 
@@ -292,8 +284,8 @@ private fun AiMessage(message: ChatMessage, viewModel: ChatViewModel) {
                 Spacer(modifier = Modifier.height(12.dp))
                 EditableAccountProposalCard(
                     proposal = proposed,
-                    onConfirm = { edited -> viewModel.confirmAccount(edited) },
-                    onReject = { viewModel.rejectAccount() }
+                    onConfirm = { edited -> viewModel.confirmAccount(message.id, edited) },
+                    onReject = { viewModel.rejectAccount(message.id) }
                 )
             }
             
@@ -303,8 +295,8 @@ private fun AiMessage(message: ChatMessage, viewModel: ChatViewModel) {
                     title = "LISTE DE COURSES",
                     mainText = proposed.name,
                     items = proposed.items.map { "Article" to it },
-                    onConfirm = { viewModel.confirmShoppingList(proposed) },
-                    onReject = { viewModel.rejectShoppingList() }
+                    onConfirm = { viewModel.confirmShoppingList(message.id, proposed) },
+                    onReject = { viewModel.rejectShoppingList(message.id) }
                 )
             }
 
@@ -314,8 +306,8 @@ private fun AiMessage(message: ChatMessage, viewModel: ChatViewModel) {
                     title = "OBJECTIF ÉPARGNE",
                     mainText = proposed.name,
                     items = listOf("Cible" to proposed.targetAmount.toString()),
-                    onConfirm = { viewModel.confirmSavingsGoal(proposed) },
-                    onReject = { viewModel.rejectSavingsGoal() }
+                    onConfirm = { viewModel.confirmSavingsGoal(message.id, proposed) },
+                    onReject = { viewModel.rejectSavingsGoal(message.id) }
                 )
             }
 
@@ -325,8 +317,8 @@ private fun AiMessage(message: ChatMessage, viewModel: ChatViewModel) {
                     title = "BUDGET",
                     mainText = "Budget Mensuel",
                     items = listOf("Montant" to proposed.amount.toString()),
-                    onConfirm = { viewModel.confirmBudget(proposed) },
-                    onReject = { viewModel.rejectBudget() }
+                    onConfirm = { viewModel.confirmBudget(message.id, proposed) },
+                    onReject = { viewModel.rejectBudget(message.id) }
                 )
             }
 
@@ -337,8 +329,8 @@ private fun AiMessage(message: ChatMessage, viewModel: ChatViewModel) {
                     title = "DETTE",
                     mainText = proposed.personName,
                     items = listOf("Type" to dirText, "Montant" to proposed.amount.toString()),
-                    onConfirm = { viewModel.confirmDebt(proposed) },
-                    onReject = { viewModel.rejectDebt() }
+                    onConfirm = { viewModel.confirmDebt(message.id, proposed) },
+                    onReject = { viewModel.rejectDebt(message.id) }
                 )
             }
 
@@ -348,8 +340,8 @@ private fun AiMessage(message: ChatMessage, viewModel: ChatViewModel) {
                     title = "RÉCURRENT",
                     mainText = proposed.name,
                     items = listOf("Montant" to proposed.amount.toString(), "Type" to proposed.type.name),
-                    onConfirm = { viewModel.confirmRecurring(proposed) },
-                    onReject = { viewModel.rejectRecurring() }
+                    onConfirm = { viewModel.confirmRecurring(message.id, proposed) },
+                    onReject = { viewModel.rejectRecurring(message.id) }
                 )
             }
         }
@@ -369,12 +361,12 @@ private fun EditableTransactionProposalCard(
 
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceColor),
-        border = androidx.compose.foundation.BorderStroke(1.dp, BorderColor),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("DÉPENSE", fontSize = 11.sp, color = TextTertiary, fontWeight = FontWeight.SemiBold)
+            Text("DÉPENSE", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f), fontWeight = FontWeight.SemiBold)
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = amountText,
@@ -382,12 +374,12 @@ private fun EditableTransactionProposalCard(
                 label = { Text("Montant") },
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = BorderColor,
-                    unfocusedBorderColor = BorderColor,
-                    focusedLabelColor = TextSecondary,
-                    unfocusedLabelColor = TextSecondary,
-                    focusedTextColor = TextPrimary,
-                    unfocusedTextColor = TextPrimary
+                    focusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    focusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -399,12 +391,12 @@ private fun EditableTransactionProposalCard(
                 label = { Text("Catégorie") },
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = BorderColor,
-                    unfocusedBorderColor = BorderColor,
-                    focusedLabelColor = TextSecondary,
-                    unfocusedLabelColor = TextSecondary,
-                    focusedTextColor = TextPrimary,
-                    unfocusedTextColor = TextPrimary
+                    focusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    focusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -416,12 +408,12 @@ private fun EditableTransactionProposalCard(
                 label = { Text("Compte") },
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = BorderColor,
-                    unfocusedBorderColor = BorderColor,
-                    focusedLabelColor = TextSecondary,
-                    unfocusedLabelColor = TextSecondary,
-                    focusedTextColor = TextPrimary,
-                    unfocusedTextColor = TextPrimary
+                    focusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    focusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -433,24 +425,24 @@ private fun EditableTransactionProposalCard(
                 label = { Text("Note") },
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = BorderColor,
-                    unfocusedBorderColor = BorderColor,
-                    focusedLabelColor = TextSecondary,
-                    unfocusedLabelColor = TextSecondary,
-                    focusedTextColor = TextPrimary,
-                    unfocusedTextColor = TextPrimary
+                    focusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    focusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(16.dp))
-            HorizontalDivider(color = BorderColor)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 TextButton(onClick = onReject) {
-                    Text("Annuler", color = TextSecondary)
+                    Text("Annuler", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 TextButton(onClick = {
                     val updated = proposal.copy(
@@ -479,12 +471,12 @@ private fun EditableCategoryProposalCard(
 
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceColor),
-        border = androidx.compose.foundation.BorderStroke(1.dp, BorderColor),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("CATÉGORIE", fontSize = 11.sp, color = TextTertiary, fontWeight = FontWeight.SemiBold)
+            Text("CATÉGORIE", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f), fontWeight = FontWeight.SemiBold)
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = nameText,
@@ -492,12 +484,12 @@ private fun EditableCategoryProposalCard(
                 label = { Text("Nom") },
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = BorderColor,
-                    unfocusedBorderColor = BorderColor,
-                    focusedLabelColor = TextSecondary,
-                    unfocusedLabelColor = TextSecondary,
-                    focusedTextColor = TextPrimary,
-                    unfocusedTextColor = TextPrimary
+                    focusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    focusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -508,23 +500,23 @@ private fun EditableCategoryProposalCard(
                 label = { Text("Type") },
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = BorderColor,
-                    unfocusedBorderColor = BorderColor,
-                    focusedLabelColor = TextSecondary,
-                    unfocusedLabelColor = TextSecondary,
-                    focusedTextColor = TextPrimary,
-                    unfocusedTextColor = TextPrimary
+                    focusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    focusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(16.dp))
-            HorizontalDivider(color = BorderColor)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 TextButton(onClick = onReject) {
-                    Text("Annuler", color = TextSecondary)
+                    Text("Annuler", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 TextButton(onClick = { onConfirm(proposal.copy(name = nameText.ifBlank { proposal.name }, type = typeText.ifBlank { proposal.type })) }) {
                     Text("Enregistrer", color = SuccessColor)
@@ -545,12 +537,12 @@ private fun EditableAccountProposalCard(
 
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceColor),
-        border = androidx.compose.foundation.BorderStroke(1.dp, BorderColor),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("COMPTE", fontSize = 11.sp, color = TextTertiary, fontWeight = FontWeight.SemiBold)
+            Text("COMPTE", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f), fontWeight = FontWeight.SemiBold)
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = nameText,
@@ -558,12 +550,12 @@ private fun EditableAccountProposalCard(
                 label = { Text("Nom") },
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = BorderColor,
-                    unfocusedBorderColor = BorderColor,
-                    focusedLabelColor = TextSecondary,
-                    unfocusedLabelColor = TextSecondary,
-                    focusedTextColor = TextPrimary,
-                    unfocusedTextColor = TextPrimary
+                    focusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    focusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -574,23 +566,23 @@ private fun EditableAccountProposalCard(
                 label = { Text("Type") },
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = BorderColor,
-                    unfocusedBorderColor = BorderColor,
-                    focusedLabelColor = TextSecondary,
-                    unfocusedLabelColor = TextSecondary,
-                    focusedTextColor = TextPrimary,
-                    unfocusedTextColor = TextPrimary
+                    focusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    focusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(16.dp))
-            HorizontalDivider(color = BorderColor)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 TextButton(onClick = onReject) {
-                    Text("Annuler", color = TextSecondary)
+                    Text("Annuler", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 TextButton(onClick = {
                     val resolvedType = when (typeText.uppercase()) {
@@ -618,18 +610,18 @@ private fun TransactionProposalCard(
 ) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceColor),
-        border = androidx.compose.foundation.BorderStroke(1.dp, BorderColor),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("DÉPENSE", fontSize = 11.sp, color = TextTertiary, fontWeight = FontWeight.SemiBold)
+            Text("DÉPENSE", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f), fontWeight = FontWeight.SemiBold)
             Spacer(modifier = Modifier.height(4.dp))
 
-            Text(if (amount % 1.0 == 0.0) "${amount.toLong()}" else "$amount", fontSize = 22.sp, color = TextPrimary, fontWeight = FontWeight.SemiBold)
+            Text(if (amount % 1.0 == 0.0) "${amount.toLong()}" else "$amount", fontSize = 22.sp, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold)
 
             Spacer(modifier = Modifier.height(16.dp))
-            HorizontalDivider(color = BorderColor)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Spacer(modifier = Modifier.height(12.dp))
 
             ProposalRow("Catégorie", categoryName)
@@ -641,14 +633,14 @@ private fun TransactionProposalCard(
             ProposalRow("Note", note.ifBlank { "Aucune" })
 
             Spacer(modifier = Modifier.height(16.dp))
-            HorizontalDivider(color = BorderColor)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 TextButton(onClick = onReject) {
-                    Text("Annuler", color = TextSecondary)
+                    Text("Annuler", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 TextButton(onClick = onConfirm) {
                     Text("Enregistrer", color = SuccessColor)
@@ -668,17 +660,17 @@ private fun GenericProposalCard(
 ) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceColor),
-        border = androidx.compose.foundation.BorderStroke(1.dp, BorderColor),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(title, fontSize = 11.sp, color = TextTertiary, fontWeight = FontWeight.SemiBold)
+            Text(title, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f), fontWeight = FontWeight.SemiBold)
             Spacer(modifier = Modifier.height(4.dp))
-            Text(mainText, fontSize = 18.sp, color = TextPrimary, fontWeight = FontWeight.SemiBold)
+            Text(mainText, fontSize = 18.sp, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold)
             
             Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider(color = BorderColor)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Spacer(modifier = Modifier.height(12.dp))
             
             items.forEachIndexed { index, pair ->
@@ -689,14 +681,14 @@ private fun GenericProposalCard(
             }
             
             Spacer(modifier = Modifier.height(16.dp))
-            HorizontalDivider(color = BorderColor)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 TextButton(onClick = onReject) {
-                    Text("Annuler", color = TextSecondary)
+                    Text("Annuler", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 TextButton(onClick = onConfirm) {
                     Text("Enregistrer", color = SuccessColor)
@@ -712,8 +704,8 @@ private fun ProposalRow(label: String, value: String) {
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(label, color = TextSecondary, fontSize = 13.sp)
-        Text(value, color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
+        Text(value, color = MaterialTheme.colorScheme.onBackground, fontSize = 13.sp, fontWeight = FontWeight.Medium)
     }
 }
 
@@ -722,7 +714,7 @@ private fun ChatInputArea(
     isLoading: Boolean,
     onSendMessage: (String, Bitmap?) -> Unit
 ) {
-    var inputText by remember { mutableStateOf("") }
+    var inputText by rememberSaveable { mutableStateOf("") }
     var selectedImage by remember { mutableStateOf<Bitmap?>(null) }
     val context = LocalContext.current
     var tempUri by remember { mutableStateOf<android.net.Uri?>(null) }
@@ -782,10 +774,8 @@ private fun ChatInputArea(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(BgColor)
+            .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 16.dp, vertical = 12.dp)
-            .navigationBarsPadding()
-            .windowInsetsPadding(WindowInsets.ime)
     ) {
         selectedImage?.let {
             Box(modifier = Modifier.padding(bottom = 12.dp)) {
@@ -806,8 +796,8 @@ private fun ChatInputArea(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(SurfaceColor, RoundedCornerShape(24.dp))
-                .border(1.dp, BorderColor, RoundedCornerShape(24.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(24.dp))
+                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(24.dp))
                 .padding(horizontal = 4.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -815,18 +805,18 @@ private fun ChatInputArea(
             
             Box {
                 IconButton(onClick = { showAttachmentMenu = true }, enabled = !isLoading) {
-                    Icon(Icons.Default.Add, contentDescription = "Joindre", tint = TextSecondary)
+                    Icon(Icons.Default.Add, contentDescription = "Joindre", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 
                 DropdownMenu(
                     expanded = showAttachmentMenu,
                     onDismissRequest = { showAttachmentMenu = false },
-                    modifier = Modifier.background(SurfaceColor),
+                    modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant),
                     shape = RoundedCornerShape(24.dp)
                 ) {
                     DropdownMenuItem(
-                        text = { Text("Caméra", color = TextPrimary) },
-                        leadingIcon = { Icon(Icons.Default.CameraAlt, contentDescription = null, tint = TextPrimary) },
+                        text = { Text("Caméra", color = MaterialTheme.colorScheme.onBackground) },
+                        leadingIcon = { Icon(Icons.Default.CameraAlt, contentDescription = null, tint = MaterialTheme.colorScheme.onBackground) },
                         onClick = {
                             showAttachmentMenu = false
                             val file = java.io.File(context.cacheDir, "chat_image_${System.currentTimeMillis()}.jpg")
@@ -840,8 +830,8 @@ private fun ChatInputArea(
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text("Photos", color = TextPrimary) },
-                        leadingIcon = { Icon(Icons.Default.Image, contentDescription = null, tint = TextPrimary) },
+                        text = { Text("Photos", color = MaterialTheme.colorScheme.onBackground) },
+                        leadingIcon = { Icon(Icons.Default.Image, contentDescription = null, tint = MaterialTheme.colorScheme.onBackground) },
                         onClick = {
                             showAttachmentMenu = false
                             galleryLauncher.launch("image/*")
@@ -856,12 +846,12 @@ private fun ChatInputArea(
                 modifier = Modifier
                     .weight(1f)
                     .padding(horizontal = 8.dp),
-                textStyle = androidx.compose.ui.text.TextStyle(color = TextPrimary, fontSize = 15.sp),
-                cursorBrush = SolidColor(TextPrimary),
+                textStyle = androidx.compose.ui.text.TextStyle(color = MaterialTheme.colorScheme.onBackground, fontSize = 15.sp),
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground),
                 maxLines = 4,
                 decorationBox = { innerTextField ->
                     if (inputText.isEmpty()) {
-                        Text("Message...", color = TextSecondary, fontSize = 15.sp)
+                        Text("Message...", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 15.sp)
                     }
                     innerTextField()
                 },
@@ -887,30 +877,38 @@ private fun ChatInputArea(
                 },
                 enabled = !isLoading
             ) {
-                Icon(Icons.Default.Mic, contentDescription = "Vocal", tint = if (isListening) ErrorColor else TextSecondary)
+                Icon(Icons.Default.Mic, contentDescription = "Vocal", tint = if (isListening) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
             }
 
+            val isSendEnabled = !isLoading && (inputText.isNotBlank() || selectedImage != null)
             Box(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .background(if (!isLoading && (inputText.isNotBlank() || selectedImage != null)) Color.White else Color(0xFF333333))
-                    .clickable(enabled = !isLoading && (inputText.isNotBlank() || selectedImage != null)) {
+                    .background(if (isSendEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
+                    .clickable(enabled = isSendEnabled) {
                         onSendMessage(inputText, selectedImage)
                         inputText = ""
                         selectedImage = null
                     },
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Envoyer", tint = Color(0xFF0C0C0E), modifier = Modifier.size(18.dp))
+                Icon(
+                    Icons.AutoMirrored.Filled.Send, 
+                    contentDescription = "Envoyer", 
+                    tint = if (isSendEnabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant, 
+                    modifier = Modifier.size(18.dp)
+                )
             }
             Spacer(modifier = Modifier.width(4.dp))
         }
     }
 }
 
+@Composable
 fun formatMarkdown(text: String): AnnotatedString {
     val textWithBullets = text.replace(Regex("(?m)^\\*\\s"), "• ")
+    val surfaceVariantColor = MaterialTheme.colorScheme.surfaceVariant
     return buildAnnotatedString {
         var currentIndex = 0
         val regex = Regex("(\\*\\*(.*?)\\*\\*)|(`(.*?)`)")
@@ -926,7 +924,7 @@ fun formatMarkdown(text: String): AnnotatedString {
                     }
                 }
                 value.startsWith("`") && value.endsWith("`") -> {
-                    withStyle(style = SpanStyle(background = Color(0xFF2A2A30), fontFamily = FontFamily.Monospace)) {
+                    withStyle(style = SpanStyle(background = surfaceVariantColor, fontFamily = FontFamily.Monospace)) {
                         append(value.removeSurrounding("`"))
                     }
                 }

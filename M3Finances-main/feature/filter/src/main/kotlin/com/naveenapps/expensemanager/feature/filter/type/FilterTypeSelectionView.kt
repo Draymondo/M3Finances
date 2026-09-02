@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +14,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -114,75 +119,77 @@ private fun FilterSelectionView(
             }
         }
 
-        Column(
-            modifier = Modifier
-                .wrapContentSize()
-                .verticalScroll(rememberScrollState()),
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(minSize = 100.dp),
+            modifier = Modifier.weight(1f),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             // Transaction type
-            FilterSectionHeader(
-                title = stringResource(id = R.string.transaction_type),
-                selectedCount = state.selectedTransactionTypes.size,
-            )
-            FlowRow(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                state.transactionTypes.forEach { type ->
-                    val isSelected = state.selectedTransactionTypes.fastAny { it == type }
-                    FilterChipView(
-                        selected = isSelected,
-                        label = type.toCapitalize(),
-                        onSelection = { onAction.invoke(FilterTypeAction.SelectTransactionType(type)) },
-                    )
-                }
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                FilterSectionHeader(
+                    title = stringResource(id = R.string.transaction_type),
+                    selectedCount = state.selectedTransactionTypes.size,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+            }
+            items(state.transactionTypes) { type ->
+                val isSelected = state.selectedTransactionTypes.fastAny { it == type }
+                FilterChipView(
+                    selected = isSelected,
+                    label = type.toCapitalize(),
+                    onSelection = { onAction.invoke(FilterTypeAction.SelectTransactionType(type)) },
+                )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Spacer(modifier = Modifier.height(8.dp))
+            }
 
             // Accounts
-            FilterSectionHeader(
-                title = stringResource(id = R.string.accounts),
-                selectedCount = state.selectedAccounts.size,
-            )
-            FlowRow(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                state.accounts.forEach { account ->
-                    val isSelected = state.selectedAccounts.fastAny { it.id == account.id }
-                    FilterChipView(
-                        selected = isSelected,
-                        label = account.name,
-                        iconName = account.storedIcon.name,
-                        onSelection = { onAction.invoke(FilterTypeAction.SelectAccount(account)) },
-                    )
-                }
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                FilterSectionHeader(
+                    title = stringResource(id = R.string.accounts),
+                    selectedCount = state.selectedAccounts.size,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+            }
+            items(state.accounts) { account ->
+                val isSelected = state.selectedAccounts.fastAny { it.id == account.id }
+                FilterChipView(
+                    selected = isSelected,
+                    label = account.name,
+                    iconName = account.storedIcon.name,
+                    onSelection = { onAction.invoke(FilterTypeAction.SelectAccount(account)) },
+                )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Spacer(modifier = Modifier.height(8.dp))
+            }
 
             // Categories
-            FilterSectionHeader(
-                title = stringResource(id = R.string.categories),
-                selectedCount = state.selectedCategories.size,
-            )
-            FlowRow(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                state.categories.forEach { category ->
-                    val isSelected = state.selectedCategories.fastAny { it.id == category.id }
-                    FilterChipView(
-                        selected = isSelected,
-                        label = category.titleResId?.let { stringResource(it) } ?: category.name,
-                        iconName = category.storedIcon.name,
-                        onSelection = { onAction.invoke(FilterTypeAction.SelectCategory(category)) },
-                    )
-                }
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                FilterSectionHeader(
+                    title = stringResource(id = R.string.categories),
+                    selectedCount = state.selectedCategories.size,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+            }
+            items(state.categories) { category ->
+                val isSelected = state.selectedCategories.fastAny { it.id == category.id }
+                FilterChipView(
+                    selected = isSelected,
+                    label = category.titleResId?.let { stringResource(it) } ?: category.name,
+                    iconName = category.storedIcon.name,
+                    onSelection = { onAction.invoke(FilterTypeAction.SelectCategory(category)) },
+                )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Spacer(modifier = Modifier.height(16.dp))
+            }
         }
 
         // Bottom action
@@ -237,7 +244,7 @@ private fun FilterSectionHeader(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 10.dp),
+            .padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(

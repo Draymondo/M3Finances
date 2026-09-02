@@ -13,11 +13,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
+import androidx.work.BackoffPolicy
+import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.WorkRequest
+import androidx.work.workDataOf
+import java.util.concurrent.TimeUnit
 
 class MobileMoneyNotificationListenerService : NotificationListenerService() {
-
-    private val parseWaveNotificationUseCase: ParseWaveNotificationUseCase by inject()
-    private val pendingTransactionRepository: PendingTransactionRepository by inject()
 
     private val supportedPackageNames = setOf(
         "com.wave.personal",
@@ -30,9 +36,6 @@ class MobileMoneyNotificationListenerService : NotificationListenerService() {
         "com.google.android.apps.messaging",
         "com.samsung.android.messaging"
     )
-
-    private val job = SupervisorJob()
-    private val scope = CoroutineScope(Dispatchers.IO + job)
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         super.onNotificationPosted(sbn)
@@ -68,23 +71,33 @@ class MobileMoneyNotificationListenerService : NotificationListenerService() {
     }
 
     private fun processNotification(text: String, source: TransactionSource) {
-        scope.launch {
-            when (val result = parseWaveNotificationUseCase.invoke(text, source)) {
-                is Resource.Success -> {
-                    val pendingTx = result.data
-                    pendingTransactionRepository.addPendingTransaction(pendingTx)
-                    Log.d("MobileMoneyNotification", "Saved Pending Transaction: \$pendingTx")
-                }
-                is Resource.Error -> {
-                    Log.e("MobileMoneyNotification", "Error parsing Wave notification", result.exception)
-                }
-            }
-        }
-    }
+        val workData = workDataOf(
+            NotificationProcessorWorker.KEY_TEXT to text,
+            NotificationProcessorWorker.KEY_SOURCE to source.name
+        )
 
-    override fun onDestroy() {
-        super.onDestroy()
-        job.cancel()
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val workRequest = OneTimeWorkRequestBuilder<NotificationProcessorWorker>()
+            .setConstraints(constraints)
+            .setInputData(workData)
+            .setBackoffCriteria(
+                BackoffPolicy.EXPONENTIAL,
+                WorkRequest.MIN_BACKOFF_MILLIS,
+                TimeUnit.MILLISECONDS
+            )
+            .build()
+
+        // Create a unique name to prevent duplicate exact texts from piling up at the same millisecond
+        val uniqueWorkName = "Tx_${text.hashCode()}"
+
+        WorkManager.getInstance(applicationContext).enqueueUniqueWork(
+            uniqueWorkName,
+            ExistingWorkPolicy.KEEP,
+            workRequest
+        )
     }
 }
 
