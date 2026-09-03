@@ -55,4 +55,8 @@ class MainViewModel(
     fun onAuthenticationSuccess() {
         _isAuthenticated.value = true
     }
+
+    fun lockApp() {
+        _isAuthenticated.value = false
+    }
 }

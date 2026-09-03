@@ -27,6 +27,7 @@ import com.naveenapps.expensemanager.core.navigation.AppComposeNavigator
 import com.naveenapps.expensemanager.core.navigation.ExpenseManagerScreens
 import com.naveenapps.expensemanager.core.repository.ActivityComponentProvider
 import com.naveenapps.expensemanager.ui.AppLockScreen
+import com.naveenapps.expensemanager.ui.DynamicAppTheme
 import com.naveenapps.expensemanager.ui.MainScreen
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -59,6 +60,26 @@ internal class MainActivity : AppCompatActivity(), AndroidScopeComponent {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
 
+        // Schedule Health Check Worker
+        val healthWorkRequest = androidx.work.PeriodicWorkRequestBuilder<com.naveenapps.expensemanager.service.ServiceHealthWorker>(
+            12, java.util.concurrent.TimeUnit.HOURS
+        ).build()
+        androidx.work.WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "ServiceHealthWorker",
+            androidx.work.ExistingPeriodicWorkPolicy.KEEP,
+            healthWorkRequest
+        )
+        
+        // Schedule Weekly AI Summary Worker
+        val weeklyWorkRequest = androidx.work.PeriodicWorkRequestBuilder<com.naveenapps.expensemanager.service.WeeklySummaryWorker>(
+            7, java.util.concurrent.TimeUnit.DAYS
+        ).build()
+        androidx.work.WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "WeeklySummaryWorker",
+            androidx.work.ExistingPeriodicWorkPolicy.KEEP,
+            weeklyWorkRequest
+        )
+
         enableEdgeToEdge()
 
         activityComponentProvider.getBackupRepository()
@@ -84,7 +105,7 @@ internal class MainActivity : AppCompatActivity(), AndroidScopeComponent {
                 val showLock = onBoardingStatus == true && isAppLockEnabled && !isAuthenticated
 
                 if (showLock) {
-                    NaveenAppsTheme(isDarkTheme = isDarkTheme) {
+                    DynamicAppTheme(isDarkTheme = isDarkTheme) {
                         LaunchedEffect(Unit) { showBiometricPrompt() }
                         AppLockScreen(onUnlockClick = ::showBiometricPrompt)
                     }
@@ -109,6 +130,11 @@ internal class MainActivity : AppCompatActivity(), AndroidScopeComponent {
         launchAppUpdateCheck()
     }
 
+    override fun onStop() {
+        super.onStop()
+        viewModel.lockApp()
+    }
+
     /** Maps the `shortcut_destination` extra set by `res/xml/shortcuts.xml` to the NavHost's
      * start destination, so a long-press shortcut lands directly on that screen instead of
      * Home. `null` (no extra, or an unrecognised value) falls back to the normal Home landing. */
@@ -127,8 +153,15 @@ internal class MainActivity : AppCompatActivity(), AndroidScopeComponent {
 
         val canAuthenticate = BiometricManager.from(this).canAuthenticate(authenticators)
         if (canAuthenticate != BiometricManager.BIOMETRIC_SUCCESS) {
-            // No biometric or device credentials enrolled — bypass the lock
-            viewModel.onAuthenticationSuccess()
+            // Faille de type "échec ouvert" corrigée : on n'autorise plus l'accès.
+            // On informe l'utilisateur ou on l'invite à configurer la sécurité de l'appareil.
+            if (canAuthenticate == BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED) {
+                val enrollIntent = android.content.Intent(android.provider.Settings.ACTION_SECURITY_SETTINGS)
+                startActivity(enrollIntent)
+                android.widget.Toast.makeText(this, "Veuillez configurer un code ou une empreinte dans les paramètres", android.widget.Toast.LENGTH_LONG).show()
+            } else {
+                android.widget.Toast.makeText(this, "Authentification système indisponible", android.widget.Toast.LENGTH_SHORT).show()
+            }
             return
         }
 

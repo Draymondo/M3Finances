@@ -1,3 +1,4 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 package com.naveenapps.expensemanager.ui
 
 import android.Manifest
@@ -8,6 +9,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.BottomAppBar
@@ -24,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.launch
@@ -259,6 +262,20 @@ fun HomeScreen(
         )
     }
 
+    var isListenerEnabled by remember { mutableStateOf(true) }
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    androidx.compose.runtime.DisposableEffect(lifecycleOwner, context) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME && context != null) {
+                isListenerEnabled = androidx.core.app.NotificationManagerCompat
+                    .getEnabledListenerPackages(context)
+                    .contains(context.packageName)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     Scaffold(
         bottomBar = {
             BottomAppBar {
@@ -283,13 +300,32 @@ fun HomeScreen(
             }
         },
     ) { paddingValues ->
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.padding(
-                bottom = paddingValues.calculateBottomPadding(),
-            ),
-            beyondViewportPageCount = 3,
-        ) { page ->
+        Column(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())) {
+            if (!isListenerEnabled) {
+                androidx.compose.material3.Surface(
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.errorContainer,
+                    modifier = Modifier.clickable {
+                        try {
+                            context?.startActivity(android.content.Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"))
+                        } catch (e: Exception) {
+                            // Ignored if intent is not available
+                        }
+                    }
+                ) {
+                    Text(
+                        text = "⚠️ L'accès aux notifications a été coupé (économiseur de batterie ?). Cliquez ici pour réparer et éviter de perdre vos transactions.",
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.padding(16.dp),
+                        style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.weight(1f),
+                beyondViewportPageCount = 3,
+            ) { page ->
             when (pages[page]) {
                 HomeScreenBottomBarItems.Home -> {
                     DashboardScreen()
@@ -310,3 +346,5 @@ fun HomeScreen(
         }
     }
 }
+}
+

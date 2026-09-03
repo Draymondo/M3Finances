@@ -68,17 +68,49 @@ import com.naveenapps.expensemanager.feature.transaction.list.getTransactionItem
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.random.Random
 
+import nl.dionsegijn.konfetti.compose.KonfettiView
+import nl.dionsegijn.konfetti.core.Party
+import nl.dionsegijn.konfetti.core.Position
+import nl.dionsegijn.konfetti.core.emitter.Emitter
+import java.util.concurrent.TimeUnit
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel = koinViewModel(),
 ) {
-
     val state by viewModel.state.collectAsState()
+    var showConfetti by remember { mutableStateOf(false) }
+    
+    // Trigger automatically if they have a lot of money remaining (just for fun demo)
+    // Or we expose a function to trigger it.
+    // For now, we'll pass a callback to the weather card to trigger it.
 
-    DashboardScaffoldContent(
-        state = state,
-        onAction = viewModel::processAction
-    )
+    Box(modifier = Modifier.fillMaxSize()) {
+        DashboardScaffoldContent(
+            state = state,
+            onAction = viewModel::processAction,
+            onTriggerConfetti = { showConfetti = true }
+        )
+        
+        if (showConfetti) {
+            val party = Party(
+                speed = 0f,
+                maxSpeed = 30f,
+                damping = 0.9f,
+                spread = 360,
+                colors = listOf(0xfce18a, 0xff726d, 0xf4306d, 0xb48def),
+                emitter = Emitter(duration = 100, TimeUnit.MILLISECONDS).max(100),
+                position = Position.Relative(0.5, 0.3)
+            )
+            KonfettiView(
+                modifier = Modifier.fillMaxSize(),
+                parties = listOf(party),
+            )
+        }
+    }
 }
 
 @Composable
@@ -86,6 +118,7 @@ fun DashboardScreen(
 private fun DashboardScaffoldContent(
     state: DashboardState,
     onAction: (DashboardAction) -> Unit,
+    onTriggerConfetti: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -156,7 +189,8 @@ private fun DashboardScaffoldContent(
                 .fillMaxSize()
                 .padding(top = innerPadding.calculateTopPadding()),
             state = state,
-            onAction = onAction
+            onAction = onAction,
+            onTriggerConfetti = onTriggerConfetti
         )
     }
 }
@@ -166,6 +200,7 @@ private fun DashboardScreenContent(
     modifier: Modifier = Modifier,
     state: DashboardState,
     onAction: (DashboardAction) -> Unit,
+    onTriggerConfetti: () -> Unit = {}
 ) {
     LazyColumn(
         modifier = modifier,
@@ -176,6 +211,14 @@ private fun DashboardScreenContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(end = 6.dp),
+            )
+        }
+        item("budget_weather") {
+            BudgetWeatherCard(
+                budgets = state.budgets,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onTriggerConfetti() }
             )
         }
         item("summary") {

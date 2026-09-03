@@ -627,7 +627,8 @@ private fun GeminiApiKeyDialog(
                     onValueChange = { key = it },
                     label = { Text("Clé d'API Gemini") },
                     singleLine = true,
-                    placeholder = { Text("AIzaSy...") }
+                    placeholder = { Text("AIzaSy...") },
+                    visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation()
                 )
                 Text(
                     modifier = Modifier

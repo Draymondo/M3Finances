@@ -31,7 +31,8 @@ class BackupRepositoryImpl(
         roomBackup
             .database(database)
             .enableLogDebug(true)
-            .backupIsEncrypted(false)
+            .backupIsEncrypted(true)
+            .customEncryptPassword("m3finances_default_encryption_key_!8#")
             .backupLocation(RoomBackup.BACKUP_FILE_LOCATION_CUSTOM_DIALOG)
             .maxFileCount(5)
             .apply {
@@ -51,7 +52,8 @@ class BackupRepositoryImpl(
         roomBackup
             .database(database)
             .enableLogDebug(true)
-            .backupIsEncrypted(false)
+            .backupIsEncrypted(true)
+            .customEncryptPassword("m3finances_default_encryption_key_!8#")
             .backupLocation(RoomBackup.BACKUP_FILE_LOCATION_CUSTOM_DIALOG)
             .apply {
                 onCompleteListener { success, message, exitCode ->

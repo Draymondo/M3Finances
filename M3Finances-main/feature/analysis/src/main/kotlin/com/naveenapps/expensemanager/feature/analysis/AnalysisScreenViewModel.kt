@@ -20,6 +20,7 @@ import com.patrykandpatrick.vico.core.entry.ChartEntryModelProducer
 import com.patrykandpatrick.vico.core.entry.entryOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -31,8 +32,9 @@ class AnalysisScreenViewModel(
     getAverageDataUseCase: GetAverageDataUseCase,
     getAmountStateUseCase: GetAmountStateUseCase,
     getDateRangeUseCase: GetDateRangeUseCase,
-    settingsRepository: SettingsRepository,
+    private val settingsRepository: SettingsRepository,
     getNetWorthChartDataUseCase: GetNetWorthChartDataUseCase,
+    private val geminiRepository: com.naveenapps.expensemanager.core.repository.GeminiRepository
 ) : ViewModel() {
 
     private val _currentTheme = MutableStateFlow(
@@ -133,6 +135,53 @@ class AnalysisScreenViewModel(
             }
         }.launchIn(viewModelScope)
     }
+
+    private val _aiReportState = MutableStateFlow<AiReportState>(AiReportState.Idle)
+    val aiReportState = _aiReportState.asStateFlow()
+
+    fun generateAiReport() {
+        viewModelScope.launch {
+            _aiReportState.value = AiReportState.Loading
+            val apiKey = settingsRepository.getGeminiApiKey().firstOrNull() ?: ""
+            if (apiKey.isEmpty()) {
+                _aiReportState.value = AiReportState.Error("API Key de Gemini manquante.")
+                return@launch
+            }
+
+            val txs = _graphItems.value?.transactions ?: emptyList()
+            if (txs.isEmpty()) {
+                _aiReportState.value = AiReportState.Error("Aucune transaction ce mois-ci.")
+                return@launch
+            }
+
+            val text = buildString {
+                appendLine("Entrées totales: ${_expenseFlowState.value.income}")
+                appendLine("Dépenses totales: ${_expenseFlowState.value.expense}")
+                appendLine("Transactions récentes:")
+                txs.take(20).forEach {
+                    appendLine("- ${it.categoryName}: ${it.amount.amountString}")
+                }
+            }
+
+            val res = geminiRepository.generateMonthlyReport(text, apiKey)
+            if (res is com.naveenapps.expensemanager.core.model.Resource.Success) {
+                _aiReportState.value = AiReportState.Success(res.data)
+            } else if (res is com.naveenapps.expensemanager.core.model.Resource.Error) {
+                _aiReportState.value = AiReportState.Error(res.exception.message ?: "Erreur")
+            }
+        }
+    }
+
+    fun dismissAiReport() {
+        _aiReportState.value = AiReportState.Idle
+    }
+}
+
+sealed class AiReportState {
+    object Idle : AiReportState()
+    object Loading : AiReportState()
+    data class Success(val text: String) : AiReportState()
+    data class Error(val error: String) : AiReportState()
 }
 
 data class AnalysisUiData(

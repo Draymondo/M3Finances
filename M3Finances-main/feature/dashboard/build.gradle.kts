@@ -15,4 +15,5 @@ dependencies {
     implementation(project(":feature:category"))
     implementation(project(":feature:filter"))
     implementation(project(":feature:transaction"))
+    implementation(libs.konfetti.compose)
 }

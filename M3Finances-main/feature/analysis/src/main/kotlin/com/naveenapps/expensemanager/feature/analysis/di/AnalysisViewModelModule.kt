@@ -13,7 +13,8 @@ val AnalysisViewModelModule = module {
             getAmountStateUseCase = get(),
             getDateRangeUseCase = get(),
             settingsRepository = get(),
-            getNetWorthChartDataUseCase = get()
+            getNetWorthChartDataUseCase = get(),
+            geminiRepository = get()
         )
     }
 }

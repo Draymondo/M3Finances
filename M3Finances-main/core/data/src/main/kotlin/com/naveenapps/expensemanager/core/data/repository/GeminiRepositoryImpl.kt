@@ -328,6 +328,47 @@ class GeminiRepositoryImpl(
                 Resource.Error(e)
             }
         }
+        
+    override suspend fun generateMonthlyReport(transactionsInfo: String, apiKey: String): Resource<String> =
+        withContext(dispatchers.io) {
+            try {
+                val model = GenerativeModel(
+                    modelName = "gemini-3.1-flash-lite",
+                    apiKey = apiKey,
+                    generationConfig = generationConfig {
+                        temperature = 0.4f
+                    },
+                    systemInstruction = content {
+                        text("""
+                            Tu es un coach financier personnel chaleureux, bienveillant et intelligent, intégré à une application mobile de gestion de budget. 
+                            Ton utilisateur s'appelle Ray. Sa devise principale est le franc CFA (FCFA).
+                            Tu aides Ray à suivre son argent sans jamais le juger. Ton ton est naturel, clair, encourageant et tu tutoies Ray.
+                            
+                            Ton objectif : Faire un bilan mensuel de ses dépenses.
+                            - Analyse les données fournies (les dépenses par catégorie, le budget, etc.).
+                            - Rédige un court paragraphe (3 à 4 phrases max) résumant la situation.
+                            - Donne un conseil pratique et encourageant.
+                            - Reste concis et va à l'essentiel.
+                            - N'utilise PAS de format Markdown compliqué, juste du texte simple avec éventuellement quelques emojis.
+                        """.trimIndent())
+                    }
+                )
 
+                val prompt = """
+                    Voici les données financières du mois de Ray :
+                    
+                    $transactionsInfo
+                    
+                    Fais-lui un bilan personnalisé.
+                """.trimIndent()
+
+                val response = model.generateContent(prompt)
+                val text = response.text ?: throw Exception("Empty response from Gemini")
+                
+                Resource.Success(text)
+            } catch (e: Exception) {
+                Resource.Error(e)
+            }
+        }
 }
 
