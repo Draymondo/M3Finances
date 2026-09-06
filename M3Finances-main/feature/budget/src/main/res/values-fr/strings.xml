@@ -44,4 +44,5 @@
     <string name="goal_type">Type d\'objectif</string>
     <string name="expense">Dépense</string>
     <string name="income">Revenu</string>
+    <string name="budget_name_optional">Nom (optionnel)</string>
 </resources>

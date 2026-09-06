@@ -49,4 +49,8 @@
     <string name="shortcut_debt_list_long">Voir mes dettes</string>
     <string name="shortcut_shopping_list_short">Courses</string>
     <string name="shortcut_shopping_list_long">Voir mes listes de courses</string>
+
+    <string name="notification_listener_warning_title">Accès aux notifications coupé</string>
+    <string name="notification_listener_warning_desc">L\'économiseur de batterie a peut-être coupé le service. Réactivez-le pour continuer à capturer vos transactions automatiquement.</string>
+    <string name="notification_listener_warning_action">Réparer</string>
 </resources>

@@ -7,6 +7,7 @@ import com.naveenapps.expensemanager.core.model.BudgetPeriod
 fun Budget.toEntityModel(): BudgetEntity {
     return BudgetEntity(
         id = id,
+        name = name,
         amount = amount,
         selectedMonth = selectedMonth,
         periodType = periodType.ordinal,
@@ -21,6 +22,7 @@ fun Budget.toEntityModel(): BudgetEntity {
 fun BudgetEntity.toDomainModel(categories: List<String>, accounts: List<String>): Budget {
     return Budget(
         id = id,
+        name = name,
         amount = amount,
         selectedMonth = selectedMonth,
         // Guard against an out-of-range ordinal (e.g. a downgraded app reading a value written by

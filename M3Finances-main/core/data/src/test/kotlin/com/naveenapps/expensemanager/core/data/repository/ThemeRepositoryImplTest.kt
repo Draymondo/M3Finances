@@ -74,13 +74,13 @@ class ThemeRepositoryImplTest : BaseCoroutineTest() {
     }
 
     @Test
-    fun getAllThemeShouldReturnFourThemeForQAndAbove() = runTest {
+    fun getAllThemeShouldReturnThreeThemeForQAndAbove() = runTest {
         whenever(versionCheckerRepository.isAndroidQAndAbove()).thenReturn(true)
 
         val themes = repository.getThemes()
         Truth.assertThat(themes).isNotNull()
         Truth.assertThat(themes).isNotEmpty()
-        Truth.assertThat(themes).hasSize(4)
+        Truth.assertThat(themes).hasSize(3)
     }
 
     @Test

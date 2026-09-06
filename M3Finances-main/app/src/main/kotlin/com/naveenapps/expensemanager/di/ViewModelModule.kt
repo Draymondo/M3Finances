@@ -13,7 +13,6 @@ import com.naveenapps.expensemanager.feature.dashboard.di.DashboardViewModelModu
 import com.naveenapps.expensemanager.feature.export.di.ExportViewModelModule
 import com.naveenapps.expensemanager.feature.filter.di.FilterViewModelModule
 import com.naveenapps.expensemanager.feature.language.di.LanguageViewModelModule
-import com.naveenapps.expensemanager.feature.onboarding.di.OnboardingViewModelModule
 import com.naveenapps.expensemanager.feature.reminder.di.ReminderViewModelModule
 import com.naveenapps.expensemanager.feature.recurring.di.RecurringViewModelModule
 import com.naveenapps.expensemanager.feature.debt.di.DebtViewModelModule
@@ -31,7 +30,6 @@ val MainViewModelModule = module {
     viewModel {
         MainViewModel(
             getCurrentThemeUseCase = get(),
-            getOnboardingStatusUseCase = get(),
             settingsRepository = get(),
         )
     }
@@ -53,7 +51,6 @@ val ViewModelModule = module {
         CategoryViewModelModule,
         DashboardViewModelModule,
         TransactionViewModelModule,
-        OnboardingViewModelModule,
         SettingsViewModelModule,
         ThemeViewModelModule,
         LanguageViewModelModule,

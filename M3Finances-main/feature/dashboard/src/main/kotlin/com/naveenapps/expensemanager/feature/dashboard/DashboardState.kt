@@ -20,4 +20,9 @@ data class DashboardState(
     val showCreateBudgetForMonth: String? = null,
     val requiredIncome: Amount? = null,
     val pendingTransactionsCount: Int = 0,
+    val activeMonth: String? = null,
+    val activeIncomeBudget: BudgetUiModel? = null,
+    val isRequiredIncomeAligned: Boolean = false,
+    val isCurrentMonth: Boolean = true,
+    val showRequiredIncomeConfirmation: Boolean = false,
 )

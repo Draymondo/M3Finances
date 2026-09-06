@@ -49,4 +49,8 @@
     <string name="shortcut_debt_list_long">View my debts</string>
     <string name="shortcut_shopping_list_short">Shopping</string>
     <string name="shortcut_shopping_list_long">View my shopping lists</string>
+
+    <string name="notification_listener_warning_title">Notification access cut off</string>
+    <string name="notification_listener_warning_desc">Battery saver may have stopped the service. Re-enable it to avoid missing automatic transactions.</string>
+    <string name="notification_listener_warning_action">Fix now</string>
 </resources>

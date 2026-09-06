@@ -64,6 +64,7 @@ import com.naveenapps.expensemanager.core.designsystem.ui.components.MonthPicker
 import com.naveenapps.expensemanager.core.designsystem.ui.components.SafeModalBottomSheet
 import com.naveenapps.expensemanager.core.designsystem.ui.components.SettingRow
 import com.naveenapps.expensemanager.core.designsystem.ui.components.SettingsSection
+import com.naveenapps.expensemanager.core.designsystem.ui.components.StringTextField
 import com.naveenapps.expensemanager.core.designsystem.ui.components.YearPicker
 import com.naveenapps.expensemanager.core.domain.usecase.budget.BudgetEquivalentUiModel
 import com.naveenapps.expensemanager.core.model.Amount
@@ -246,6 +247,7 @@ private fun BudgetCreateScreenContentView(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState()),
+            nameField = state.name,
             amountField = state.amount,
             currencyIconField = state.currency.symbol,
             selectedDate = state.month,
@@ -269,6 +271,7 @@ private fun BudgetCreateScreenContentView(
 
 @Composable
 fun BudgetCreateScreen(
+    nameField: TextFieldValue<String>,
     amountField: TextFieldValue<String>,
     currencyIconField: String,
     selectedDate: TextFieldValue<Date>,
@@ -420,6 +423,24 @@ fun BudgetCreateScreen(
             }
         }
 
+        SettingsSection(title = stringResource(R.string.budget_name_optional)) {
+            AppCardView {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    StringTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = nameField.value,
+                        isError = nameField.valueError,
+                        onValueChange = nameField.onValueChange,
+                        label = R.string.budget_name_optional,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    )
+                }
+            }
+        }
+
         SettingsSection(title = stringResource(R.string.what_is_your_budget_limit)) {
             AppCardView {
                 Column(
@@ -495,6 +516,11 @@ fun BudgetCreateScreen(
 @AppPreviewsLightAndDarkMode
 @Composable
 private fun BudgetCreateStatePreview() {
+    val nameField = TextFieldValue(
+        value = "",
+        valueError = false,
+        onValueChange = { }
+    )
     val amountField = TextFieldValue(
         value = "0.0",
         valueError = false,
@@ -509,6 +535,7 @@ private fun BudgetCreateStatePreview() {
         BudgetCreateScreenContentView(
             state = BudgetCreateState(
                 isLoading = false,
+                name = nameField,
                 amount = amountField,
                 month = dateField,
                 isAllCategorySelected = true,

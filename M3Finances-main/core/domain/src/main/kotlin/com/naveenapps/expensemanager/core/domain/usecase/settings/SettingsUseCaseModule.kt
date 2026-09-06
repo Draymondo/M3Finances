@@ -9,9 +9,7 @@ import com.naveenapps.expensemanager.core.domain.usecase.settings.locale.ApplyLo
 import com.naveenapps.expensemanager.core.domain.usecase.settings.locale.GetCurrentLocaleUseCase
 import com.naveenapps.expensemanager.core.domain.usecase.settings.locale.GetLocalesUseCase
 import com.naveenapps.expensemanager.core.domain.usecase.settings.locale.SaveLocaleUseCase
-import com.naveenapps.expensemanager.core.domain.usecase.settings.onboarding.GetOnboardingStatusUseCase
 import com.naveenapps.expensemanager.core.domain.usecase.settings.onboarding.GetPreloadStatusUseCase
-import com.naveenapps.expensemanager.core.domain.usecase.settings.onboarding.SetOnboardingStatusUseCase
 import com.naveenapps.expensemanager.core.domain.usecase.settings.onboarding.SetPreloadStatusUseCase
 import com.naveenapps.expensemanager.core.domain.usecase.settings.reminder.GetReminderStatusUseCase
 import com.naveenapps.expensemanager.core.domain.usecase.settings.reminder.GetReminderTimeUseCase
@@ -38,10 +36,8 @@ val SettingsUseCaseModule = module {
         )
     }
 
-    //Onboarding
-    single { GetOnboardingStatusUseCase(get()) }
+    //Preload
     single { GetPreloadStatusUseCase(get()) }
-    single { SetOnboardingStatusUseCase(get()) }
     single { SetPreloadStatusUseCase(get()) }
 
     //Reminder

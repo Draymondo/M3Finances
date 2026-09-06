@@ -22,11 +22,7 @@ fun MainScreen(
             composeNavigator.handleNavigationCommands(navHostController)
         }
 
-        val actualStartDestination = if (landingScreen is ExpenseManagerScreens.IntroScreen) {
-            ExpenseManagerScreens.IntroScreen
-        } else {
-            ExpenseManagerScreens.Home
-        }
+        val actualStartDestination = ExpenseManagerScreens.Home
 
         LaunchedEffect(landingScreen) {
             if (landingScreen != actualStartDestination) {

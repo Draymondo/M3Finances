@@ -27,10 +27,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Run instrumented tests (needed for Room migration tests, which live in androidTest)
 ./gradlew :core:database:connectedDebugAndroidTest
 
-# Unit test coverage (Jacoco) — per module, this is the task CI runs (`unit-test` job)
-./gradlew debugCoverage
-# Aggregated report across all modules, defined in the root build.gradle.kts
-./gradlew allDebugCoverage
+# Run unit tests — this is the task CI runs (`unit-test` job)
+./gradlew testDebugUnitTest
 
 # Lint / format (Spotless + ktlint, applied to every .kt/.kts/.xml file)
 ./gradlew spotlessCheck
@@ -53,7 +51,7 @@ This is a multi-module Clean Architecture Android app (single-Activity, 100% Kot
 - **`core:navigation`** — the navigation abstraction described below (`AppComposeNavigator`, `ExpenseManagerScreens`).
 - **`core:designsystem`** — shared Compose components/theme (`SettingRow`, `AppCardView`, `DeleteDialogItem`, `SettingsSection`, etc.) used by every feature module instead of hand-rolled UI.
 - **`core:common`**, **`core:testing`**, **`core:notification`**, **`core:settings`** — shared utilities/extensions, test fixtures (`FakeConstants.kt`), notification scheduling, and a small settings-domain module (number formatting) respectively.
-- **`feature:*`** (account, analysis, budget, category, country, currency, dashboard, export, filter, language, onboarding, reminder, settings, theme, transaction, about) — one module per user-facing feature. Each follows the same internal shape: `<Screen>.kt` (Compose), `<Screen>ViewModel.kt`, `<Screen>State.kt`, `<Screen>Action.kt`, optionally `<Screen>Event.kt`, and `di/<Feature>ViewModelModule.kt`.
+- **`feature:*`** (account, analysis, budget, category, country, currency, dashboard, export, filter, language, reminder, settings, theme, transaction, about) — one module per user-facing feature. Each follows the same internal shape: `<Screen>.kt` (Compose), `<Screen>ViewModel.kt`, `<Screen>State.kt`, `<Screen>Action.kt`, optionally `<Screen>Event.kt`, and `di/<Feature>ViewModelModule.kt`.
 
 Module wiring for a new feature module always applies the same convention plugins (defined in `build-logic/convention`): `naveenapps.plugin.android.feature`, `naveenapps.plugin.kotlin.basic`, `naveenapps.plugin.compose`, `naveenapps.plugin.di`. Other convention plugin ids: `naveenapps.plugin.android.library`, `naveenapps.plugin.android.app`, `naveenapps.plugin.room`. `MIN_SDK`/`TARGET_SDK`/`COMPILE_SDK` are defined once in `AndroidConfigExt.kt` and applied everywhere via these plugins — don't hardcode SDK versions in a module's own `build.gradle.kts`.
 

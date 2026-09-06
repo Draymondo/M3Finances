@@ -47,14 +47,6 @@ class SettingsDataStore(private val dataStore: DataStore<Preferences>) {
         preferences[KEY_IS_PRELOAD] ?: false
     }
 
-    suspend fun setOnboardingCompleted(onboardingCompleted: Boolean) =
-        dataStore.edit { preferences ->
-            preferences[KEY_IS_ON_BOARDING_COMPLETED] = onboardingCompleted
-        }
-
-    fun isOnboardingCompleted(): Flow<Boolean> = dataStore.data.map { preferences ->
-        preferences[KEY_IS_ON_BOARDING_COMPLETED] ?: false
-    }
 
     suspend fun setDefaultAccount(defaultAccount: String?) = dataStore.edit { preferences ->
         preferences[KEY_DEFAULT_ACCOUNT] = defaultAccount ?: ""
@@ -106,7 +98,6 @@ class SettingsDataStore(private val dataStore: DataStore<Preferences>) {
 
     companion object {
         private val KEY_IS_PRELOAD = booleanPreferencesKey("is_preloaded")
-        private val KEY_IS_ON_BOARDING_COMPLETED = booleanPreferencesKey("is_on_boarding_completed")
 
         private val KEY_SELECTED_ACCOUNTS = stringSetPreferencesKey("selected_accounts")
         private val KEY_SELECTED_CATEGORIES = stringSetPreferencesKey("selected_categories")

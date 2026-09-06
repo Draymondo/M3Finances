@@ -10,6 +10,8 @@ data class BudgetEntity(
     @PrimaryKey(autoGenerate = false)
     @ColumnInfo(name = "id")
     val id: String,
+    @ColumnInfo(name = "name")
+    val name: String? = null,
     @ColumnInfo(name = "selected_month")
     val selectedMonth: String,
     @ColumnInfo(name = "amount")

@@ -44,4 +44,5 @@
     <string name="goal_type">Goal Type</string>
     <string name="expense">Expense</string>
     <string name="income">Income</string>
+    <string name="budget_name_optional">Name (optional)</string>
 </resources>

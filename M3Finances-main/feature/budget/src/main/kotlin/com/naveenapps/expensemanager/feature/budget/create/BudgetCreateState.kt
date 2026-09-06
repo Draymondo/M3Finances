@@ -12,6 +12,7 @@ import java.util.Date
 @Stable
 data class BudgetCreateState(
     val isLoading: Boolean,
+    val name: TextFieldValue<String>,
     val amount: TextFieldValue<String>,
     val month: TextFieldValue<Date>,
     val periodType: BudgetPeriod = BudgetPeriod.MONTHLY,

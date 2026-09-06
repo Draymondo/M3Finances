@@ -19,6 +19,9 @@ val DashboardViewModelModule = module {
             settingsRepository = get(),
             getPendingTransactionsUseCase = get(),
             getRequiredIncomeUseCase = get(),
+            findBudgetByIdUseCase = get(),
+            updateBudgetUseCase = get(),
+            addBudgetUseCase = get(),
         )
     }
 }

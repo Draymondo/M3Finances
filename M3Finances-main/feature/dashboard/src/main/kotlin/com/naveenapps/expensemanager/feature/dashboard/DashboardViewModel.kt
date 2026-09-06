@@ -29,6 +29,12 @@ import com.naveenapps.expensemanager.core.model.toTransactionUIModel
 import com.naveenapps.expensemanager.core.navigation.AppComposeNavigator
 import com.naveenapps.expensemanager.core.navigation.ExpenseManagerScreens
 import com.naveenapps.expensemanager.core.repository.SettingsRepository
+import com.naveenapps.expensemanager.core.domain.usecase.budget.AddBudgetUseCase
+import com.naveenapps.expensemanager.core.domain.usecase.budget.FindBudgetByIdUseCase
+import com.naveenapps.expensemanager.core.domain.usecase.budget.UpdateBudgetUseCase
+import com.naveenapps.expensemanager.core.model.Budget
+import com.naveenapps.expensemanager.core.model.BudgetGoalType
+import com.naveenapps.expensemanager.core.model.Resource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
@@ -36,8 +42,10 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.util.Date
 import java.util.Locale
+import java.util.UUID
 import kotlin.math.abs
 
 
@@ -53,6 +61,9 @@ class DashboardViewModel(
     getDateRangeUseCase: GetDateRangeUseCase,
     settingsRepository: SettingsRepository,
     getPendingTransactionsUseCase: com.naveenapps.expensemanager.core.domain.usecase.transaction.GetPendingTransactionsUseCase,
+    private val findBudgetByIdUseCase: FindBudgetByIdUseCase,
+    private val updateBudgetUseCase: UpdateBudgetUseCase,
+    private val addBudgetUseCase: AddBudgetUseCase,
     private val appComposeNavigator: AppComposeNavigator
 ) : ViewModel() {
 
@@ -208,7 +219,8 @@ class DashboardViewModel(
         combine(
             getBudgetsUseCase.invoke(),
             getDateRangeUseCase.invoke(),
-        ) { allBudgets, dateRange ->
+            getRequiredIncomeUseCase.invoke(),
+        ) { allBudgets, dateRange, requiredAmount ->
             val activeDate = when (dateRange.type) {
                 DateRangeType.TODAY, DateRangeType.THIS_WEEK, DateRangeType.THIS_MONTH ->
                     Date(dateRange.dateRanges[0])
@@ -217,6 +229,8 @@ class DashboardViewModel(
             val activeMonth = activeDate?.toMonthAndYearKey()
             val activeWeek = activeDate?.toWeekKey()
             val activeDay = activeDate?.toDayKey()
+            val currentMonth = Date().toMonthAndYearKey()
+            val isCurrentMonth = activeMonth != null && activeMonth == currentMonth
             val filtered = if (activeMonth != null) {
                 // "Active Budgets" means: the monthly budget covering the month being viewed,
                 // together with the yearly budget covering the current year, the weekly budget
@@ -243,14 +257,30 @@ class DashboardViewModel(
             } else {
                 null
             }
-            _state.update { it.copy(budgets = filtered, showCreateBudgetForMonth = showCreateBudgetForMonth) }
+
+            val activeIncomeBudget = filtered.firstOrNull {
+                it.periodType == BudgetPeriod.MONTHLY && it.goalType == BudgetGoalType.INCOME
+            }
+
+            val isAligned = isRequiredIncomeAligned(
+                requiredAmount = requiredAmount.amount,
+                budgetAmount = activeIncomeBudget?.amount?.amount,
+                tolerance = 0.01,
+            )
+
+            _state.update {
+                it.copy(
+                    budgets = filtered,
+                    showCreateBudgetForMonth = showCreateBudgetForMonth,
+                    requiredIncome = requiredAmount,
+                    activeMonth = activeMonth ?: currentMonth,
+                    activeIncomeBudget = activeIncomeBudget,
+                    isRequiredIncomeAligned = isAligned,
+                    isCurrentMonth = isCurrentMonth,
+                )
+            }
         }.flowOn(appCoroutineDispatchers.computation)
             .launchIn(viewModelScope)
-
-        
-        getRequiredIncomeUseCase.invoke().onEach { requiredAmount ->
-            _state.update { it.copy(requiredIncome = requiredAmount) }
-        }.launchIn(viewModelScope)
 
         settingsRepository.getHomeSummaryCompact().onEach { compact ->
             _state.update { it.copy(isCompactSummary = compact) }
@@ -301,6 +331,54 @@ class DashboardViewModel(
             DashboardAction.OpenTransactionList -> openTransactionList()
             DashboardAction.OpenPendingTransactions -> openPendingTransactions()
             DashboardAction.OpenChat -> openChat()
+            DashboardAction.OnRequiredIncomeClick -> {
+                if (_state.value.isCurrentMonth && !_state.value.isRequiredIncomeAligned) {
+                    _state.update { it.copy(showRequiredIncomeConfirmation = true) }
+                }
+            }
+            DashboardAction.DismissRequiredIncomeDialog -> {
+                _state.update { it.copy(showRequiredIncomeConfirmation = false) }
+            }
+            DashboardAction.ConfirmRequiredIncomeSync -> {
+                confirmRequiredIncomeSync()
+            }
+        }
+    }
+
+    private fun confirmRequiredIncomeSync() {
+        val requiredAmount = _state.value.requiredIncome?.amount ?: return
+        val existingUiBudget = _state.value.activeIncomeBudget
+        val activeMonth = _state.value.activeMonth ?: Date().toMonthAndYearKey()
+
+        _state.update { it.copy(showRequiredIncomeConfirmation = false) }
+
+        viewModelScope.launch {
+            if (existingUiBudget != null) {
+                val budgetResult = findBudgetByIdUseCase(existingUiBudget.id)
+                if (budgetResult is Resource.Success) {
+                    val existingBudget = budgetResult.data
+                    val updatedBudget = existingBudget.copy(
+                        amount = requiredAmount,
+                        updatedOn = Date(),
+                    )
+                    updateBudgetUseCase(updatedBudget)
+                }
+            } else {
+                val newBudget = Budget(
+                    id = UUID.randomUUID().toString(),
+                    amount = requiredAmount,
+                    selectedMonth = activeMonth,
+                    periodType = BudgetPeriod.MONTHLY,
+                    goalType = BudgetGoalType.INCOME,
+                    categories = emptyList(),
+                    accounts = emptyList(),
+                    isAllAccountsSelected = true,
+                    isAllCategoriesSelected = true,
+                    createdOn = Date(),
+                    updatedOn = Date(),
+                )
+                addBudgetUseCase(newBudget)
+            }
         }
     }
 

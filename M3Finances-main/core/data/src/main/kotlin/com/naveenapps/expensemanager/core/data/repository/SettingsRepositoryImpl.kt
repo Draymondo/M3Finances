@@ -52,15 +52,6 @@ class SettingsRepositoryImpl(
             return@withContext Resource.Success(true)
         }
 
-    override fun isOnboardingCompleted(): Flow<Boolean> {
-        return dataStore.isOnboardingCompleted()
-    }
-
-    override suspend fun setOnboardingCompleted(isOnboardingCompleted: Boolean): Resource<Boolean> =
-        withContext(dispatchers.io) {
-            dataStore.setOnboardingCompleted(isOnboardingCompleted)
-            return@withContext Resource.Success(true)
-        }
 
     override fun getDefaultAccount(): Flow<String?> {
         return dataStore.getDefaultAccount()

@@ -62,10 +62,9 @@ class GetBudgetDetailUseCase(
                     goalType = budget.goalType,
                 )
                 budget.toBudgetUiModel(
-                    name = budgetName(budget.selectedMonth, budget.periodType),
                     budgetAmount = getFormattedAmountUseCase(effectiveLimit, currency),
                     transactionAmount = getFormattedAmountUseCase(transactionAmount, currency),
-                    percent,
+                    percent = percent,
                     budgetTransactions?.map {
                         it.toTransactionUIModel(
                             getFormattedAmountUseCase(it.amount.amount, currency),

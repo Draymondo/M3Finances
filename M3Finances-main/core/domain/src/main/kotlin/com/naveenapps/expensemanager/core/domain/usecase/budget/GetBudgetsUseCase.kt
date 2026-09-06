@@ -64,11 +64,10 @@ class GetBudgetsUseCase(
                     0f
                 }
                 budget.toBudgetUiModel(
-                    name = budgetName(budget.selectedMonth, budget.periodType),
                     budgetAmount = getFormattedAmountUseCase(effectiveLimit, currency),
                     transactionAmount = getFormattedAmountUseCase(transactionAmount, currency),
-                    percent,
-                    transactions?.map {
+                    percent = percent,
+                    transactions = transactions?.map {
                         it.toTransactionUIModel(getFormattedAmountUseCase(it.amount.amount, currency))
                     },
                 )
@@ -151,12 +150,12 @@ fun budgetProgressColor(percent: Float, goalType: com.naveenapps.expensemanager.
 }
 
 fun Budget.toBudgetUiModel(
-    name: String,
     budgetAmount: Amount,
     transactionAmount: Amount,
     percent: Float,
     transactions: List<TransactionUiItem>? = null,
     equivalents: List<BudgetEquivalentUiModel>? = null,
+    name: String = this.name?.takeIf { it.isNotBlank() } ?: budgetName(this.selectedMonth, this.periodType),
 ) = BudgetUiModel(
     id = this.id,
     name = name,

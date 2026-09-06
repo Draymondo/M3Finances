@@ -42,4 +42,45 @@ class GetBudgetDetailUseCaseTest : BaseCoroutineTest() {
     @Test
     fun whenAllDataAvailableItShouldSendSuccessResult() {
     }
+
+    @Test
+    fun whenBudgetNameIsProvidedItShouldBeUsed() {
+        val budget = com.naveenapps.expensemanager.core.testing.FAKE_BUDGET.copy(name = "Courses du mois")
+        val uiModel = budget.toBudgetUiModel(
+            budgetAmount = com.naveenapps.expensemanager.core.model.Amount(500.0),
+            transactionAmount = com.naveenapps.expensemanager.core.model.Amount(100.0),
+            percent = 20f,
+        )
+        com.google.common.truth.Truth.assertThat(uiModel.name).isEqualTo("Courses du mois")
+    }
+
+    @Test
+    fun whenBudgetNameIsNullItShouldFallbackToBudgetName() {
+        val budget = com.naveenapps.expensemanager.core.testing.FAKE_BUDGET.copy(
+            name = null,
+            periodType = com.naveenapps.expensemanager.core.model.BudgetPeriod.MONTHLY,
+        )
+        val uiModel = budget.toBudgetUiModel(
+            budgetAmount = com.naveenapps.expensemanager.core.model.Amount(500.0),
+            transactionAmount = com.naveenapps.expensemanager.core.model.Amount(100.0),
+            percent = 20f,
+        )
+        com.google.common.truth.Truth.assertThat(uiModel.name)
+            .isEqualTo(budgetName(budget.selectedMonth, budget.periodType))
+    }
+
+    @Test
+    fun whenBudgetNameIsBlankItShouldFallbackToBudgetName() {
+        val budget = com.naveenapps.expensemanager.core.testing.FAKE_BUDGET.copy(
+            name = "   ",
+            periodType = com.naveenapps.expensemanager.core.model.BudgetPeriod.MONTHLY,
+        )
+        val uiModel = budget.toBudgetUiModel(
+            budgetAmount = com.naveenapps.expensemanager.core.model.Amount(500.0),
+            transactionAmount = com.naveenapps.expensemanager.core.model.Amount(100.0),
+            percent = 20f,
+        )
+        com.google.common.truth.Truth.assertThat(uiModel.name)
+            .isEqualTo(budgetName(budget.selectedMonth, budget.periodType))
+    }
 }

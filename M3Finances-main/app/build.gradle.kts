@@ -186,7 +186,6 @@ dependencies {
     implementation(project(":feature:category"))
     implementation(project(":feature:dashboard"))
     implementation(project(":feature:transaction"))
-    implementation(project(":feature:onboarding"))
     implementation(project(":feature:filter"))
     implementation(project(":feature:country"))
     implementation(project(":feature:currency"))

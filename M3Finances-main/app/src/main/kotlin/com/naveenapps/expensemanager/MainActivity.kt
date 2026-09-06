@@ -84,43 +84,26 @@ internal class MainActivity : AppCompatActivity(), AndroidScopeComponent {
 
         activityComponentProvider.getBackupRepository()
 
-        lifecycleScope.launch {
-            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.onboardingStatus.collectLatest {
-                    splashScreen.setKeepOnScreenCondition {
-                        it == null
-                    }
-                }
-            }
-        }
-
         setContent {
             val currentTheme by viewModel.currentTheme.collectAsState()
-            val onBoardingStatus by viewModel.onboardingStatus.collectAsState()
             val isAppLockEnabled by viewModel.isAppLockEnabled.collectAsState()
             val isAuthenticated by viewModel.isAuthenticated.collectAsState()
             val isDarkTheme = shouldUseDarkTheme(theme = currentTheme.mode)
 
-            if (onBoardingStatus != null) {
-                val showLock = onBoardingStatus == true && isAppLockEnabled && !isAuthenticated
+            val showLock = isAppLockEnabled && !isAuthenticated
 
-                if (showLock) {
-                    DynamicAppTheme(isDarkTheme = isDarkTheme) {
-                        LaunchedEffect(Unit) { showBiometricPrompt() }
-                        AppLockScreen(onUnlockClick = ::showBiometricPrompt)
-                    }
-                } else {
-                    MainScreen(
-                        composeNavigator = appComposeNavigator,
-                        componentProvider = activityComponentProvider,
-                        isDarkTheme = isDarkTheme,
-                        landingScreen = if (onBoardingStatus == true) {
-                            landingScreenFromShortcut() ?: ExpenseManagerScreens.Home
-                        } else {
-                            ExpenseManagerScreens.IntroScreen
-                        }
-                    )
+            if (showLock) {
+                DynamicAppTheme(isDarkTheme = isDarkTheme) {
+                    LaunchedEffect(Unit) { showBiometricPrompt() }
+                    AppLockScreen(onUnlockClick = ::showBiometricPrompt)
                 }
+            } else {
+                MainScreen(
+                    composeNavigator = appComposeNavigator,
+                    componentProvider = activityComponentProvider,
+                    isDarkTheme = isDarkTheme,
+                    landingScreen = landingScreenFromShortcut() ?: ExpenseManagerScreens.Home,
+                )
             }
         }
     }

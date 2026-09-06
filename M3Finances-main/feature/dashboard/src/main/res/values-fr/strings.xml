@@ -17,4 +17,10 @@
     <string name="ok">OK</string>
     <string name="no_budget_for_month">Aucun %1$s</string>
     <string name="tap_to_set_spending_limit">Appuyez pour définir une limite de dépenses</string>
+    <string name="income_goal_dialog_title">Objectif de revenu</string>
+    <string name="update_income_goal_message">Mettre à jour ton objectif de revenu de %1$s à %2$s ?</string>
+    <string name="create_income_goal_message">Créer un objectif de revenu de %1$s pour ce mois ?</string>
+    <string name="update">Mettre à jour</string>
+    <string name="create">Créer</string>
+    <string name="cancel">Annuler</string>
 </resources>

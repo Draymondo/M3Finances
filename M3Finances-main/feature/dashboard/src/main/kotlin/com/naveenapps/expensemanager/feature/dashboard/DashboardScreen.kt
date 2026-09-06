@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -32,6 +33,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.runtime.Composable
@@ -192,6 +194,50 @@ private fun DashboardScaffoldContent(
             onAction = onAction,
             onTriggerConfetti = onTriggerConfetti
         )
+
+        if (state.showRequiredIncomeConfirmation) {
+            val isUpdate = state.activeIncomeBudget != null
+            val oldAmount = state.activeIncomeBudget?.amount?.amountString ?: ""
+            val newAmount = state.requiredIncome?.amountString ?: ""
+
+            AlertDialog(
+                onDismissRequest = {
+                    onAction(DashboardAction.DismissRequiredIncomeDialog)
+                },
+                title = {
+                    Text(text = stringResource(id = R.string.income_goal_dialog_title))
+                },
+                text = {
+                    Text(
+                        text = if (isUpdate) {
+                            stringResource(id = R.string.update_income_goal_message, oldAmount, newAmount)
+                        } else {
+                            stringResource(id = R.string.create_income_goal_message, newAmount)
+                        }
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        onAction(DashboardAction.ConfirmRequiredIncomeSync)
+                    }) {
+                        Text(
+                            text = if (isUpdate) {
+                                stringResource(id = R.string.update)
+                            } else {
+                                stringResource(id = R.string.create)
+                            }
+                        )
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = {
+                        onAction(DashboardAction.DismissRequiredIncomeDialog)
+                    }) {
+                        Text(text = stringResource(id = R.string.cancel))
+                    }
+                }
+            )
+        }
     }
 }
 
@@ -231,12 +277,20 @@ private fun DashboardScreenContent(
                     .padding(start = 16.dp, end = 16.dp, top = 16.dp),
             )
         }
-        if (state.requiredIncome != null) {
+        val showRequiredIncomeBanner = state.isCurrentMonth
+            && state.requiredIncome != null
+            && state.requiredIncome.amount > 0.0
+            && !state.isRequiredIncomeAligned
+
+        if (showRequiredIncomeBanner) {
             item("required_income") {
                 AppCardView(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 16.dp)
+                        .clickable {
+                            onAction(DashboardAction.OnRequiredIncomeClick)
+                        }
                 ) {
                     Row(
                         modifier = Modifier
