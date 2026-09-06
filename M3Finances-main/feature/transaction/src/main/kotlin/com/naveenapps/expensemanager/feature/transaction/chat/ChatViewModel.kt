@@ -179,7 +179,7 @@ class ChatViewModel(
                     4) ACCOUNT|nom|REGULAR ou ACCOUNT|nom|CREDIT ou ACCOUNT|nom|MOBILE_MONEY
                     5) SHOPPING_LIST|nom de la liste|article1|article2|article3...
                     6) SAVINGS_GOAL|nom|montant_cible
-                    7) BUDGET|montant
+                    7) BUDGET|montant|EXPENSE ou BUDGET|montant|INCOME
                     8) DEBT|nom_de_la_personne|montant|LENT ou BORROWED
                     9) RECURRING|nom|montant|EXPENSE ou RECURRING|nom|montant|INCOME
 
@@ -403,11 +403,18 @@ class ChatViewModel(
                 } else if (finalText.contains("BUDGET|")) {
                     val parts = finalText.substringAfter("BUDGET|").substringBefore("\n").replace("`", "").trim().split("|")
                     if (parts.isNotEmpty()) {
+                        val goalTypeStr = parts.getOrNull(1)?.trim()
+                        val goalType = if (goalTypeStr.equals("INCOME", ignoreCase = true)) {
+                            com.naveenapps.expensemanager.core.model.BudgetGoalType.INCOME
+                        } else {
+                            com.naveenapps.expensemanager.core.model.BudgetGoalType.EXPENSE
+                        }
                         updateMessage(streamId) {
                             it.copy(
                                 text = "Nouveau budget global proposé :",
                                 proposedBudget = ProposedBudget(
-                                    amount = parts[0].trim().toDoubleOrNull() ?: 0.0
+                                    amount = parts[0].trim().toDoubleOrNull() ?: 0.0,
+                                    goalType = goalType,
                                 )
                             )
                         }
@@ -461,7 +468,8 @@ class ChatViewModel(
         viewModelScope.launch {
             try {
                 val categories = getAllCategoryUseCase.invoke().firstOrNull() ?: emptyList()
-                val category = categories.matchCategory(proposed.categoryName) 
+                val category = categories.matchCategory(proposed.categoryName)
+                    ?: proposed.splitItems?.firstOrNull()?.let { categories.matchCategory(it.categoryName) }
                     ?: if (proposed.splitItems?.isNotEmpty() == true) categories.firstOrNull { it.type == CategoryType.EXPENSE } else null
 
                 val accounts = accountRepository.getAccounts().firstOrNull() ?: emptyList()
@@ -654,6 +662,7 @@ class ChatViewModel(
                     amount = proposed.amount,
                     selectedMonth = Date().toMonthAndYearKey(),
                     periodType = BudgetPeriod.MONTHLY,
+                    goalType = proposed.goalType,
                     categories = emptyList(),
                     accounts = emptyList(),
                     isAllAccountsSelected = true,
@@ -662,7 +671,12 @@ class ChatViewModel(
                     updatedOn = Date()
                 )
                 addBudgetUseCase.invoke(budget)
-                addMessage(ChatMessage(isUser = false, text = "Budget mensuel global de ${proposed.amount} créé avec succès !"))
+                val typeLabel = if (proposed.goalType == com.naveenapps.expensemanager.core.model.BudgetGoalType.INCOME) {
+                    "Revenu"
+                } else {
+                    "Dépense"
+                }
+                addMessage(ChatMessage(isUser = false, text = "Budget $typeLabel mensuel de ${proposed.amount} créé avec succès !"))
             } catch (e: Exception) {
                 addMessage(ChatMessage(isUser = false, text = "Erreur lors de la création du budget.", isError = true))
             }

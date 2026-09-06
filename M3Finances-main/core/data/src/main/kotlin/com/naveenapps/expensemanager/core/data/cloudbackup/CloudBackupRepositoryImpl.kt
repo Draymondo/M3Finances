@@ -9,6 +9,7 @@ import com.naveenapps.expensemanager.core.database.dao.BudgetDao
 import com.naveenapps.expensemanager.core.database.dao.CategoryDao
 import com.naveenapps.expensemanager.core.database.dao.DebtDao
 import com.naveenapps.expensemanager.core.database.dao.DebtReminderDao
+import com.naveenapps.expensemanager.core.database.dao.PendingTransactionDao
 import com.naveenapps.expensemanager.core.database.dao.RecurringTransactionDao
 import com.naveenapps.expensemanager.core.database.dao.SavingsGoalDao
 import com.naveenapps.expensemanager.core.database.dao.ShoppingListDao
@@ -70,6 +71,7 @@ class CloudBackupRepositoryImpl(
     private val cloudBackupScheduler: CloudBackupScheduler,
     private val shoppingListDao: ShoppingListDao,
     private val shoppingListItemDao: ShoppingListItemDao,
+    private val pendingTransactionDao: PendingTransactionDao,
     private val cloudSyncDataStore: CloudSyncDataStore,
     private val cloudAppSettingsSync: CloudAppSettingsSync,
 ) : CloudBackupRepository {
@@ -257,6 +259,12 @@ class CloudBackupRepositoryImpl(
                 idOf = { it.id },
                 toMap = { it.toFirestoreMap() },
             )
+            syncCollection(
+                collectionRef = userRoot.collection(PENDING_TRANSACTIONS),
+                localRows = pendingTransactionDao.getAllPendingTransactionEntities(),
+                idOf = { it.id },
+                toMap = { it.toFirestoreMap() },
+            )
 
             userRoot.collection(SETTINGS).document(APP_SETTINGS)
                 .set(cloudAppSettingsSync.read())
@@ -379,6 +387,9 @@ class CloudBackupRepositoryImpl(
         val shoppingListItems = root.collection(SHOPPING_LIST_ITEMS).get().await().documents.map { doc ->
             shoppingListItemEntityFromFirestoreMap(doc.id, doc.data.orEmpty())
         }
+        val pendingTransactions = root.collection(PENDING_TRANSACTIONS).get().await().documents.map { doc ->
+            pendingTransactionEntityFromFirestoreMap(doc.id, doc.data.orEmpty())
+        }
         val appSettings = root.collection(SETTINGS).document(APP_SETTINGS).get().await()
 
         database.withTransaction {
@@ -393,6 +404,7 @@ class CloudBackupRepositoryImpl(
             recurringTransactionDao.deleteAll()
             shoppingListItemDao.deleteAll()
             shoppingListDao.deleteAll()
+            pendingTransactionDao.deleteAll()
             categoryDao.deleteAll()
             accountDao.deleteAll()
 
@@ -409,6 +421,7 @@ class CloudBackupRepositoryImpl(
             recurringTransactions.forEach { recurringTransactionDao.insert(it) }
             shoppingLists.forEach { shoppingListDao.insert(it) }
             shoppingListItems.forEach { shoppingListItemDao.insert(it) }
+            pendingTransactions.forEach { pendingTransactionDao.insert(it) }
         }
 
         if (appSettings.exists()) {
@@ -446,6 +459,10 @@ class CloudBackupRepositoryImpl(
             copyCollection(
                 userRoot.collection(SHOPPING_LIST_ITEMS),
                 snapshotRoot.collection(SHOPPING_LIST_ITEMS),
+            )
+            copyCollection(
+                userRoot.collection(PENDING_TRANSACTIONS),
+                snapshotRoot.collection(PENDING_TRANSACTIONS),
             )
             copyCollection(
                 userRoot.collection(SETTINGS),
@@ -518,7 +535,7 @@ class CloudBackupRepositoryImpl(
         val subcollections = listOf(
             ACCOUNTS, CATEGORIES, TRANSACTIONS, TRANSACTION_SPLIT_ITEMS, BUDGETS,
             DEBTS, DEBT_REMINDERS, SAVINGS_GOALS, RECURRING_TRANSACTIONS,
-            SHOPPING_LISTS, SHOPPING_LIST_ITEMS, SETTINGS, META,
+            SHOPPING_LISTS, SHOPPING_LIST_ITEMS, PENDING_TRANSACTIONS, SETTINGS, META,
         )
         subcollections.forEach { name ->
             snapshotRef.collection(name).get().await().documents.chunked(400).forEach { chunk ->
@@ -557,6 +574,7 @@ class CloudBackupRepositoryImpl(
         private const val RECURRING_TRANSACTIONS = "recurring_transactions"
         private const val SHOPPING_LISTS = "shopping_lists"
         private const val SHOPPING_LIST_ITEMS = "shopping_list_items"
+        private const val PENDING_TRANSACTIONS = "pending_transactions"
         private const val SETTINGS = "settings"
         private const val APP_SETTINGS = "app"
         private const val META = "meta"

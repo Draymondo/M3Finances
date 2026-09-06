@@ -242,6 +242,7 @@ val RepositoryModule = module {
             cloudBackupScheduler = get(),
             shoppingListDao = get(),
             shoppingListItemDao = get(),
+            pendingTransactionDao = get(),
             cloudSyncDataStore = get(),
             cloudAppSettingsSync = get(),
         )

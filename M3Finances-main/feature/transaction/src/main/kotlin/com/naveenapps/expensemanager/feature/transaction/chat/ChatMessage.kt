@@ -57,7 +57,9 @@ data class ProposedSavingsGoal(
 )
 
 data class ProposedBudget(
-    val amount: Double
+    val amount: Double,
+    val goalType: com.naveenapps.expensemanager.core.model.BudgetGoalType =
+        com.naveenapps.expensemanager.core.model.BudgetGoalType.EXPENSE,
 )
 
 data class ProposedDebt(

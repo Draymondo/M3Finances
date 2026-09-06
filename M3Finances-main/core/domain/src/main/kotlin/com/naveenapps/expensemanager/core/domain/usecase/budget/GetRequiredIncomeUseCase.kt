@@ -1,6 +1,10 @@
 package com.naveenapps.expensemanager.core.domain.usecase.budget
 
 import com.naveenapps.expensemanager.core.common.utils.AppCoroutineDispatchers
+import com.naveenapps.expensemanager.core.common.utils.toDayKey
+import com.naveenapps.expensemanager.core.common.utils.toMonthAndYearKey
+import com.naveenapps.expensemanager.core.common.utils.toWeekKey
+import com.naveenapps.expensemanager.core.common.utils.toYear
 import com.naveenapps.expensemanager.core.domain.usecase.settings.currency.GetCurrencyUseCase
 import com.naveenapps.expensemanager.core.domain.usecase.settings.currency.GetFormattedAmountUseCase
 import com.naveenapps.expensemanager.core.model.Amount
@@ -33,12 +37,21 @@ class GetRequiredIncomeUseCase(
             getCurrencyUseCase.invoke(),
         ) { budgets, savingsGoals, currency ->
             var totalRequired = 0.0
-            
+            val now = Date()
+
             for (budget in budgets) {
-                if (budget.goalType == BudgetGoalType.EXPENSE) {
-                    val prorated = budget.amount / daysInPeriod(budget.periodType) * daysInPeriod(periodType)
-                    totalRequired += prorated
+                if (budget.goalType != BudgetGoalType.EXPENSE) continue
+
+                val isActiveNow = when (budget.periodType) {
+                    BudgetPeriod.MONTHLY -> budget.selectedMonth == now.toMonthAndYearKey()
+                    BudgetPeriod.YEARLY -> budget.selectedMonth == now.toYear()
+                    BudgetPeriod.WEEKLY -> budget.selectedMonth == now.toWeekKey()
+                    BudgetPeriod.DAILY -> budget.selectedMonth == now.toDayKey()
                 }
+                if (!isActiveNow) continue
+
+                val prorated = budget.amount / daysInPeriod(budget.periodType) * daysInPeriod(periodType)
+                totalRequired += prorated
             }
 
             for (goal in savingsGoals) {

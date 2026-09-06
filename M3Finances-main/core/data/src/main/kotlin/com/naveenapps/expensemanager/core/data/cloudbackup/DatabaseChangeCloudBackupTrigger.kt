@@ -38,6 +38,7 @@ class DatabaseChangeCloudBackupTrigger(
         "recurring_transaction",
         "shopping_list",
         "shopping_list_item",
+        "pending_transaction",
     )
 
     private val observer = object : InvalidationTracker.Observer(allTableNames) {

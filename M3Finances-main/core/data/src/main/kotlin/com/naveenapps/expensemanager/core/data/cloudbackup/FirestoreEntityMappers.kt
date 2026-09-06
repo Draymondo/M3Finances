@@ -7,6 +7,7 @@ import com.naveenapps.expensemanager.core.database.entity.BudgetEntity
 import com.naveenapps.expensemanager.core.database.entity.CategoryEntity
 import com.naveenapps.expensemanager.core.database.entity.DebtEntity
 import com.naveenapps.expensemanager.core.database.entity.DebtReminderEntity
+import com.naveenapps.expensemanager.core.database.entity.PendingTransactionEntity
 import com.naveenapps.expensemanager.core.database.entity.RecurringTransactionEntity
 import com.naveenapps.expensemanager.core.database.entity.SavingsGoalEntity
 import com.naveenapps.expensemanager.core.database.entity.ShoppingListEntity
@@ -17,6 +18,7 @@ import com.naveenapps.expensemanager.core.model.AccountType
 import com.naveenapps.expensemanager.core.model.CategoryType
 import com.naveenapps.expensemanager.core.model.DebtDirection
 import com.naveenapps.expensemanager.core.model.RecurrenceFrequency
+import com.naveenapps.expensemanager.core.model.TransactionSource
 import com.naveenapps.expensemanager.core.model.TransactionType
 import java.util.Date
 import java.util.UUID
@@ -209,6 +211,37 @@ fun debtReminderEntityFromFirestoreMap(id: String, map: Map<String, Any?>): Debt
     debtId = map["debtId"] as? String ?: "",
     reminderDate = Date((map["reminderDate"] as? Number)?.toLong() ?: 0L),
     createdOn = Date((map["createdOn"] as? Number)?.toLong() ?: 0L),
+)
+
+fun PendingTransactionEntity.toFirestoreMap(): Map<String, Any?> = mapOf(
+    "amount" to amount,
+    "fee" to fee,
+    "merchant" to merchant,
+    "date" to date,
+    "transactionType" to transactionType.name,
+    "suggestedCategory" to suggestedCategory,
+    "rawNotification" to rawNotification,
+    "source" to source.name,
+    "confidence" to confidence,
+    "createdOn" to createdOn,
+)
+
+fun pendingTransactionEntityFromFirestoreMap(
+    id: String,
+    map: Map<String, Any?>,
+): PendingTransactionEntity = PendingTransactionEntity(
+    id = id,
+    amount = (map["amount"] as? Number)?.toDouble() ?: 0.0,
+    fee = (map["fee"] as? Number)?.toDouble(),
+    merchant = map["merchant"] as? String,
+    date = (map["date"] as? Number)?.toLong() ?: 0L,
+    transactionType = (map["transactionType"] as? String)?.let { TransactionType.valueOf(it) }
+        ?: TransactionType.EXPENSE,
+    suggestedCategory = map["suggestedCategory"] as? String,
+    rawNotification = map["rawNotification"] as? String,
+    source = (map["source"] as? String)?.let { TransactionSource.valueOf(it) } ?: TransactionSource.UNKNOWN,
+    confidence = (map["confidence"] as? Number)?.toFloat(),
+    createdOn = (map["createdOn"] as? Number)?.toLong() ?: 0L,
 )
 
 fun SavingsGoalEntity.toFirestoreMap(): Map<String, Any?> = mapOf(

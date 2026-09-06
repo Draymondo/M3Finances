@@ -313,9 +313,14 @@ private fun AiMessage(message: ChatMessage, viewModel: ChatViewModel) {
 
             message.proposedBudget?.let { proposed ->
                 Spacer(modifier = Modifier.height(12.dp))
+                val typeText = if (proposed.goalType == com.naveenapps.expensemanager.core.model.BudgetGoalType.INCOME) {
+                    "Revenu"
+                } else {
+                    "Dépense"
+                }
                 GenericProposalCard(
                     title = "BUDGET",
-                    mainText = "Budget Mensuel",
+                    mainText = "Budget Mensuel ($typeText)",
                     items = listOf("Montant" to proposed.amount.toString()),
                     onConfirm = { viewModel.confirmBudget(message.id, proposed) },
                     onReject = { viewModel.rejectBudget(message.id) }

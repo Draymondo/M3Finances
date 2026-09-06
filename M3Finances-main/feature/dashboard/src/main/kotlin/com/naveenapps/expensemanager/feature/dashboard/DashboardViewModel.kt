@@ -347,6 +347,7 @@ class DashboardViewModel(
 
     private fun confirmRequiredIncomeSync() {
         val requiredAmount = _state.value.requiredIncome?.amount ?: return
+        val roundedAmount = kotlin.math.round(requiredAmount)
         val existingUiBudget = _state.value.activeIncomeBudget
         val activeMonth = _state.value.activeMonth ?: Date().toMonthAndYearKey()
 
@@ -358,7 +359,7 @@ class DashboardViewModel(
                 if (budgetResult is Resource.Success) {
                     val existingBudget = budgetResult.data
                     val updatedBudget = existingBudget.copy(
-                        amount = requiredAmount,
+                        amount = roundedAmount,
                         updatedOn = Date(),
                     )
                     updateBudgetUseCase(updatedBudget)
@@ -366,7 +367,7 @@ class DashboardViewModel(
             } else {
                 val newBudget = Budget(
                     id = UUID.randomUUID().toString(),
-                    amount = requiredAmount,
+                    amount = roundedAmount,
                     selectedMonth = activeMonth,
                     periodType = BudgetPeriod.MONTHLY,
                     goalType = BudgetGoalType.INCOME,

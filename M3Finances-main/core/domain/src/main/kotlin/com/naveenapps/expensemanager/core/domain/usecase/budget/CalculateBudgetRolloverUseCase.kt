@@ -9,9 +9,11 @@ import com.naveenapps.expensemanager.core.common.utils.toMonthAndYearKey
 import com.naveenapps.expensemanager.core.common.utils.toWeekKey
 import com.naveenapps.expensemanager.core.common.utils.toYear
 import com.naveenapps.expensemanager.core.model.Budget
+import com.naveenapps.expensemanager.core.model.BudgetGoalType
 import com.naveenapps.expensemanager.core.model.BudgetPeriod
 import com.naveenapps.expensemanager.core.model.Resource
 import com.naveenapps.expensemanager.core.model.isExpense
+import com.naveenapps.expensemanager.core.model.isIncome
 import com.naveenapps.expensemanager.core.repository.BudgetRepository
 import kotlinx.coroutines.flow.firstOrNull
 import java.util.Calendar
@@ -29,7 +31,13 @@ class CalculateBudgetRolloverUseCase(
 
         val transactions = when (val response = getBudgetTransactionsUseCase(previousBudget)) {
             is Resource.Error -> null
-            is Resource.Success -> response.data.filter { it.type.isExpense() }
+            is Resource.Success -> response.data.filter {
+                if (previousBudget.goalType == BudgetGoalType.INCOME) {
+                    it.type.isIncome()
+                } else {
+                    it.type.isExpense()
+                }
+            }
         }
         val spentInPrevious = transactions?.sumOf { it.amount.amount } ?: 0.0
         val previousRollover = invoke(previousBudget, depth + 1)

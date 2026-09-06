@@ -5,7 +5,9 @@ import com.naveenapps.expensemanager.core.domain.usecase.settings.currency.GetCu
 import com.naveenapps.expensemanager.core.domain.usecase.settings.currency.GetFormattedAmountUseCase
 import com.naveenapps.expensemanager.core.domain.usecase.settings.filter.daterange.GetDateRangeUseCase
 import com.naveenapps.expensemanager.core.model.AverageData
+import com.naveenapps.expensemanager.core.model.DateRangeModel
 import com.naveenapps.expensemanager.core.model.DateRangeType
+import com.naveenapps.expensemanager.core.model.Transaction
 import com.naveenapps.expensemanager.core.model.WholeAverageData
 import com.naveenapps.expensemanager.core.model.isExpense
 import com.naveenapps.expensemanager.core.model.isIncome
@@ -60,13 +62,19 @@ class GetAverageDataUseCase(
                     monthMultiplier = 1.0
                 }
 
-                DateRangeType.THIS_YEAR,
-                DateRangeType.CUSTOM,
-                DateRangeType.ALL,
-                    -> {
+                DateRangeType.THIS_YEAR -> {
                     daysMultiplier = 1.0 / calendar.getActualMaximum(Calendar.DAY_OF_YEAR)
                     weeksMultiplier = 1.0 / calendar.getActualMaximum(Calendar.WEEK_OF_YEAR)
                     monthMultiplier = 1.0 / 12
+                }
+
+                DateRangeType.CUSTOM,
+                DateRangeType.ALL,
+                    -> {
+                    val spanDays = actualSpanDays(dateRangeModel, transactions)
+                    daysMultiplier = 1.0 / spanDays
+                    weeksMultiplier = 7.0 / spanDays
+                    monthMultiplier = (365.25 / 12) / spanDays
                 }
             }
 
@@ -101,5 +109,26 @@ class GetAverageDataUseCase(
                 ),
             )
         }.flowOn(dispatcher.computation)
+    }
+
+    private fun actualSpanDays(
+        dateRangeModel: DateRangeModel,
+        transactions: List<Transaction>?,
+    ): Double {
+        val spanMillis = if (dateRangeModel.type == DateRangeType.ALL) {
+            val times = transactions?.map { it.createdOn.time }
+            val earliest = times?.minOrNull()
+            val latest = times?.maxOrNull()
+            if (earliest == null || latest == null) 0L else latest - earliest
+        } else {
+            val ranges = dateRangeModel.dateRanges
+            val end = ranges.getOrNull(1) ?: ranges[0]
+            end - ranges[0]
+        }
+        return (spanMillis / MILLIS_PER_DAY).coerceAtLeast(1.0)
+    }
+
+    companion object {
+        private const val MILLIS_PER_DAY = 24.0 * 60 * 60 * 1000
     }
 }

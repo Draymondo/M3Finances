@@ -14,6 +14,9 @@ interface PendingTransactionDao {
     @Query("SELECT * FROM pending_transaction ORDER BY created_on DESC")
     fun getAllPendingTransactions(): Flow<List<PendingTransactionEntity>>
 
+    @Query("SELECT * FROM pending_transaction")
+    suspend fun getAllPendingTransactionEntities(): List<PendingTransactionEntity>
+
     @Query("SELECT * FROM pending_transaction WHERE id = :id LIMIT 1")
     fun getPendingTransactionById(id: String): Flow<PendingTransactionEntity?>
 
