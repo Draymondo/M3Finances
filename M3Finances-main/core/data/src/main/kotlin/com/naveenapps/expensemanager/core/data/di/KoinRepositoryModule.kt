@@ -8,6 +8,7 @@ import com.naveenapps.expensemanager.core.data.cloudbackup.CloudBackupScheduler
 import com.naveenapps.expensemanager.core.data.cloudbackup.CloudBackupWorker
 import com.naveenapps.expensemanager.core.data.cloudbackup.DatabaseChangeCloudBackupTrigger
 import com.naveenapps.expensemanager.core.data.cloudbackup.CloudBackupRepositoryImpl
+import com.naveenapps.expensemanager.core.data.cloudbackup.CloudAppSettingsSync
 import com.naveenapps.expensemanager.core.data.repository.GoogleAuthRepositoryImpl
 import com.naveenapps.expensemanager.core.data.repository.RecurringTransactionRepositoryImpl
 import com.naveenapps.expensemanager.core.data.repository.DebtRepositoryImpl
@@ -242,6 +243,7 @@ val RepositoryModule = module {
             shoppingListDao = get(),
             shoppingListItemDao = get(),
             cloudSyncDataStore = get(),
+            cloudAppSettingsSync = get(),
         )
     }
     single<GeminiRepository> {
@@ -257,6 +259,18 @@ val RepositoryModule = module {
             database = get(),
             cloudBackupScheduler = get(),
             cloudSyncDataStore = get(),
+            cloudAppSettingsSync = get(),
+        )
+    }
+    single {
+        CloudAppSettingsSync(
+            themeDataStore = get(),
+            localeDataStore = get(),
+            currencyDataStore = get(),
+            reminderTimeDataStore = get(),
+            settingsDataStore = get(),
+            dateRangeDataStore = get(),
+            numberFormatSettingsDatastore = get(),
         )
     }
     worker {

@@ -249,9 +249,23 @@ class SettingsViewModel(
 
     private fun showSnapshotPicker() {
         viewModelScope.launch {
-            _state.update { it.copy(showSnapshotPicker = true) }
+            when (val snapshotResult = cloudBackupRepository.createDailySnapshotIfNeeded()) {
+                is Resource.Error -> {
+                    _state.update {
+                        it.copy(
+                            cloudRestoreStatusMessage = snapshotResult.exception.message
+                                ?: "Impossible de créer la sauvegarde datée",
+                        )
+                    }
+                    return@launch
+                }
+                is Resource.Success -> Unit
+            }
+
             when (val result = cloudBackupRepository.listSnapshotDates()) {
-                is Resource.Success -> _state.update { it.copy(snapshotDates = result.data) }
+                is Resource.Success -> _state.update {
+                    it.copy(showSnapshotPicker = true, snapshotDates = result.data)
+                }
                 is Resource.Error -> _state.update {
                     it.copy(
                         showSnapshotPicker = false,

@@ -71,6 +71,7 @@ class CloudBackupRepositoryImpl(
     private val shoppingListDao: ShoppingListDao,
     private val shoppingListItemDao: ShoppingListItemDao,
     private val cloudSyncDataStore: CloudSyncDataStore,
+    private val cloudAppSettingsSync: CloudAppSettingsSync,
 ) : CloudBackupRepository {
 
     private val cloudOperationMutex = Mutex()
@@ -257,6 +258,9 @@ class CloudBackupRepositoryImpl(
                 toMap = { it.toFirestoreMap() },
             )
 
+            userRoot.collection(SETTINGS).document(APP_SETTINGS)
+                .set(cloudAppSettingsSync.read())
+
             userRoot.collection(META).document("info")
                 .set(mapOf("lastSyncedAt" to syncedAt))
                 .await()
@@ -375,6 +379,7 @@ class CloudBackupRepositoryImpl(
         val shoppingListItems = root.collection(SHOPPING_LIST_ITEMS).get().await().documents.map { doc ->
             shoppingListItemEntityFromFirestoreMap(doc.id, doc.data.orEmpty())
         }
+        val appSettings = root.collection(SETTINGS).document(APP_SETTINGS).get().await()
 
         database.withTransaction {
             transactionDao.deleteAllSplitItems()
@@ -405,6 +410,10 @@ class CloudBackupRepositoryImpl(
             shoppingLists.forEach { shoppingListDao.insert(it) }
             shoppingListItems.forEach { shoppingListItemDao.insert(it) }
         }
+
+        if (appSettings.exists()) {
+            cloudAppSettingsSync.restore(appSettings.data.orEmpty())
+        }
     }
 
     override suspend fun createDailySnapshotIfNeeded(): Resource<Boolean> {
@@ -414,36 +423,37 @@ class CloudBackupRepositoryImpl(
             val dateKey = todayDateKey()
             val snapshotRoot = userRoot.collection(SNAPSHOTS).document(dateKey)
 
-            val alreadyExists = isSnapshotComplete(snapshotRoot)
-            if (!alreadyExists) {
-                deleteSnapshot(snapshotRoot)
-                snapshotRoot.collection(META).document("info")
-                    .set(mapOf("status" to SNAPSHOT_CREATING, "createdAt" to Date().time))
-                    .await()
-                copyCollection(userRoot.collection(ACCOUNTS), snapshotRoot.collection(ACCOUNTS))
-                copyCollection(userRoot.collection(CATEGORIES), snapshotRoot.collection(CATEGORIES))
-                copyCollection(userRoot.collection(TRANSACTIONS), snapshotRoot.collection(TRANSACTIONS))
-                copyCollection(
-                    userRoot.collection(TRANSACTION_SPLIT_ITEMS),
-                    snapshotRoot.collection(TRANSACTION_SPLIT_ITEMS),
-                )
-                copyCollection(userRoot.collection(BUDGETS), snapshotRoot.collection(BUDGETS))
-                copyCollection(userRoot.collection(DEBTS), snapshotRoot.collection(DEBTS))
-                copyCollection(userRoot.collection(DEBT_REMINDERS), snapshotRoot.collection(DEBT_REMINDERS))
-                copyCollection(userRoot.collection(SAVINGS_GOALS), snapshotRoot.collection(SAVINGS_GOALS))
-                copyCollection(
-                    userRoot.collection(RECURRING_TRANSACTIONS),
-                    snapshotRoot.collection(RECURRING_TRANSACTIONS),
-                )
-                copyCollection(userRoot.collection(SHOPPING_LISTS), snapshotRoot.collection(SHOPPING_LISTS))
-                copyCollection(
-                    userRoot.collection(SHOPPING_LIST_ITEMS),
-                    snapshotRoot.collection(SHOPPING_LIST_ITEMS),
-                )
-                snapshotRoot.collection(META).document("info")
-                    .set(mapOf("status" to SNAPSHOT_COMPLETE, "createdAt" to Date().time))
-                    .await()
-            }
+            deleteSnapshot(snapshotRoot)
+            snapshotRoot.collection(META).document("info")
+                .set(mapOf("status" to SNAPSHOT_CREATING, "createdAt" to Date().time))
+                .await()
+            copyCollection(userRoot.collection(ACCOUNTS), snapshotRoot.collection(ACCOUNTS))
+            copyCollection(userRoot.collection(CATEGORIES), snapshotRoot.collection(CATEGORIES))
+            copyCollection(userRoot.collection(TRANSACTIONS), snapshotRoot.collection(TRANSACTIONS))
+            copyCollection(
+                userRoot.collection(TRANSACTION_SPLIT_ITEMS),
+                snapshotRoot.collection(TRANSACTION_SPLIT_ITEMS),
+            )
+            copyCollection(userRoot.collection(BUDGETS), snapshotRoot.collection(BUDGETS))
+            copyCollection(userRoot.collection(DEBTS), snapshotRoot.collection(DEBTS))
+            copyCollection(userRoot.collection(DEBT_REMINDERS), snapshotRoot.collection(DEBT_REMINDERS))
+            copyCollection(userRoot.collection(SAVINGS_GOALS), snapshotRoot.collection(SAVINGS_GOALS))
+            copyCollection(
+                userRoot.collection(RECURRING_TRANSACTIONS),
+                snapshotRoot.collection(RECURRING_TRANSACTIONS),
+            )
+            copyCollection(userRoot.collection(SHOPPING_LISTS), snapshotRoot.collection(SHOPPING_LISTS))
+            copyCollection(
+                userRoot.collection(SHOPPING_LIST_ITEMS),
+                snapshotRoot.collection(SHOPPING_LIST_ITEMS),
+            )
+            copyCollection(
+                userRoot.collection(SETTINGS),
+                snapshotRoot.collection(SETTINGS),
+            )
+            snapshotRoot.collection(META).document("info")
+                .set(mapOf("status" to SNAPSHOT_COMPLETE, "createdAt" to Date().time))
+                .await()
 
             pruneOldSnapshots(userRoot)
             Resource.Success(true)
@@ -508,7 +518,7 @@ class CloudBackupRepositoryImpl(
         val subcollections = listOf(
             ACCOUNTS, CATEGORIES, TRANSACTIONS, TRANSACTION_SPLIT_ITEMS, BUDGETS,
             DEBTS, DEBT_REMINDERS, SAVINGS_GOALS, RECURRING_TRANSACTIONS,
-            SHOPPING_LISTS, SHOPPING_LIST_ITEMS, META,
+            SHOPPING_LISTS, SHOPPING_LIST_ITEMS, SETTINGS, META,
         )
         subcollections.forEach { name ->
             snapshotRef.collection(name).get().await().documents.chunked(400).forEach { chunk ->
@@ -547,6 +557,8 @@ class CloudBackupRepositoryImpl(
         private const val RECURRING_TRANSACTIONS = "recurring_transactions"
         private const val SHOPPING_LISTS = "shopping_lists"
         private const val SHOPPING_LIST_ITEMS = "shopping_list_items"
+        private const val SETTINGS = "settings"
+        private const val APP_SETTINGS = "app"
         private const val META = "meta"
         private const val SNAPSHOTS = "snapshots"
         private const val SNAPSHOT_RETENTION_DAYS = 7

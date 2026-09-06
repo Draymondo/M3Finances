@@ -37,7 +37,12 @@ class CloudBackupWorker(
                         }
                     }
                     CloudSyncOutcome.Restored,
-                    CloudSyncOutcome.NoOp,
+                    CloudSyncOutcome.NoOp -> {
+                        when (cloudBackupRepository.createDailySnapshotIfNeeded()) {
+                            is Resource.Success -> Result.success()
+                            is Resource.Error -> Result.retry()
+                        }
+                    }
                     CloudSyncOutcome.Conflict -> Result.success()
                 }
             }

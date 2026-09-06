@@ -19,6 +19,7 @@ class DatabaseChangeCloudBackupTrigger(
     private val database: ExpenseManagerDatabase,
     private val cloudBackupScheduler: CloudBackupScheduler,
     private val cloudSyncDataStore: CloudSyncDataStore,
+    private val cloudAppSettingsSync: CloudAppSettingsSync,
 ) {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -54,5 +55,12 @@ class DatabaseChangeCloudBackupTrigger(
     /** Call once, at app startup — see AppInitializer. */
     fun start() {
         database.invalidationTracker.addObserver(observer)
+        scope.launch {
+            cloudAppSettingsSync.observeChanges().collect {
+                if (CloudBackupOperationState.isRestoreInProgress()) return@collect
+                cloudSyncDataStore.markLocalChanged()
+                cloudBackupScheduler.scheduleDebouncedBackup()
+            }
+        }
     }
 }

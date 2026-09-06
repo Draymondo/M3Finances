@@ -48,9 +48,10 @@ interface CloudBackupRepository {
     suspend fun restoreAllFromCloud(): Resource<Boolean>
 
     /**
-     * Copies the current live cloud state into a dated snapshot (once per calendar day — a
-     * no-op if today's snapshot already exists). Snapshots older than 7 days are pruned each
-     * time this runs. Called from CloudBackupWorker after a successful local [syncAll] push.
+    * Copies the current live cloud state into the dated snapshot for today. The same date is
+    * refreshed after later successful pushes, so it always represents the latest state from
+    * that day. Snapshots older than 7 days are pruned each time this runs.
+    * Called from CloudBackupWorker after a successful local [syncAll] push.
      */
     suspend fun createDailySnapshotIfNeeded(): Resource<Boolean>
 

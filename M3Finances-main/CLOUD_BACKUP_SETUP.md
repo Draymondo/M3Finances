@@ -46,6 +46,12 @@ Fait : Dettes, rappels de dette, objectifs d'épargne et transactions récurrent
 maintenant synchronisés eux aussi (mêmes mappeurs dans `FirestoreEntityMappers.kt`, mêmes
 listes dans `CloudBackupRepositoryImpl` et `DatabaseChangeCloudBackupTrigger`).
 
+Les paramètres applicatifs non sensibles sont maintenant synchronisés dans
+`/users/{userId}/settings/app` : thème, langue, devise, format des nombres, rappels,
+filtres, catégories/comptes par défaut et options d'affichage. La clé Gemini et l'état du
+verrouillage de l'application restent uniquement sur l'appareil et ne sont jamais envoyés
+dans Firestore.
+
 ---
 
 ## Ce qui n'est PAS encore fait côté app (pas de code écrit pour ça)

@@ -2,8 +2,10 @@
 package com.naveenapps.expensemanager.ui
 
 import android.Manifest
+import android.net.Uri
 import android.os.Build
 import android.content.Intent
+import android.provider.Settings
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -11,6 +13,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -341,15 +345,24 @@ fun HomeScreen(
         Column(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())) {
             AnimatedVisibility(
                 visible = !isListenerEnabled && !isDismissedForSession,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically(),
+                enter = fadeIn() + expandVertically() + scaleIn(initialScale = 0.98f),
+                exit = fadeOut() + shrinkVertically() + scaleOut(targetScale = 0.98f),
             ) {
                 NotificationListenerWarningCard(
                     onRepairClick = {
-                        try {
-                            context?.startActivity(Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"))
-                        } catch (e: Exception) {
-                            // Ignored if intent is not available
+                        context?.let { activity ->
+                            val listenerSettingsIntent = Intent(
+                                Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS,
+                            )
+                            val appSettingsIntent = Intent(
+                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                Uri.parse("package:${activity.packageName}"),
+                            )
+                            runCatching {
+                                activity.startActivity(listenerSettingsIntent)
+                            }.recoverCatching {
+                                activity.startActivity(appSettingsIntent)
+                            }
                         }
                     },
                     onDismissClick = {
@@ -409,25 +422,25 @@ private fun NotificationListenerWarningCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.Top,
         ) {
             Surface(
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.error.copy(alpha = 0.15f),
-                modifier = Modifier.size(40.dp),
+                modifier = Modifier.size(34.dp),
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = Icons.Default.Warning,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(22.dp),
+                        modifier = Modifier.size(19.dp),
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(10.dp))
 
             Column(
                 modifier = Modifier.weight(1f),
@@ -439,20 +452,20 @@ private fun NotificationListenerWarningCard(
                 ) {
                     Text(
                         text = stringResource(R.string.notification_listener_warning_title),
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onErrorContainer,
                         modifier = Modifier.weight(1f),
                     )
                     IconButton(
                         onClick = onDismissClick,
-                        modifier = Modifier.size(24.dp),
+                        modifier = Modifier.size(28.dp),
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = stringResource(R.string.cancel),
                             tint = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.6f),
-                            modifier = Modifier.size(16.dp),
+                            modifier = Modifier.size(15.dp),
                         )
                     }
                 }
@@ -465,7 +478,7 @@ private fun NotificationListenerWarningCard(
                     color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.85f),
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -478,15 +491,15 @@ private fun NotificationListenerWarningCard(
                             containerColor = MaterialTheme.colorScheme.error,
                             contentColor = MaterialTheme.colorScheme.onError,
                         ),
-                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
-                        modifier = Modifier.height(34.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 5.dp),
+                        modifier = Modifier.height(32.dp),
                     ) {
                         Icon(
                             imageVector = Icons.Default.Settings,
                             contentDescription = null,
-                            modifier = Modifier.size(16.dp),
+                            modifier = Modifier.size(15.dp),
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(5.dp))
                         Text(
                             text = stringResource(R.string.notification_listener_warning_action),
                             style = MaterialTheme.typography.labelMedium,
