@@ -68,4 +68,7 @@ sealed class TransactionCreateAction {
     data object ClearAiScanError : TransactionCreateAction()
 
     data object ClearSaveError : TransactionCreateAction()
+
+    data object AcceptSuggestion : TransactionCreateAction()
+    data object DismissSuggestion : TransactionCreateAction()
 }

@@ -231,6 +231,36 @@ private fun DashboardScreenContent(
                     .padding(start = 16.dp, end = 16.dp, top = 16.dp),
             )
         }
+        if (state.requiredIncome != null) {
+            item("required_income") {
+                AppCardView(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Revenu nécessaire :",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = "~" + (state.requiredIncome?.amountString ?: ""),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+        }
+
 
         item("account_item") {
             Column {

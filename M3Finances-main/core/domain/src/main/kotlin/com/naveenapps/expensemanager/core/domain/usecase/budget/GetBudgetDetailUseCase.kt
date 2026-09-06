@@ -5,6 +5,7 @@ import com.naveenapps.expensemanager.core.domain.usecase.settings.currency.GetFo
 import com.naveenapps.expensemanager.core.domain.usecase.transaction.GetTransactionWithFilterUseCase
 import com.naveenapps.expensemanager.core.model.Resource
 import com.naveenapps.expensemanager.core.model.isExpense
+import com.naveenapps.expensemanager.core.model.isIncome
 import com.naveenapps.expensemanager.core.model.toTransactionUIModel
 import com.naveenapps.expensemanager.core.repository.BudgetRepository
 import kotlinx.coroutines.flow.Flow
@@ -35,7 +36,11 @@ class GetBudgetDetailUseCase(
 
                         is Resource.Success -> {
                             transaction.data.filter {
-                                it.type.isExpense()
+                                if (budget.goalType == com.naveenapps.expensemanager.core.model.BudgetGoalType.INCOME) {
+                                    it.type.isIncome()
+                                } else {
+                                    it.type.isExpense()
+                                }
                             }
                         }
                     }
@@ -54,6 +59,7 @@ class GetBudgetDetailUseCase(
                     categories = budget.categories,
                     isAllAccountsSelected = budget.isAllAccountsSelected,
                     isAllCategoriesSelected = budget.isAllCategoriesSelected,
+                    goalType = budget.goalType,
                 )
                 budget.toBudgetUiModel(
                     name = budgetName(budget.selectedMonth, budget.periodType),

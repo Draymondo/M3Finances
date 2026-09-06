@@ -18,6 +18,7 @@ val DashboardViewModelModule = module {
             getDateRangeUseCase = get(),
             settingsRepository = get(),
             getPendingTransactionsUseCase = get(),
+            getRequiredIncomeUseCase = get(),
         )
     }
 }

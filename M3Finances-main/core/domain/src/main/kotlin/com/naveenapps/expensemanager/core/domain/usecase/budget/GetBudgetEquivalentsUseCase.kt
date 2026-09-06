@@ -16,6 +16,7 @@ import com.naveenapps.expensemanager.core.model.BudgetPeriod
 import com.naveenapps.expensemanager.core.model.TransactionType
 import com.naveenapps.expensemanager.core.model.expandedForCategoryAccounting
 import com.naveenapps.expensemanager.core.model.isExpense
+import com.naveenapps.expensemanager.core.model.isIncome
 import com.naveenapps.expensemanager.core.repository.AccountRepository
 import com.naveenapps.expensemanager.core.repository.CategoryRepository
 import com.naveenapps.expensemanager.core.repository.TransactionRepository
@@ -50,6 +51,7 @@ class GetBudgetEquivalentsUseCase(
         categories: List<String>,
         isAllAccountsSelected: Boolean,
         isAllCategoriesSelected: Boolean,
+        goalType: com.naveenapps.expensemanager.core.model.BudgetGoalType = com.naveenapps.expensemanager.core.model.BudgetGoalType.EXPENSE,
     ): List<BudgetEquivalentUiModel> {
         if (amount <= 0.0) return emptyList()
 
@@ -95,7 +97,13 @@ class GetBudgetEquivalentsUseCase(
                     endDate = endDate,
                 ).firstOrNull()
                     ?.expandedForCategoryAccounting()
-                    ?.filter { it.type.isExpense() }
+                    ?.filter {
+                        if (goalType == com.naveenapps.expensemanager.core.model.BudgetGoalType.INCOME) {
+                            it.type.isIncome()
+                        } else {
+                            it.type.isExpense()
+                        }
+                    }
                     ?.sumOf { it.amount.amount }
                     ?: 0.0
 
@@ -110,7 +118,7 @@ class GetBudgetEquivalentsUseCase(
                     equivalentAmount = getFormattedAmountUseCase(equivalentAmount, currency),
                     spentAmount = getFormattedAmountUseCase(spent, currency),
                     percent = percent,
-                    progressBarColor = budgetProgressColor(percent),
+                    progressBarColor = budgetProgressColor(percent, goalType),
                 )
             }
     }

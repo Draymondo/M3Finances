@@ -41,4 +41,7 @@
     <string name="budget_equivalent_monthly">Monthly</string>
     <string name="budget_equivalent_weekly">Weekly</string>
     <string name="budget_equivalent_daily">Daily</string>
+    <string name="goal_type">Goal Type</string>
+    <string name="expense">Expense</string>
+    <string name="income">Income</string>
 </resources>

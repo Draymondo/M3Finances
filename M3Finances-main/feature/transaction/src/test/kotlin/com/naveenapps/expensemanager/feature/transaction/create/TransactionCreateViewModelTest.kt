@@ -12,6 +12,11 @@ import com.naveenapps.expensemanager.core.domain.usecase.transaction.DeleteTrans
 import com.naveenapps.expensemanager.core.domain.usecase.transaction.FindTransactionByIdUseCase
 import com.naveenapps.expensemanager.core.domain.usecase.transaction.UpdateTransactionUseCase
 import com.naveenapps.expensemanager.core.domain.usecase.transaction.PredictCategoryForNotesUseCase
+import com.naveenapps.expensemanager.core.domain.usecase.transaction.ScanReceiptUseCase
+import com.naveenapps.expensemanager.core.repository.PendingTransactionRepository
+import com.naveenapps.expensemanager.core.domain.usecase.transaction.SuggestCategoryUseCase
+import com.naveenapps.expensemanager.core.domain.usecase.savingsgoal.SuggestContributionUseCase
+import com.naveenapps.expensemanager.core.domain.usecase.savingsgoal.AddSavingsGoalContributionUseCase
 import com.naveenapps.expensemanager.core.model.AccountUiModel
 import com.naveenapps.expensemanager.core.model.Amount
 import com.naveenapps.expensemanager.core.model.Category
@@ -34,6 +39,9 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.verify
 import java.util.Date
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -53,6 +61,11 @@ class TransactionCreateViewModelTest : BaseCoroutineTest() {
     private val numberFormatRepository: NumberFormatRepository = mock()
     private val feedbackRepository: FeedbackRepository = mock()
     private val predictCategoryForNotesUseCase: PredictCategoryForNotesUseCase = mock()
+    private val scanReceiptUseCase: ScanReceiptUseCase = mock()
+    private val pendingTransactionRepository: PendingTransactionRepository = mock()
+    private val suggestCategoryUseCase: SuggestCategoryUseCase = mock()
+    private val suggestContributionUseCase: SuggestContributionUseCase = mock()
+    private val addSavingsGoalContributionUseCase: AddSavingsGoalContributionUseCase = mock()
 
     private val categoriesFlow = kotlinx.coroutines.flow.MutableStateFlow<List<Category>>(emptyList())
 
@@ -90,12 +103,20 @@ class TransactionCreateViewModelTest : BaseCoroutineTest() {
 
         whenever(getDefaultCurrencyUseCase.invoke()).thenReturn(fakeCurrency)
         whenever(numberFormatRepository.formatForEditing(0.0)).thenReturn("0.00")
+        whenever(numberFormatRepository.parseToDouble(any())).thenAnswer {
+            it.getArgument<String>(0).toDoubleOrNull()
+        }
         whenever(getCurrencyUseCase.invoke()).thenReturn(flowOf(fakeCurrency))
         whenever(getAllAccountsUseCase.invoke()).thenReturn(flowOf(emptyList()))
         whenever(getAllCategoryUseCase.invoke()).thenReturn(categoriesFlow)
         whenever(settingsRepository.getDefaultAccount()).thenReturn(flowOf(null))
         whenever(settingsRepository.getDefaultIncomeCategory()).thenReturn(flowOf(null))
         whenever(settingsRepository.getDefaultExpenseCategory()).thenReturn(flowOf(null))
+        whenever(feedbackRepository.shouldShowFeedbackDialog()).thenReturn(flowOf(false))
+        whenever(getFormattedAmountUseCase.invoke(any(), any())).thenAnswer {
+            val amount = it.getArgument<Double>(0)
+            Amount(amount = amount, amountString = "$amount $")
+        }
 
         viewModel = TransactionCreateViewModel(
             savedStateHandle = SavedStateHandle(),
@@ -113,6 +134,11 @@ class TransactionCreateViewModelTest : BaseCoroutineTest() {
             numberFormatRepository = numberFormatRepository,
             feedbackRepository = feedbackRepository,
             predictCategoryForNotesUseCase = predictCategoryForNotesUseCase,
+            scanReceiptUseCase = scanReceiptUseCase,
+            pendingTransactionRepository = pendingTransactionRepository,
+            suggestCategoryUseCase = suggestCategoryUseCase,
+            suggestContributionUseCase = suggestContributionUseCase,
+            addSavingsGoalContributionUseCase = addSavingsGoalContributionUseCase,
         )
     }
 
@@ -352,6 +378,117 @@ class TransactionCreateViewModelTest : BaseCoroutineTest() {
         testScheduler.runCurrent()
 
         assertThat(viewModel.state.value.selectedCategory.id).isEqualTo(fakeCategory.id)
+    }
+
+    @Test
+    fun `income save with percentage goals triggers suggestion dialog with formatted amounts`() = runTest {
+        val goal = com.naveenapps.expensemanager.core.model.SavingsGoal(
+            id = "goal-1",
+            accountId = "acc-goal-1",
+            name = "Vacances",
+            targetAmount = 1000.0,
+            targetDate = null,
+            notes = "",
+            isAchieved = false,
+            createdOn = Date(),
+            updatedOn = Date(),
+            savingsStrategy = com.naveenapps.expensemanager.core.model.SavingsStrategy.PERCENTAGE_INCOME,
+            targetPercentage = 10.0,
+        )
+        val incomeAmount = 500.0
+        val formattedAmount = Amount(50.0, "50,00 $")
+        whenever(addTransactionUseCase.invoke(any())).thenReturn(com.naveenapps.expensemanager.core.model.Resource.Success(true))
+        whenever(suggestContributionUseCase.invoke(incomeAmount)).thenReturn(mapOf(goal to 50.0))
+        whenever(getFormattedAmountUseCase.invoke(50.0, fakeCurrency)).thenReturn(formattedAmount)
+        whenever(numberFormatRepository.parseToDouble("500.00")).thenReturn(500.0)
+
+        viewModel.processAction(TransactionCreateAction.ChangeTransactionType(TransactionType.INCOME))
+        viewModel.state.value.amount.onValueChange?.invoke("500.00")
+        viewModel.processAction(TransactionCreateAction.Save)
+        testScheduler.runCurrent()
+
+        val state = viewModel.state.value
+        assertThat(state.showSuggestionDialog).isTrue()
+        assertThat(state.suggestedContributions[goal]?.amountString).isEqualTo("50,00 $")
+    }
+
+    @Test
+    fun `accepting suggestions calls AddSavingsGoalContributionUseCase and closes page on success`() = runTest {
+        val goal = com.naveenapps.expensemanager.core.model.SavingsGoal(
+            id = "goal-1",
+            accountId = "acc-goal-1",
+            name = "Vacances",
+            targetAmount = 1000.0,
+            targetDate = null,
+            notes = "",
+            isAchieved = false,
+            createdOn = Date(),
+            updatedOn = Date(),
+            savingsStrategy = com.naveenapps.expensemanager.core.model.SavingsStrategy.PERCENTAGE_INCOME,
+            targetPercentage = 10.0,
+        )
+        val incomeAmount = 500.0
+        val formattedAmount = Amount(50.0, "50,00 $")
+        whenever(addTransactionUseCase.invoke(any())).thenReturn(com.naveenapps.expensemanager.core.model.Resource.Success(true))
+        whenever(suggestContributionUseCase.invoke(incomeAmount)).thenReturn(mapOf(goal to 50.0))
+        whenever(getFormattedAmountUseCase.invoke(50.0, fakeCurrency)).thenReturn(formattedAmount)
+        whenever(numberFormatRepository.parseToDouble("500.00")).thenReturn(500.0)
+        whenever(addSavingsGoalContributionUseCase.invoke(eq(goal), eq(50.0), any(), eq(false), any()))
+            .thenReturn(com.naveenapps.expensemanager.core.model.Resource.Success(true))
+
+        viewModel.processAction(TransactionCreateAction.ChangeTransactionType(TransactionType.INCOME))
+        viewModel.state.value.amount.onValueChange?.invoke("500.00")
+        viewModel.processAction(TransactionCreateAction.Save)
+        testScheduler.runCurrent()
+
+        viewModel.processAction(TransactionCreateAction.AcceptSuggestion)
+        testScheduler.runCurrent()
+
+        assertThat(viewModel.state.value.showSuggestionDialog).isFalse()
+        verify(addSavingsGoalContributionUseCase).invoke(
+            savingsGoal = eq(goal),
+            amount = eq(50.0),
+            realAccountId = any(),
+            isWithdrawal = eq(false),
+            notes = any(),
+        )
+        verify(appComposeNavigator).popBackStack()
+    }
+
+    @Test
+    fun `accepting suggestions handles Resource Error without crashing and displays error message`() = runTest {
+        val goal = com.naveenapps.expensemanager.core.model.SavingsGoal(
+            id = "goal-1",
+            accountId = "acc-goal-1",
+            name = "Vacances",
+            targetAmount = 1000.0,
+            targetDate = null,
+            notes = "",
+            isAchieved = false,
+            createdOn = Date(),
+            updatedOn = Date(),
+            savingsStrategy = com.naveenapps.expensemanager.core.model.SavingsStrategy.PERCENTAGE_INCOME,
+            targetPercentage = 10.0,
+        )
+        val incomeAmount = 500.0
+        val formattedAmount = Amount(50.0, "50,00 $")
+        whenever(addTransactionUseCase.invoke(any())).thenReturn(com.naveenapps.expensemanager.core.model.Resource.Success(true))
+        whenever(suggestContributionUseCase.invoke(incomeAmount)).thenReturn(mapOf(goal to 50.0))
+        whenever(getFormattedAmountUseCase.invoke(50.0, fakeCurrency)).thenReturn(formattedAmount)
+        whenever(numberFormatRepository.parseToDouble("500.00")).thenReturn(500.0)
+        whenever(addSavingsGoalContributionUseCase.invoke(eq(goal), eq(50.0), any(), eq(false), any()))
+            .thenReturn(com.naveenapps.expensemanager.core.model.Resource.Error(Exception("No category available")))
+
+        viewModel.processAction(TransactionCreateAction.ChangeTransactionType(TransactionType.INCOME))
+        viewModel.state.value.amount.onValueChange?.invoke("500.00")
+        viewModel.processAction(TransactionCreateAction.Save)
+        testScheduler.runCurrent()
+
+        viewModel.processAction(TransactionCreateAction.AcceptSuggestion)
+        testScheduler.runCurrent()
+
+        assertThat(viewModel.state.value.showSuggestionDialog).isFalse()
+        assertThat(viewModel.state.value.saveError).contains("Vacances")
     }
     // endregion
 }

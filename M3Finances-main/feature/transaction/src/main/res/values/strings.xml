@@ -69,4 +69,8 @@
     <string name="split_amount_mismatch">Split amounts must equal the transaction amount</string>
     <string name="add_split_line">Add line</string>
     <string name="split_badge">Split</string>
+    <string name="suggested_savings">Suggested Savings</string>
+    <string name="suggested_savings_message">Percentage-based savings goals were detected. Would you like to automatically transfer:</string>
+    <string name="yes_transfer">Yes, transfer</string>
+    <string name="no_thanks">No, thanks</string>
 </resources>

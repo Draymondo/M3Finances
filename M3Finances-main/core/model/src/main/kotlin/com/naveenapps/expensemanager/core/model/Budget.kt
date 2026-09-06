@@ -14,6 +14,7 @@ data class Budget(
      */
     val selectedMonth: String,
     val periodType: BudgetPeriod = BudgetPeriod.MONTHLY,
+    val goalType: BudgetGoalType = BudgetGoalType.EXPENSE,
     val categories: List<String>,
     val accounts: List<String>,
     val isAllAccountsSelected: Boolean,

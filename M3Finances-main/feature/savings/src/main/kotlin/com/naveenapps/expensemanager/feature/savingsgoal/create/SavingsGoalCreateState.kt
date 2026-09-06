@@ -22,6 +22,8 @@ data class SavingsGoalCreateState(
     val initialAmount: TextFieldValue<String>,
     val targetDate: Date?,
     val isAchieved: Boolean,
+    val savingsStrategy: com.naveenapps.expensemanager.core.model.SavingsStrategy,
+    val targetPercentage: TextFieldValue<String>,
     val currency: Currency,
     /** Funding account for the initial contribution — only used/shown while creating, and only
      * required if [initialAmount] is greater than 0. */

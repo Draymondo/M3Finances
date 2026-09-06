@@ -28,4 +28,11 @@
     <string name="clear">Effacer</string>
     <string name="achieved">Atteint</string>
     <string name="achieved_message">Clôturer manuellement cet objectif même si le montant épargné n\'est pas exactement à la cible</string>
+    <string name="savings_strategy">Stratégie d\'épargne</string>
+    <string name="strategy_fixed">Montants fixes</string>
+    <string name="strategy_percentage">% du revenu</string>
+    <string name="target_percentage">Pourcentage des revenus (%)</string>
+    <string name="target_percentage_error">Le pourcentage doit être entre 1 et 100</string>
+    <string name="estimated_date">Date est. : %1$s</string>
+    <string name="estimated_date_indeterminate">Date est. : Indéterminée</string>
 </resources>

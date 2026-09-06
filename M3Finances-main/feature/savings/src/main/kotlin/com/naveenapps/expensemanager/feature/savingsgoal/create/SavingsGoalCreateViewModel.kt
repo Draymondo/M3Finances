@@ -70,6 +70,12 @@ class SavingsGoalCreateViewModel(
             ),
             targetDate = null,
             isAchieved = false,
+            savingsStrategy = com.naveenapps.expensemanager.core.model.SavingsStrategy.FIXED,
+            targetPercentage = TextFieldValue(
+                value = "",
+                valueError = false,
+                onValueChange = this::setTargetPercentageOnChange,
+            ),
             currency = getDefaultCurrencyUseCase.invoke(),
             selectedAccount = defaultAccount,
             accounts = emptyList(),
@@ -146,6 +152,10 @@ class SavingsGoalCreateViewModel(
                         ),
                         targetDate = savingsGoal.targetDate,
                         isAchieved = savingsGoal.isAchieved,
+                        savingsStrategy = savingsGoal.savingsStrategy,
+                        targetPercentage = it.targetPercentage.copy(
+                            value = savingsGoal.targetPercentage?.let { pct -> numberFormatRepository.formatForEditing(pct) } ?: ""
+                        ),
                         savedAmount = getFormattedAmountUseCase.invoke(
                             savingsGoal.account.amount,
                             it.currency,
@@ -180,6 +190,8 @@ class SavingsGoalCreateViewModel(
                     targetAmount = targetAmountValue,
                     targetDate = currentState.targetDate,
                     isAchieved = currentState.isAchieved,
+                    savingsStrategy = currentState.savingsStrategy,
+                    targetPercentage = numberFormatRepository.parseToDouble(currentState.targetPercentage.value),
                     updatedOn = Date(),
                 )
                 if (updateSavingsGoalUseCase.invoke(updated) is Resource.Success) {
@@ -205,6 +217,8 @@ class SavingsGoalCreateViewModel(
                 targetDate = currentState.targetDate,
                 notes = currentState.notes.value,
                 isAchieved = false,
+                savingsStrategy = currentState.savingsStrategy,
+                targetPercentage = numberFormatRepository.parseToDouble(currentState.targetPercentage.value),
                 createdOn = now,
                 updatedOn = now,
             )
@@ -236,6 +250,18 @@ class SavingsGoalCreateViewModel(
 
     private fun setNotes(notes: String) {
         _state.update { it.copy(notes = it.notes.copy(value = notes)) }
+    }
+
+    private fun setTargetPercentageOnChange(percentage: String) {
+        val pctValue = numberFormatRepository.parseToDouble(percentage)
+        _state.update {
+            it.copy(
+                targetPercentage = it.targetPercentage.copy(
+                    value = percentage,
+                    valueError = percentage.isBlank() || pctValue == null || pctValue <= 0.0 || pctValue > 100.0,
+                ),
+            )
+        }
     }
 
     private fun setTargetAmountOnChange(amount: String) {
@@ -357,6 +383,14 @@ class SavingsGoalCreateViewModel(
             SavingsGoalCreateAction.ClearTargetDate -> _state.update { it.copy(targetDate = null) }
 
             SavingsGoalCreateAction.ToggleAchieved -> _state.update { it.copy(isAchieved = !it.isAchieved) }
+            SavingsGoalCreateAction.ToggleSavingsStrategy -> _state.update { 
+                val newStrategy = if (it.savingsStrategy == com.naveenapps.expensemanager.core.model.SavingsStrategy.FIXED) {
+                    com.naveenapps.expensemanager.core.model.SavingsStrategy.PERCENTAGE_INCOME
+                } else {
+                    com.naveenapps.expensemanager.core.model.SavingsStrategy.FIXED
+                }
+                it.copy(savingsStrategy = newStrategy) 
+            }
 
             SavingsGoalCreateAction.ShowContributionSheet -> showContributionSheet()
             SavingsGoalCreateAction.DismissContributionSheet -> _state.update {

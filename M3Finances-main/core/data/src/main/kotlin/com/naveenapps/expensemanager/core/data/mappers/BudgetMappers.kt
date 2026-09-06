@@ -14,6 +14,7 @@ fun Budget.toEntityModel(): BudgetEntity {
         isAllAccountsSelected = isAllAccountsSelected,
         createdOn = createdOn,
         updatedOn = updatedOn,
+        goalType = goalType.ordinal,
     )
 }
 
@@ -31,5 +32,6 @@ fun BudgetEntity.toDomainModel(categories: List<String>, accounts: List<String>)
         isAllAccountsSelected = isAllAccountsSelected,
         createdOn = createdOn,
         updatedOn = updatedOn,
+        goalType = com.naveenapps.expensemanager.core.model.BudgetGoalType.entries.getOrElse(goalType) { com.naveenapps.expensemanager.core.model.BudgetGoalType.EXPENSE },
     )
 }

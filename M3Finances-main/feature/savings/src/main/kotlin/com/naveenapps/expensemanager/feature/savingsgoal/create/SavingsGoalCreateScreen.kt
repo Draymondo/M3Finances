@@ -325,6 +325,32 @@ private fun SavingsGoalCreateBody(
                         errorMessage = stringResource(R.string.savings_goal_name_error),
                     )
 
+                    Text(
+                        text = stringResource(R.string.savings_strategy),
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        AppFilterChip(
+                            filterName = stringResource(R.string.strategy_fixed),
+                            isSelected = state.savingsStrategy == com.naveenapps.expensemanager.core.model.SavingsStrategy.FIXED,
+                            onClick = {
+                                if (state.savingsStrategy != com.naveenapps.expensemanager.core.model.SavingsStrategy.FIXED) {
+                                    onAction.invoke(SavingsGoalCreateAction.ToggleSavingsStrategy)
+                                }
+                            }
+                        )
+                        AppFilterChip(
+                            filterName = stringResource(R.string.strategy_percentage),
+                            isSelected = state.savingsStrategy == com.naveenapps.expensemanager.core.model.SavingsStrategy.PERCENTAGE_INCOME,
+                            onClick = {
+                                if (state.savingsStrategy != com.naveenapps.expensemanager.core.model.SavingsStrategy.PERCENTAGE_INCOME) {
+                                    onAction.invoke(SavingsGoalCreateAction.ToggleSavingsStrategy)
+                                }
+                            }
+                        )
+                    }
+
                     DecimalTextField(
                         modifier = Modifier.fillMaxWidth(),
                         value = state.targetAmount.value,
@@ -333,6 +359,17 @@ private fun SavingsGoalCreateBody(
                         label = R.string.target_amount,
                         errorMessage = stringResource(R.string.amount_error),
                     )
+
+                    if (state.savingsStrategy == com.naveenapps.expensemanager.core.model.SavingsStrategy.PERCENTAGE_INCOME) {
+                        DecimalTextField(
+                            modifier = Modifier.fillMaxWidth(),
+                            value = state.targetPercentage.value,
+                            isError = state.targetPercentage.valueError,
+                            onValueChange = state.targetPercentage.onValueChange,
+                            label = R.string.target_percentage,
+                            errorMessage = stringResource(R.string.target_percentage_error),
+                        )
+                    }
 
                     if (!state.isEditing) {
                         DecimalTextField(
@@ -459,6 +496,8 @@ private fun SavingsGoalCreateScreenPreview() {
                 initialAmount = TextFieldValue(value = "0", valueError = false, onValueChange = {}),
                 targetDate = null,
                 isAchieved = false,
+                savingsStrategy = com.naveenapps.expensemanager.core.model.SavingsStrategy.FIXED,
+                targetPercentage = TextFieldValue("", false, {}),
                 currency = Currency("$", "USD"),
                 selectedAccount = AccountUiModel(
                     id = "1",

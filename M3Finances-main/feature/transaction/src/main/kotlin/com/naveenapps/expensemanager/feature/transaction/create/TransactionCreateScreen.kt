@@ -41,6 +41,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -143,6 +144,34 @@ private fun TransactionCreateScreenContent(
         CategorySelectionView(state, onAction)
     } else if (state.showAccountSelection) {
         AccountSelectionView(state, onAction)
+    }
+
+    if (state.showSuggestionDialog && state.suggestedContributions.isNotEmpty()) {
+        AlertDialog(
+            onDismissRequest = { onAction.invoke(TransactionCreateAction.DismissSuggestion) },
+            title = {
+                Text(text = stringResource(R.string.suggested_savings))
+            },
+            text = {
+                Column {
+                    Text(stringResource(R.string.suggested_savings_message))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    state.suggestedContributions.forEach { (goal, amount) ->
+                        Text("• ${amount.amountString ?: amount.amount.toString()} vers ${goal.name}")
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { onAction.invoke(TransactionCreateAction.AcceptSuggestion) }) {
+                    Text(text = stringResource(R.string.yes_transfer))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { onAction.invoke(TransactionCreateAction.DismissSuggestion) }) {
+                    Text(text = stringResource(R.string.no_thanks))
+                }
+            }
+        )
     }
 
     LaunchedEffect(state.saveError) {

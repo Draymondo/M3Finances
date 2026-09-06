@@ -142,6 +142,7 @@ class BudgetCreateViewModel(
                 amount = state.amount.copy(value = numberFormatRepository.formatForEditing(budget.amount)),
                 month = state.month.copy(value = loadedDate),
                 periodType = budget.periodType,
+                goalType = budget.goalType,
                 isAllAccountSelected = budget.isAllAccountsSelected,
                 isAllCategorySelected = budget.isAllCategoriesSelected,
                 showDeleteButton = true,
@@ -205,6 +206,7 @@ class BudgetCreateViewModel(
                 BudgetPeriod.DAILY -> date.toDayKey()
             },
             periodType = periodType,
+            goalType = _state.value.goalType,
             categories = categories,
             accounts = accounts,
             isAllCategoriesSelected = _state.value.isAllCategorySelected,
@@ -295,6 +297,7 @@ class BudgetCreateViewModel(
                 categories = state.selectedCategories.map { it.id },
                 isAllAccountsSelected = state.isAllAccountSelected,
                 isAllCategoriesSelected = state.isAllCategorySelected,
+                goalType = state.goalType,
             )
             _state.update { it.copy(equivalents = equivalents) }
         }
@@ -356,6 +359,10 @@ class BudgetCreateViewModel(
         when (action) {
             BudgetCreateAction.ClosePage -> closePage()
             is BudgetCreateAction.SelectPeriodType -> setPeriodType(action.periodType)
+            is BudgetCreateAction.SelectGoalType -> {
+                _state.update { it.copy(goalType = action.goalType) }
+                recomputeEquivalents()
+            }
             BudgetCreateAction.OpenAccountSelectionDialog -> openAccountSelection()
             BudgetCreateAction.CloseAccountSelectionDialog -> closeAccountSelection()
             BudgetCreateAction.OpenCategorySelectionDialog -> openCategorySelection()

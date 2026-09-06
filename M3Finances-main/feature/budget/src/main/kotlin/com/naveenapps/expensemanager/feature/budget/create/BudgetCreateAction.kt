@@ -9,6 +9,8 @@ sealed class BudgetCreateAction {
     data object ClosePage : BudgetCreateAction()
 
     data class SelectPeriodType(val periodType: BudgetPeriod) : BudgetCreateAction()
+    
+    data class SelectGoalType(val goalType: com.naveenapps.expensemanager.core.model.BudgetGoalType) : BudgetCreateAction()
 
     data object ShowMonthSelection : BudgetCreateAction()
 

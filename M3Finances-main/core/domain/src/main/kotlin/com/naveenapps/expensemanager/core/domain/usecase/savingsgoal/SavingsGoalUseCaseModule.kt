@@ -25,7 +25,10 @@ val SavingsGoalUseCaseModule = module {
             repository = get(),
             getCurrencyUseCase = get(),
             getFormattedAmountUseCase = get(),
+            recalculateGoalEstimateUseCase = get(),
             appCoroutineDispatchers = get(),
         )
     }
+    single { RecalculateGoalEstimateUseCase(transactionRepository = get()) }
+    single { SuggestContributionUseCase(savingsGoalRepository = get()) }
 }

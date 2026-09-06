@@ -59,6 +59,11 @@ class TransactionRepositoryImpl(
             }
         }
 
+    override suspend fun getTransactionsByAccountId(accountId: String): List<Transaction> =
+        withContext(dispatchers.io) {
+            return@withContext transactionDao.getTransactionsByAccountId(accountId).map { it.toDomainModel() }
+        }
+
     override suspend fun addTransaction(transaction: Transaction): Resource<Boolean> =
         withContext(dispatchers.io) {
             return@withContext try {

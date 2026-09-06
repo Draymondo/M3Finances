@@ -69,4 +69,8 @@
     <string name="split_amount_mismatch">La somme des lignes doit être égale au montant de la transaction</string>
     <string name="add_split_line">Ajouter une ligne</string>
     <string name="split_badge">Scindée</string>
+    <string name="suggested_savings">Épargne suggérée</string>
+    <string name="suggested_savings_message">Des objectifs d\'épargne proportionnels ont été détectés. Souhaitez-vous transférer automatiquement :</string>
+    <string name="yes_transfer">Oui, transférer</string>
+    <string name="no_thanks">Non, merci</string>
 </resources>

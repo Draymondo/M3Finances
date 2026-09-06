@@ -3,6 +3,7 @@ package com.naveenapps.expensemanager.feature.dashboard
 import androidx.compose.runtime.Stable
 import com.naveenapps.expensemanager.core.domain.usecase.budget.BudgetUiModel
 import com.naveenapps.expensemanager.core.model.AccountUiModel
+import com.naveenapps.expensemanager.core.model.Amount
 import com.naveenapps.expensemanager.core.model.CategoryTransactionState
 import com.naveenapps.expensemanager.core.model.ExpenseFlowState
 import com.naveenapps.expensemanager.core.model.TransactionUiItem
@@ -17,5 +18,6 @@ data class DashboardState(
     val categoryTransactionState: CategoryTransactionState,
     val isCompactSummary: Boolean = false,
     val showCreateBudgetForMonth: String? = null,
+    val requiredIncome: Amount? = null,
     val pendingTransactionsCount: Int = 0,
 )

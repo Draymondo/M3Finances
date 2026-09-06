@@ -15,6 +15,7 @@ data class BudgetCreateState(
     val amount: TextFieldValue<String>,
     val month: TextFieldValue<Date>,
     val periodType: BudgetPeriod = BudgetPeriod.MONTHLY,
+    val goalType: com.naveenapps.expensemanager.core.model.BudgetGoalType = com.naveenapps.expensemanager.core.model.BudgetGoalType.EXPENSE,
     val isAllAccountSelected: Boolean,
     val selectedAccounts: List<AccountUiModel>,
     val isAllCategorySelected: Boolean,

@@ -48,6 +48,7 @@ class DashboardViewModel(
     getAllAccountsUseCase: GetAllAccountsUseCase,
     getTransactionGroupByCategoryUseCase: GetTransactionGroupByCategoryUseCase,
     getBudgetsUseCase: GetBudgetsUseCase,
+    getRequiredIncomeUseCase: com.naveenapps.expensemanager.core.domain.usecase.budget.GetRequiredIncomeUseCase,
     appCoroutineDispatchers: AppCoroutineDispatchers,
     getDateRangeUseCase: GetDateRangeUseCase,
     settingsRepository: SettingsRepository,
@@ -245,6 +246,11 @@ class DashboardViewModel(
             _state.update { it.copy(budgets = filtered, showCreateBudgetForMonth = showCreateBudgetForMonth) }
         }.flowOn(appCoroutineDispatchers.computation)
             .launchIn(viewModelScope)
+
+        
+        getRequiredIncomeUseCase.invoke().onEach { requiredAmount ->
+            _state.update { it.copy(requiredIncome = requiredAmount) }
+        }.launchIn(viewModelScope)
 
         settingsRepository.getHomeSummaryCompact().onEach { compact ->
             _state.update { it.copy(isCompactSummary = compact) }

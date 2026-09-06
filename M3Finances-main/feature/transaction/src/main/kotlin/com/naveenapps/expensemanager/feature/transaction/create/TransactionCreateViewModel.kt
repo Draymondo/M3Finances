@@ -75,6 +75,8 @@ class TransactionCreateViewModel(
     private val scanReceiptUseCase: ScanReceiptUseCase,
     private val pendingTransactionRepository: com.naveenapps.expensemanager.core.repository.PendingTransactionRepository,
     private val suggestCategoryUseCase: com.naveenapps.expensemanager.core.domain.usecase.transaction.SuggestCategoryUseCase,
+    private val suggestContributionUseCase: com.naveenapps.expensemanager.core.domain.usecase.savingsgoal.SuggestContributionUseCase,
+    private val addSavingsGoalContributionUseCase: com.naveenapps.expensemanager.core.domain.usecase.savingsgoal.AddSavingsGoalContributionUseCase,
 ) : ViewModel() {
 
     private val _event = Channel<TransactionCreateEvent>()
@@ -132,6 +134,7 @@ class TransactionCreateViewModel(
     private var editingTransaction: Transaction? = null
     private var isCategoryManuallySelected = false
     private var loadedPendingTransaction: com.naveenapps.expensemanager.core.model.PendingTransaction? = null
+    private var isTransactionSaved = false
 
     init {
         observeAccountsAndCurrency(getCurrencyUseCase, getAllAccountsUseCase)
@@ -306,10 +309,7 @@ class TransactionCreateViewModel(
         val amountText = currentState.amount.value
         val amountValue = numberFormatRepository.parseToDouble(amountText)
 
-        Log.d("TransactionCreate", "save() called: amountText='$amountText', amountValue=$amountValue, type=${currentState.transactionType}, fromAcc=${currentState.selectedFromAccount.id}, toAcc=${currentState.selectedToAccount.id}")
-
         if (amountText.isBlank() || amountValue == null || amountValue <= 0.0) {
-            Log.d("TransactionCreate", "save() BLOCKED: amount validation failed")
             _state.update { it.copy(amount = it.amount.copy(valueError = true)) }
             return
         }
@@ -317,7 +317,6 @@ class TransactionCreateViewModel(
         if (currentState.transactionType.isTransfer() &&
             currentState.selectedFromAccount.id == currentState.selectedToAccount.id
         ) {
-            Log.d("TransactionCreate", "save() BLOCKED: transfer with same from/to account")
             _state.update { it.copy(saveError = "Les comptes source et destination doivent être différents") }
             return
         }
@@ -413,7 +412,21 @@ class TransactionCreateViewModel(
                 if (isNewTransaction) {
                     onNewTransactionCreated()
                 }
-                closePage()
+                editingTransaction = transaction
+                isTransactionSaved = true
+                if (transaction.type == com.naveenapps.expensemanager.core.model.TransactionType.INCOME) {
+                    val suggestions = suggestContributionUseCase(transaction.amount.amount)
+                    if (suggestions.isNotEmpty()) {
+                        val formattedSuggestions = suggestions.mapValues { (_, amount) ->
+                            getFormattedAmountUseCase.invoke(amount, _state.value.currency)
+                        }
+                        _state.update { it.copy(showSuggestionDialog = true, suggestedContributions = formattedSuggestions) }
+                    } else {
+                        closePage()
+                    }
+                } else {
+                    closePage()
+                }
             } else if (response is com.naveenapps.expensemanager.core.model.Resource.Error) {
                 val errorMsg = response.exception.message ?: "Une erreur inconnue est survenue"
                 _state.update { it.copy(saveError = errorMsg) }
@@ -499,18 +512,14 @@ class TransactionCreateViewModel(
                 if (notes.length >= 3) {
                     kotlinx.coroutines.delay(1000) // Debounce 1 second
                     val categoryNames = _state.value.categories.map { it.name }
-                    when (val result = suggestCategoryUseCase.invoke(notes, categoryNames)) {
-                        is com.naveenapps.expensemanager.core.model.Resource.Success -> {
-                            val suggestedName = result.data
-                            val matchedAiCategory = _state.value.categories.find { 
-                                it.name.equals(suggestedName, ignoreCase = true) 
-                            }
-                            if (matchedAiCategory != null && !isCategoryManuallySelected && _state.value.selectedCategory.id != matchedAiCategory.id) {
-                                _state.update { it.copy(selectedCategory = matchedAiCategory, isCategoryAutoSelected = true) }
-                            }
+                    val result = suggestCategoryUseCase.invoke(notes, categoryNames)
+                    if (result is com.naveenapps.expensemanager.core.model.Resource.Success) {
+                        val suggestedName = result.data
+                        val matchedAiCategory = _state.value.categories.find { 
+                            it.name.equals(suggestedName, ignoreCase = true) 
                         }
-                        is com.naveenapps.expensemanager.core.model.Resource.Error -> {
-                            // Silently ignore AI prediction errors for notes
+                        if (matchedAiCategory != null && !isCategoryManuallySelected && _state.value.selectedCategory.id != matchedAiCategory.id) {
+                            _state.update { it.copy(selectedCategory = matchedAiCategory, isCategoryAutoSelected = true) }
                         }
                     }
                 }
@@ -818,7 +827,47 @@ class TransactionCreateViewModel(
 
             TransactionCreateAction.ClearAiScanError -> _state.update { it.copy(aiScanError = null) }
             
-            TransactionCreateAction.ClearSaveError -> _state.update { it.copy(saveError = null) }
+            TransactionCreateAction.ClearSaveError -> {
+                _state.update { it.copy(saveError = null) }
+                if (isTransactionSaved) {
+                    closePage()
+                }
+            }
+            TransactionCreateAction.AcceptSuggestion -> acceptSuggestion()
+            TransactionCreateAction.DismissSuggestion -> {
+                _state.update { it.copy(showSuggestionDialog = false) }
+                closePage()
+            }
+        }
+    }
+
+    private fun acceptSuggestion() {
+        _state.update { it.copy(showSuggestionDialog = false) }
+        val currentState = _state.value
+        viewModelScope.launch {
+            val failedGoals = mutableListOf<String>()
+            for ((goal, formattedAmount) in currentState.suggestedContributions) {
+                try {
+                    val result = addSavingsGoalContributionUseCase.invoke(
+                        savingsGoal = goal,
+                        amount = formattedAmount.amount,
+                        realAccountId = currentState.selectedFromAccount.id,
+                        isWithdrawal = false,
+                        notes = "Transfert automatique suggéré : ${goal.name}",
+                    )
+                    if (result is com.naveenapps.expensemanager.core.model.Resource.Error) {
+                        failedGoals.add(goal.name)
+                    }
+                } catch (e: Exception) {
+                    failedGoals.add(goal.name)
+                }
+            }
+            if (failedGoals.isNotEmpty()) {
+                val errorMsg = "Revenu enregistré, mais le transfert d'épargne a échoué pour : ${failedGoals.joinToString(", ")}"
+                _state.update { it.copy(saveError = errorMsg) }
+            } else {
+                closePage()
+            }
         }
     }
 

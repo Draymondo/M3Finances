@@ -41,4 +41,7 @@
     <string name="budget_equivalent_monthly">Mensuel</string>
     <string name="budget_equivalent_weekly">Hebdomadaire</string>
     <string name="budget_equivalent_daily">Journalier</string>
+    <string name="goal_type">Type d\'objectif</string>
+    <string name="expense">Dépense</string>
+    <string name="income">Revenu</string>
 </resources>

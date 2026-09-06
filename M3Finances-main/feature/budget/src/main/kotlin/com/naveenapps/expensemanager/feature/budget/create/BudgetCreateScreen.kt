@@ -250,6 +250,7 @@ private fun BudgetCreateScreenContentView(
             currencyIconField = state.currency.symbol,
             selectedDate = state.month,
             periodType = state.periodType,
+            goalType = state.goalType,
             accountCount = if (state.isAllAccountSelected) {
                 stringResource(R.string.all)
             } else {
@@ -276,6 +277,7 @@ fun BudgetCreateScreen(
     onAction: (BudgetCreateAction) -> Unit,
     modifier: Modifier = Modifier,
     periodType: BudgetPeriod = BudgetPeriod.MONTHLY,
+    goalType: com.naveenapps.expensemanager.core.model.BudgetGoalType = com.naveenapps.expensemanager.core.model.BudgetGoalType.EXPENSE,
     equivalents: List<BudgetEquivalentUiModel> = emptyList(),
 ) {
     val focusManager = LocalFocusManager.current
@@ -284,6 +286,39 @@ fun BudgetCreateScreen(
         modifier = modifier.padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        SettingsSection(
+            title = stringResource(R.string.goal_type),
+            modifier = Modifier.padding(top = 8.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                AppFilterChip(
+                    modifier = Modifier.weight(1f),
+                    centerAlign = true,
+                    filterName = stringResource(id = R.string.expense),
+                    isSelected = goalType == com.naveenapps.expensemanager.core.model.BudgetGoalType.EXPENSE,
+                    onClick = {
+                        onAction.invoke(
+                            BudgetCreateAction.SelectGoalType(com.naveenapps.expensemanager.core.model.BudgetGoalType.EXPENSE),
+                        )
+                    },
+                )
+                AppFilterChip(
+                    modifier = Modifier.weight(1f),
+                    centerAlign = true,
+                    filterName = stringResource(id = R.string.income),
+                    isSelected = goalType == com.naveenapps.expensemanager.core.model.BudgetGoalType.INCOME,
+                    onClick = {
+                        onAction.invoke(
+                            BudgetCreateAction.SelectGoalType(com.naveenapps.expensemanager.core.model.BudgetGoalType.INCOME),
+                        )
+                    },
+                )
+            }
+        }
+
         SettingsSection(
             title = stringResource(R.string.budget_for),
             modifier = Modifier.padding(top = 8.dp),

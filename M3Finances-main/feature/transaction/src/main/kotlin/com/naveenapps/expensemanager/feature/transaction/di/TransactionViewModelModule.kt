@@ -28,6 +28,8 @@ val TransactionViewModelModule = module {
             scanReceiptUseCase = get(),
             pendingTransactionRepository = get(),
             suggestCategoryUseCase = get(),
+            suggestContributionUseCase = get(),
+            addSavingsGoalContributionUseCase = get(),
         )
     }
     viewModel {

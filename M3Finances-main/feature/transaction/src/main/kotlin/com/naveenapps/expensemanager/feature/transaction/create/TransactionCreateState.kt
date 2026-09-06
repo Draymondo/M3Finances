@@ -7,6 +7,7 @@ import com.naveenapps.expensemanager.core.model.Category
 import com.naveenapps.expensemanager.core.model.Currency
 import com.naveenapps.expensemanager.core.model.TextFieldValue
 import com.naveenapps.expensemanager.core.model.TransactionType
+import com.naveenapps.expensemanager.core.model.SavingsGoal
 import java.util.Date
 
 @Stable
@@ -39,6 +40,8 @@ data class TransactionCreateState(
     val aiScanError: String? = null,
     val saveError: String? = null,
     val isCategoryAutoSelected: Boolean = false,
+    val showSuggestionDialog: Boolean = false,
+    val suggestedContributions: Map<SavingsGoal, Amount> = emptyMap(),
 )
 
 data class TransactionSplitItemState(

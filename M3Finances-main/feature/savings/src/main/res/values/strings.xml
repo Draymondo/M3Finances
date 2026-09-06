@@ -28,4 +28,11 @@
     <string name="clear">Clear</string>
     <string name="achieved">Achieved</string>
     <string name="achieved_message">Manually close this goal even if the saved amount isn\'t exactly at the target</string>
+    <string name="savings_strategy">Savings strategy</string>
+    <string name="strategy_fixed">Fixed amounts</string>
+    <string name="strategy_percentage">% of income</string>
+    <string name="target_percentage">Income percentage (%)</string>
+    <string name="target_percentage_error">Percentage must be between 1 and 100</string>
+    <string name="estimated_date">Est. date: %1$s</string>
+    <string name="estimated_date_indeterminate">Est. date: Indeterminate</string>
 </resources>

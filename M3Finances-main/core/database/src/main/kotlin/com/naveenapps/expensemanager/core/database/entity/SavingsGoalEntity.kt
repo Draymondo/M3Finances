@@ -37,4 +37,10 @@ data class SavingsGoalEntity(
     val createdOn: Date,
     @ColumnInfo(name = "updated_on")
     val updatedOn: Date,
+    @ColumnInfo(name = "savings_strategy", defaultValue = "0")
+    val savingsStrategy: Int = 0,
+    @ColumnInfo(name = "target_percentage")
+    val targetPercentage: Double? = null,
+    @ColumnInfo(name = "estimated_completion_date")
+    val estimatedCompletionDate: Date? = null,
 )

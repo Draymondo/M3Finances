@@ -67,5 +67,6 @@ val BudgetUseCaseModule = module {
             getBudgetTransactionsUseCase = get(),
         )
     }
+    single { GetRequiredIncomeUseCase(get(), get(), get(), get(), get(), get()) }
 }
 

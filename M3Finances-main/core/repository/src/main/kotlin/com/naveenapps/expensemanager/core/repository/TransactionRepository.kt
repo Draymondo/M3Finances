@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 interface TransactionRepository {
 
     suspend fun findTransactionById(transactionId: String): Resource<Transaction>
-
+    suspend fun getTransactionsByAccountId(accountId: String): List<Transaction>
     suspend fun addTransaction(transaction: Transaction): Resource<Boolean>
 
     suspend fun updateTransaction(transaction: Transaction): Resource<Boolean>

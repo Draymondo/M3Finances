@@ -32,6 +32,8 @@ sealed class SavingsGoalCreateAction {
     data object ClearTargetDate : SavingsGoalCreateAction()
 
     data object ToggleAchieved : SavingsGoalCreateAction()
+    
+    data object ToggleSavingsStrategy : SavingsGoalCreateAction()
 
     data object ShowContributionSheet : SavingsGoalCreateAction()
 

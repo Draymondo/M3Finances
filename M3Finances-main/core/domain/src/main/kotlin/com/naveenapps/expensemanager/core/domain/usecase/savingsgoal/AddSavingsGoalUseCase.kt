@@ -44,6 +44,13 @@ class AddSavingsGoalUseCase(
             return Resource.Error(Exception("Target amount should be greater than 0"))
         }
 
+        if (savingsGoal.savingsStrategy == com.naveenapps.expensemanager.core.model.SavingsStrategy.PERCENTAGE_INCOME) {
+            val pct = savingsGoal.targetPercentage
+            if (pct == null || pct <= 0.0 || pct > 100.0) {
+                return Resource.Error(Exception("Target percentage must be between 0 and 100"))
+            }
+        }
+
         if (initialAmount < 0.0) {
             return Resource.Error(Exception("Initial amount can't be negative"))
         }

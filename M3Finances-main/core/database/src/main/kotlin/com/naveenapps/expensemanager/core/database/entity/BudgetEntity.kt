@@ -26,4 +26,6 @@ data class BudgetEntity(
     val createdOn: Date,
     @ColumnInfo(name = "updated_on")
     val updatedOn: Date,
+    @ColumnInfo(name = "goal_type", defaultValue = "0")
+    val goalType: Int = 0,
 )

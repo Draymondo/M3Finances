@@ -31,6 +31,9 @@ data class SavingsGoal(
     val isAchieved: Boolean,
     val createdOn: Date,
     val updatedOn: Date,
+    val savingsStrategy: SavingsStrategy = SavingsStrategy.FIXED,
+    val targetPercentage: Double? = null,
+    val estimatedCompletionDate: Date? = null,
     /** Populated for display by the domain layer; empty/default until then. */
     val account: Account = Account(
         id = "",

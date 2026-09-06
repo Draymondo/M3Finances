@@ -261,3 +261,17 @@ internal val MIGRATION_13_14 = object : Migration(13, 14) {
         )
     }
 }
+
+internal val MIGRATION_14_15 = object : Migration(14, 15) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `savings_goal` ADD COLUMN `savings_strategy` INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("ALTER TABLE `savings_goal` ADD COLUMN `target_percentage` REAL DEFAULT NULL")
+        db.execSQL("ALTER TABLE `savings_goal` ADD COLUMN `estimated_completion_date` INTEGER DEFAULT NULL")
+    }
+}
+
+internal val MIGRATION_15_16 = object : Migration(15, 16) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `budget` ADD COLUMN `goal_type` INTEGER NOT NULL DEFAULT 0")
+    }
+}

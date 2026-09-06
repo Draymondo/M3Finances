@@ -2,6 +2,7 @@ package com.naveenapps.expensemanager.core.data.mappers
 
 import com.naveenapps.expensemanager.core.database.entity.SavingsGoalEntity
 import com.naveenapps.expensemanager.core.model.SavingsGoal
+import com.naveenapps.expensemanager.core.model.SavingsStrategy
 
 fun SavingsGoal.toEntityModel(): SavingsGoalEntity {
     return SavingsGoalEntity(
@@ -14,6 +15,9 @@ fun SavingsGoal.toEntityModel(): SavingsGoalEntity {
         isAchieved = isAchieved,
         createdOn = createdOn,
         updatedOn = updatedOn,
+        savingsStrategy = savingsStrategy.ordinal,
+        targetPercentage = targetPercentage,
+        estimatedCompletionDate = estimatedCompletionDate,
     )
 }
 
@@ -28,5 +32,8 @@ fun SavingsGoalEntity.toDomainModel(): SavingsGoal {
         isAchieved = isAchieved,
         createdOn = createdOn,
         updatedOn = updatedOn,
+        savingsStrategy = SavingsStrategy.values().getOrElse(savingsStrategy) { SavingsStrategy.FIXED },
+        targetPercentage = targetPercentage,
+        estimatedCompletionDate = estimatedCompletionDate,
     )
 }

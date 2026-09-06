@@ -19,6 +19,7 @@ import com.naveenapps.expensemanager.core.model.BudgetPeriod
 import com.naveenapps.expensemanager.core.model.Resource
 import com.naveenapps.expensemanager.core.model.TransactionUiItem
 import com.naveenapps.expensemanager.core.model.isExpense
+import com.naveenapps.expensemanager.core.model.isIncome
 import com.naveenapps.expensemanager.core.model.toTransactionUIModel
 import com.naveenapps.expensemanager.core.repository.BudgetRepository
 import kotlinx.coroutines.flow.Flow
@@ -46,7 +47,13 @@ class GetBudgetsUseCase(
             budgets.map { budget ->
                 val transactions = when (val response = getBudgetTransactionsUseCase.invoke(budget)) {
                     is Resource.Error -> null
-                    is Resource.Success -> response.data.filter { it.type.isExpense() }
+                    is Resource.Success -> response.data.filter { 
+                        if (budget.goalType == com.naveenapps.expensemanager.core.model.BudgetGoalType.INCOME) {
+                            it.type.isIncome()
+                        } else {
+                            it.type.isExpense()
+                        }
+                    }
                 }
                 val transactionAmount = transactions?.sumOf { it.amount.amount } ?: 0.0
                 val rollover = calculateBudgetRolloverUseCase.invoke(budget)
@@ -124,12 +131,23 @@ fun budgetName(selectedMonth: String, periodType: BudgetPeriod = BudgetPeriod.MO
 
 /** Shared with `GetBudgetEquivalentsUseCase.progressBarColor` so a budget and its equivalence
  * breakdown always use the same color thresholds for the same percentage. */
-fun budgetProgressColor(percent: Float): Int = when {
-    percent < 0f -> R.color.green_500
-    percent in 0f..35f -> R.color.green_500
-    percent in 36f..60f -> R.color.light_green_500
-    percent in 61f..85f -> R.color.orange_500
-    else -> R.color.red_500
+fun budgetProgressColor(percent: Float, goalType: com.naveenapps.expensemanager.core.model.BudgetGoalType = com.naveenapps.expensemanager.core.model.BudgetGoalType.EXPENSE): Int {
+    if (goalType == com.naveenapps.expensemanager.core.model.BudgetGoalType.INCOME) {
+        return when {
+            percent < 0f -> R.color.red_500
+            percent in 0f..35f -> R.color.red_500
+            percent in 36f..60f -> R.color.orange_500
+            percent in 61f..85f -> R.color.light_green_500
+            else -> R.color.green_500
+        }
+    }
+    return when {
+        percent < 0f -> R.color.green_500
+        percent in 0f..35f -> R.color.green_500
+        percent in 36f..60f -> R.color.light_green_500
+        percent in 61f..85f -> R.color.orange_500
+        else -> R.color.red_500
+    }
 }
 
 fun Budget.toBudgetUiModel(
@@ -144,7 +162,8 @@ fun Budget.toBudgetUiModel(
     name = name,
     selectedMonth = this.selectedMonth,
     periodType = this.periodType,
-    progressBarColor = budgetProgressColor(percent),
+    goalType = this.goalType,
+    progressBarColor = budgetProgressColor(percent, this.goalType),
     amount = budgetAmount,
     transactionAmount = transactionAmount,
     percent = percent,
@@ -158,6 +177,7 @@ data class BudgetUiModel(
     val name: String,
     val selectedMonth: String,
     val periodType: BudgetPeriod = BudgetPeriod.MONTHLY,
+    val goalType: com.naveenapps.expensemanager.core.model.BudgetGoalType = com.naveenapps.expensemanager.core.model.BudgetGoalType.EXPENSE,
     val progressBarColor: Int,
     val amount: Amount,
     val transactionAmount: Amount,

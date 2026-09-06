@@ -16,6 +16,7 @@ class GetSavingsGoalsUseCase(
     private val repository: SavingsGoalRepository,
     private val getCurrencyUseCase: GetCurrencyUseCase,
     private val getFormattedAmountUseCase: GetFormattedAmountUseCase,
+    private val recalculateGoalEstimateUseCase: RecalculateGoalEstimateUseCase,
     private val appCoroutineDispatchers: AppCoroutineDispatchers,
 ) {
     operator fun invoke(): Flow<List<SavingsGoalUiModel>> {
@@ -24,11 +25,24 @@ class GetSavingsGoalsUseCase(
             getCurrencyUseCase.invoke(),
         ) { savingsGoals, currency ->
             savingsGoals.map { savingsGoal ->
+                // Call recalculate on the fly for each goal
+                val estimateResult = recalculateGoalEstimateUseCase.invoke(savingsGoal)
+                
+                val estimateMessage = when (estimateResult) {
+                    is GoalEstimateResult.Achieved -> "Atteint" // Will be translated in UI if needed
+                    is GoalEstimateResult.Indeterminate -> "Date indéterminée"
+                    is GoalEstimateResult.Estimated -> {
+                        val sdf = java.text.SimpleDateFormat("MMM yyyy", java.util.Locale.getDefault())
+                        "Date est. : " + sdf.format(estimateResult.date)
+                    }
+                }
+
                 SavingsGoalUiModel(
                     savingsGoal = savingsGoal,
                     savedAmount = getFormattedAmountUseCase.invoke(savingsGoal.account.amount, currency),
                     targetAmount = getFormattedAmountUseCase.invoke(savingsGoal.targetAmount, currency),
                     progress = savingsGoal.progress(),
+                    estimateMessage = estimateMessage,
                 )
             }
         }.flowOn(appCoroutineDispatchers.computation)
@@ -41,4 +55,5 @@ data class SavingsGoalUiModel(
     val savedAmount: Amount,
     val targetAmount: Amount,
     val progress: Float,
+    val estimateMessage: String? = null,
 )
