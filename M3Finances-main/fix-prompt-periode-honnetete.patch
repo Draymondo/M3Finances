@@ -1,0 +1,76 @@
+diff --git a/core/data/src/main/kotlin/com/naveenapps/expensemanager/core/data/repository/GeminiRepositoryImpl.kt b/core/data/src/main/kotlin/com/naveenapps/expensemanager/core/data/repository/GeminiRepositoryImpl.kt
+index b815ebc..fe8bd7f 100644
+--- a/core/data/src/main/kotlin/com/naveenapps/expensemanager/core/data/repository/GeminiRepositoryImpl.kt
++++ b/core/data/src/main/kotlin/com/naveenapps/expensemanager/core/data/repository/GeminiRepositoryImpl.kt
+@@ -344,8 +344,11 @@ class GeminiRepositoryImpl(
+                             Ton utilisateur s'appelle Ray. Sa devise principale est le franc CFA (FCFA).
+                             Tu aides Ray à suivre son argent sans jamais le juger. Ton ton est naturel, clair, encourageant et tu tutoies Ray.
+                             
+-                            Ton objectif : Faire un bilan mensuel de ses dépenses.
++                            Ton objectif : Faire un bilan de ses finances sur la période indiquée dans les données fournies ci-dessous.
++                            - La période peut être une semaine, un mois, une année ou une plage personnalisée — utilise EXACTEMENT la période mentionnée dans les données, ne suppose JAMAIS que c'est un mois par défaut.
+                             - Analyse les données fournies (les dépenses par catégorie, le budget, etc.).
++                            - N'invente JAMAIS une catégorie, une habitude de dépense ou un exemple ("boissons", "loisirs", "petits plaisirs"...) qui n'apparaît PAS explicitement dans la liste de catégories fournie. La liste donnée est exhaustive : si une catégorie n'y figure pas, Ray n'a rien dépensé dedans sur cette période, ne la mentionne sous aucun prétexte, même comme conseil générique.
++                            - Base tes remarques et ton conseil uniquement sur les catégories et montants réellement listés.
+                             - Rédige un court paragraphe (3 à 4 phrases max) résumant la situation.
+                             - Donne un conseil pratique et encourageant.
+                             - Reste concis et va à l'essentiel.
+@@ -355,7 +358,7 @@ class GeminiRepositoryImpl(
+                 )
+ 
+                 val prompt = """
+-                    Voici les données financières du mois de Ray :
++                    Voici les données financières de Ray pour la période indiquée ci-dessous :
+                     
+                     $transactionsInfo
+                     
+diff --git a/feature/analysis/src/main/kotlin/com/naveenapps/expensemanager/feature/analysis/AnalysisScreenViewModel.kt b/feature/analysis/src/main/kotlin/com/naveenapps/expensemanager/feature/analysis/AnalysisScreenViewModel.kt
+index 035fdc4..777f0f9 100644
+--- a/feature/analysis/src/main/kotlin/com/naveenapps/expensemanager/feature/analysis/AnalysisScreenViewModel.kt
++++ b/feature/analysis/src/main/kotlin/com/naveenapps/expensemanager/feature/analysis/AnalysisScreenViewModel.kt
+@@ -150,16 +150,25 @@ class AnalysisScreenViewModel(
+ 
+             val txs = _graphItems.value?.transactions ?: emptyList()
+             if (txs.isEmpty()) {
+-                _aiReportState.value = AiReportState.Error("Aucune transaction ce mois-ci.")
++                val periodLabel = _transactionPeriod.value.ifBlank { "cette période" }
++                _aiReportState.value = AiReportState.Error("Aucune transaction sur $periodLabel.")
+                 return@launch
+             }
+ 
+             val text = buildString {
++                appendLine("Période sélectionnée : ${_transactionPeriod.value.ifBlank { "non précisée" }}")
+                 appendLine("Entrées totales: ${_expenseFlowState.value.income}")
+                 appendLine("Dépenses totales: ${_expenseFlowState.value.expense}")
+-                appendLine("Transactions récentes:")
+-                txs.take(20).forEach {
+-                    appendLine("- ${it.categoryName}: ${it.amount.amountString}")
++
++                val categoryTotals = txs
++                    .groupBy { it.categoryName }
++                    .mapValues { (_, items) -> items.sumOf { it.amount.amount } }
++                    .entries
++                    .sortedByDescending { it.value }
++
++                appendLine("Répartition des dépenses/revenus par catégorie (liste EXHAUSTIVE — aucune autre catégorie n'existe sur cette période) :")
++                categoryTotals.forEach { (category, total) ->
++                    appendLine("- $category: $total")
+                 }
+             }
+ 
+diff --git a/feature/transaction/src/main/kotlin/com/naveenapps/expensemanager/feature/transaction/chat/ChatViewModel.kt b/feature/transaction/src/main/kotlin/com/naveenapps/expensemanager/feature/transaction/chat/ChatViewModel.kt
+index 45cff59..e669c3a 100644
+--- a/feature/transaction/src/main/kotlin/com/naveenapps/expensemanager/feature/transaction/chat/ChatViewModel.kt
++++ b/feature/transaction/src/main/kotlin/com/naveenapps/expensemanager/feature/transaction/chat/ChatViewModel.kt
+@@ -197,6 +197,11 @@ class ChatViewModel(
+                     - CAS A (L'utilisateur demande une création/action) : Renvoie UNIQUEMENT la commande structurée. (Exemple: TRANSACTION|42.50|Food|Courses supermarché).
+                     - CAS B (L'utilisateur pose une question, demande un bilan ou un conseil) : Réponds directement avec ton texte de coach bienveillant, sans aucun code. 
+                     - Ne mélange jamais les deux formats.
++
++                    Règle d'honnêteté importante :
++                    - Tu n'as PAS accès aux transactions réelles de Ray depuis cette conversation.
++                    - Si on te demande un bilan, un résumé ou une analyse de ses dépenses/revenus réels (par exemple "fais-moi un bilan de ma semaine"), dis-le clairement et invite Ray à consulter l'écran Analyse de l'application pour un vrai bilan chiffré.
++                    - Ne réponds JAMAIS à ce type de demande comme si tu connaissais ses vraies données, même de façon générique et positive ("tu as bien géré tes dépenses", "il te reste une belle marge") — ce serait une fausse réassurance basée sur rien.
+                 """.trimIndent())
+             }
+         )
