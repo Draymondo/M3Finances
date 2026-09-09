@@ -756,7 +756,7 @@ fun Date.toTime(): ReminderTimeState {
     return ReminderTimeState(
         hour = hours,
         minute = minutes,
-        is24Hour = false,
+        is24Hour = true,
     )
 }
 
