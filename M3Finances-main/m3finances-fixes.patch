@@ -1,0 +1,66 @@
+diff --git a/core/database/src/main/kotlin/com/naveenapps/expensemanager/core/database/dao/TransactionDao.kt b/core/database/src/main/kotlin/com/naveenapps/expensemanager/core/database/dao/TransactionDao.kt
+index f37d9a4..86745d5 100644
+--- a/core/database/src/main/kotlin/com/naveenapps/expensemanager/core/database/dao/TransactionDao.kt
++++ b/core/database/src/main/kotlin/com/naveenapps/expensemanager/core/database/dao/TransactionDao.kt
+@@ -48,15 +48,15 @@ interface TransactionDao : BaseDao<TransactionEntity> {
+           INNER JOIN category ON category.id = t.category_id
+           INNER JOIN account AS from_account ON from_account.id = t.from_account_id
+           LEFT JOIN account AS to_account ON to_account.id = t.to_account_id
+-          WHERE LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(t.notes, 'é', 'e'), 'è', 'e'), 'ê', 'e'), 'ë', 'e'), 'à', 'a'), 'ç', 'c')) LIKE '%' || :query || '%'
+-              OR LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(category.name, 'é', 'e'), 'è', 'e'), 'ê', 'e'), 'ë', 'e'), 'à', 'a'), 'ç', 'c')) LIKE '%' || :query || '%'
+-              OR LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(from_account.name, 'é', 'e'), 'è', 'e'), 'ê', 'e'), 'ë', 'e'), 'à', 'a'), 'ç', 'c')) LIKE '%' || :query || '%'
+-               OR LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(to_account.name, 'é', 'e'), 'è', 'e'), 'ê', 'e'), 'ë', 'e'), 'à', 'a'), 'ç', 'c')) LIKE '%' || :query || '%'
++          WHERE LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(t.notes, 'à', 'a'), 'â', 'a'), 'À', 'a'), 'Â', 'a'), 'é', 'e'), 'è', 'e'), 'ê', 'e'), 'ë', 'e'), 'É', 'e'), 'È', 'e'), 'Ê', 'e'), 'Ë', 'e'), 'î', 'i'), 'ï', 'i'), 'Î', 'i'), 'Ï', 'i'), 'ô', 'o'), 'ö', 'o'), 'Ô', 'o'), 'Ö', 'o'), 'ù', 'u'), 'û', 'u'), 'ü', 'u'), 'Ù', 'u'), 'Û', 'u'), 'Ü', 'u'), 'ç', 'c'), 'Ç', 'c')) LIKE '%' || :query || '%'
++              OR LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(category.name, 'à', 'a'), 'â', 'a'), 'À', 'a'), 'Â', 'a'), 'é', 'e'), 'è', 'e'), 'ê', 'e'), 'ë', 'e'), 'É', 'e'), 'È', 'e'), 'Ê', 'e'), 'Ë', 'e'), 'î', 'i'), 'ï', 'i'), 'Î', 'i'), 'Ï', 'i'), 'ô', 'o'), 'ö', 'o'), 'Ô', 'o'), 'Ö', 'o'), 'ù', 'u'), 'û', 'u'), 'ü', 'u'), 'Ù', 'u'), 'Û', 'u'), 'Ü', 'u'), 'ç', 'c'), 'Ç', 'c')) LIKE '%' || :query || '%'
++              OR LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(from_account.name, 'à', 'a'), 'â', 'a'), 'À', 'a'), 'Â', 'a'), 'é', 'e'), 'è', 'e'), 'ê', 'e'), 'ë', 'e'), 'É', 'e'), 'È', 'e'), 'Ê', 'e'), 'Ë', 'e'), 'î', 'i'), 'ï', 'i'), 'Î', 'i'), 'Ï', 'i'), 'ô', 'o'), 'ö', 'o'), 'Ô', 'o'), 'Ö', 'o'), 'ù', 'u'), 'û', 'u'), 'ü', 'u'), 'Ù', 'u'), 'Û', 'u'), 'Ü', 'u'), 'ç', 'c'), 'Ç', 'c')) LIKE '%' || :query || '%'
++               OR LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(to_account.name, 'à', 'a'), 'â', 'a'), 'À', 'a'), 'Â', 'a'), 'é', 'e'), 'è', 'e'), 'ê', 'e'), 'ë', 'e'), 'É', 'e'), 'È', 'e'), 'Ê', 'e'), 'Ë', 'e'), 'î', 'i'), 'ï', 'i'), 'Î', 'i'), 'Ï', 'i'), 'ô', 'o'), 'ö', 'o'), 'Ô', 'o'), 'Ö', 'o'), 'ù', 'u'), 'û', 'u'), 'ü', 'u'), 'Ù', 'u'), 'Û', 'u'), 'Ü', 'u'), 'ç', 'c'), 'Ç', 'c')) LIKE '%' || :query || '%'
+                             OR EXISTS (
+                                     SELECT 1 FROM transaction_split_item AS split_item
+                                     INNER JOIN category AS split_category ON split_category.id = split_item.category_id
+                                     WHERE split_item.transaction_id = t.id
+-                                        AND LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(split_category.name, 'é', 'e'), 'è', 'e'), 'ê', 'e'), 'ë', 'e'), 'à', 'a'), 'ç', 'c')) LIKE '%' || :query || '%'
++                                        AND LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(split_category.name, 'à', 'a'), 'â', 'a'), 'À', 'a'), 'Â', 'a'), 'é', 'e'), 'è', 'e'), 'ê', 'e'), 'ë', 'e'), 'É', 'e'), 'È', 'e'), 'Ê', 'e'), 'Ë', 'e'), 'î', 'i'), 'ï', 'i'), 'Î', 'i'), 'Ï', 'i'), 'ô', 'o'), 'ö', 'o'), 'Ô', 'o'), 'Ö', 'o'), 'ù', 'u'), 'û', 'u'), 'ü', 'u'), 'Ù', 'u'), 'Û', 'u'), 'Ü', 'u'), 'ç', 'c'), 'Ç', 'c')) LIKE '%' || :query || '%'
+                             )
+           ORDER BY t.created_on DESC
+         """,
+diff --git a/feature/transaction/src/main/kotlin/com/naveenapps/expensemanager/feature/transaction/create/TransactionCreateViewModel.kt b/feature/transaction/src/main/kotlin/com/naveenapps/expensemanager/feature/transaction/create/TransactionCreateViewModel.kt
+index d354d48..e60b1c2 100644
+--- a/feature/transaction/src/main/kotlin/com/naveenapps/expensemanager/feature/transaction/create/TransactionCreateViewModel.kt
++++ b/feature/transaction/src/main/kotlin/com/naveenapps/expensemanager/feature/transaction/create/TransactionCreateViewModel.kt
+@@ -243,7 +243,9 @@ class TransactionCreateViewModel(
+                     value = numberFormatRepository.formatForEditing(pendingTransaction.amount)
+                 ),
+                 transactionType = pendingTransaction.transactionType,
+-                dateTime = pendingTransaction.date,
++                // scheduledDate est le champ que "Reporter" met à jour - utiliser pendingTransaction.date
++                // ici affichait l'ancienne date figée après un report.
++                dateTime = pendingTransaction.scheduledDate ?: pendingTransaction.date,
+                 notes = current.notes.copy(value = pendingTransaction.merchant ?: ""),
+                 selectedCategory = suggestedCategory,
+                 selectedFromAccount = targetAccount,
+diff --git a/feature/transaction/src/main/kotlin/com/naveenapps/expensemanager/feature/transaction/pending/PendingTransactionListScreen.kt b/feature/transaction/src/main/kotlin/com/naveenapps/expensemanager/feature/transaction/pending/PendingTransactionListScreen.kt
+index a7220c5..df66687 100644
+--- a/feature/transaction/src/main/kotlin/com/naveenapps/expensemanager/feature/transaction/pending/PendingTransactionListScreen.kt
++++ b/feature/transaction/src/main/kotlin/com/naveenapps/expensemanager/feature/transaction/pending/PendingTransactionListScreen.kt
+@@ -26,6 +26,7 @@ import androidx.compose.runtime.mutableStateOf
+ import androidx.compose.runtime.remember
+ import androidx.compose.runtime.setValue
+ import com.naveenapps.expensemanager.core.designsystem.ui.components.AppDatePickerDialog
++import com.naveenapps.expensemanager.core.common.utils.toCompleteDateWithDate
+ import java.util.Date
+ 
+ @OptIn(ExperimentalMaterial3Api::class)
+@@ -111,6 +112,13 @@ fun PendingTransactionItem(
+                     style = MaterialTheme.typography.labelSmall,
+                     color = MaterialTheme.colorScheme.primary
+                 )
++                if (transaction.source == TransactionSource.SCHEDULED) {
++                    Text(
++                        text = "Prévue le : ${(transaction.scheduledDate ?: transaction.date).toCompleteDateWithDate()}",
++                        style = MaterialTheme.typography.bodySmall,
++                        color = MaterialTheme.colorScheme.onSurfaceVariant
++                    )
++                }
+                 Text(
+                     text = transaction.merchant ?: "Inconnu",
+                     style = MaterialTheme.typography.titleMedium
