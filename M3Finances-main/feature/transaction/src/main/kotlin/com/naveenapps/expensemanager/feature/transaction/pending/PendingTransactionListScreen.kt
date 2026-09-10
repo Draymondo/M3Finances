@@ -26,6 +26,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.naveenapps.expensemanager.core.designsystem.ui.components.AppDatePickerDialog
+import com.naveenapps.expensemanager.core.common.utils.toCompleteDateWithDate
 import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -111,6 +112,13 @@ fun PendingTransactionItem(
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary
                 )
+                if (transaction.source == TransactionSource.SCHEDULED) {
+                    Text(
+                        text = "Prévue le : ${(transaction.scheduledDate ?: transaction.date).toCompleteDateWithDate()}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 Text(
                     text = transaction.merchant ?: "Inconnu",
                     style = MaterialTheme.typography.titleMedium

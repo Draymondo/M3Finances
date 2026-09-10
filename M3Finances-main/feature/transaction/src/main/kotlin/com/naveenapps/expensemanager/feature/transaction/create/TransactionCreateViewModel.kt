@@ -243,7 +243,7 @@ class TransactionCreateViewModel(
                     value = numberFormatRepository.formatForEditing(pendingTransaction.amount)
                 ),
                 transactionType = pendingTransaction.transactionType,
-                dateTime = pendingTransaction.date,
+                dateTime = pendingTransaction.scheduledDate ?: pendingTransaction.date,
                 notes = current.notes.copy(value = pendingTransaction.merchant ?: ""),
                 selectedCategory = suggestedCategory,
                 selectedFromAccount = targetAccount,
