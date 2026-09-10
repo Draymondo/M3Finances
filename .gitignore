@@ -95,5 +95,6 @@ lint/tmp/
 *.hprof
 
 #Keys
-keys
+keys/*
+!keys/debug.keystore
 
