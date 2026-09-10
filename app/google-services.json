@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "312791889198",
+    "firebase_url": "https://m3notes-9712f-default-rtdb.europe-west1.firebasedatabase.app",
     "project_id": "m3notes-9712f",
     "storage_bucket": "m3notes-9712f.firebasestorage.app"
   },
@@ -43,11 +44,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "312791889198-sp7e88sht7tc9psp02ajl16a3i4e5v14.apps.googleusercontent.com",
+          "client_id": "312791889198-abg6seoaa1uvk0f57201m9dj8qtt7af3.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.naveenapps.expensemanager",
-            "certificate_hash": "a01d7e9ea3d44a2914d2275a02be4bf09b0b3f45"
+            "certificate_hash": "9a40d941d7f24943f837bd6a34eb87ecd57f7d5b"
           }
         },
         {
@@ -80,11 +81,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "312791889198-0dh9h8re8sktmjtie3e4dice3l9gr44i.apps.googleusercontent.com",
+          "client_id": "312791889198-89vm5j2kvs5ik2pm1a3veem4cuird3vp.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.naveenapps.expensemanager.debug",
-            "certificate_hash": "a01d7e9ea3d44a2914d2275a02be4bf09b0b3f45"
+            "certificate_hash": "fd59886aea57303615137fe89dfd3ad366daf879"
           }
         },
         {
