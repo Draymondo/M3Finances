@@ -6,6 +6,7 @@ import com.naveenapps.expensemanager.core.datastore.LocaleDataStore
 import com.naveenapps.expensemanager.core.datastore.ReminderTimeDataStore
 import com.naveenapps.expensemanager.core.datastore.SettingsDataStore
 import com.naveenapps.expensemanager.core.datastore.ThemeDataStore
+import com.naveenapps.expensemanager.core.datastore.ToolUsageDataStore
 import com.naveenapps.expensemanager.core.model.Currency
 import com.naveenapps.expensemanager.core.model.CurrencyPosition
 import com.naveenapps.expensemanager.core.model.DateRangeType
@@ -26,6 +27,7 @@ class CloudAppSettingsSync(
     private val settingsDataStore: SettingsDataStore,
     private val dateRangeDataStore: DateRangeDataStore,
     private val numberFormatSettingsDatastore: NumberFormatSettingsDatastore,
+    private val toolUsageDataStore: ToolUsageDataStore,
 ) {
 
     suspend fun read(): Map<String, Any?> = snapshot().toFirestoreMap()
@@ -51,6 +53,7 @@ class CloudAppSettingsSync(
         dateRangeDataStore.getFilterType(),
         dateRangeDataStore.getDateRanges(),
         numberFormatSettingsDatastore.getNumberFormatType(),
+        toolUsageDataStore.getAllUsage(),
     ) { values -> values.toList() }
         .distinctUntilChanged()
         .map { }
@@ -72,6 +75,7 @@ class CloudAppSettingsSync(
         dateFilterType = dateRangeDataStore.getFilterType().first().ordinal,
         dateRanges = dateRangeDataStore.getDateRanges().first(),
         numberFormatType = numberFormatSettingsDatastore.getNumberFormatType().first().ordinal,
+        toolUsage = toolUsageDataStore.getAllUsage().first(),
     )
 
     private suspend fun Snapshot.restore() {
@@ -96,6 +100,7 @@ class CloudAppSettingsSync(
         dateRangeDataStore.setFilterType(DateRangeType.entries[dateFilterType])
         dateRanges?.let { dateRangeDataStore.setDateRanges(it[0], it[1]) }
         numberFormatSettingsDatastore.setNumberFormatType(NumberFormatType.entries[numberFormatType])
+        toolUsage?.let { toolUsageDataStore.setAllUsage(it) }
     }
 
     private fun Snapshot.toFirestoreMap(): Map<String, Any?> = mapOf(
@@ -121,6 +126,7 @@ class CloudAppSettingsSync(
         KEY_DATE_FILTER_TYPE to dateFilterType,
         KEY_DATE_RANGES to dateRanges,
         KEY_NUMBER_FORMAT_TYPE to numberFormatType,
+        KEY_TOOL_USAGE to toolUsage,
     )
 
     private fun snapshotFrom(data: Map<String, Any?>): Snapshot? {
@@ -156,6 +162,7 @@ class CloudAppSettingsSync(
                 dateFilterType = dateFilterType,
                 dateRanges = data.longList(KEY_DATE_RANGES),
                 numberFormatType = numberFormatType,
+                toolUsage = data.intMap(KEY_TOOL_USAGE),
             ).also {
                 DateRangeType.entries[dateFilterType]
                 NumberFormatType.entries[numberFormatType]
@@ -183,6 +190,7 @@ class CloudAppSettingsSync(
         val dateFilterType: Int,
         val dateRanges: List<Long>?,
         val numberFormatType: Int,
+        val toolUsage: Map<String, Int>? = null,
     )
 
     private fun Map<String, Any?>.int(key: String) = (this[key] as? Number)?.toInt()
@@ -195,6 +203,10 @@ class CloudAppSettingsSync(
         (this[key] as? List<*>)?.mapNotNull { it as? String }
     private fun Map<String, Any?>.longList(key: String) =
         (this[key] as? List<*>)?.mapNotNull { (it as? Number)?.toLong() }
+    private fun Map<String, Any?>.intMap(key: String): Map<String, Int>? =
+        (this[key] as? Map<*, *>)?.mapNotNull { (k, v) ->
+            if (k is String && v is Number) k to v.toInt() else null
+        }?.toMap()
 
     companion object {
         private const val VERSION = 1
@@ -229,5 +241,6 @@ class CloudAppSettingsSync(
         private const val KEY_DATE_FILTER_TYPE = "dateFilterType"
         private const val KEY_DATE_RANGES = "dateRanges"
         private const val KEY_NUMBER_FORMAT_TYPE = "numberFormatType"
+        private const val KEY_TOOL_USAGE = "toolUsage"
     }
 }

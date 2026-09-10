@@ -315,20 +315,8 @@ class SettingsViewModel(
         appComposeNavigator.navigate(ExpenseManagerScreens.ReminderScreen)
     }
 
-    private fun openRecurringTransactionsScreen() {
-        appComposeNavigator.navigate(ExpenseManagerScreens.RecurringTransactionList)
-    }
-
-    private fun openDebtsScreen() {
-        appComposeNavigator.navigate(ExpenseManagerScreens.DebtList)
-    }
-
-    private fun openSavingsGoalsScreen() {
-        appComposeNavigator.navigate(ExpenseManagerScreens.SavingsGoalList)
-    }
-
-    private fun openShoppingListsScreen() {
-        appComposeNavigator.navigate(ExpenseManagerScreens.ShoppingListList)
+    private fun openToolsScreen() {
+        appComposeNavigator.navigate(ExpenseManagerScreens.ToolsScreen)
     }
 
     private fun closePage() {
@@ -385,10 +373,7 @@ class SettingsViewModel(
             SettingAction.OpenCurrencyEdit -> openCurrencyCustomiseScreen()
             SettingAction.OpenExport -> openExportScreen()
             SettingAction.OpenNotification -> openNotificationScreen()
-            SettingAction.OpenRecurringTransactions -> openRecurringTransactionsScreen()
-            SettingAction.OpenDebts -> openDebtsScreen()
-            SettingAction.OpenSavingsGoals -> openSavingsGoalsScreen()
-            SettingAction.OpenShoppingLists -> openShoppingListsScreen()
+            SettingAction.OpenTools -> openToolsScreen()
             SettingAction.OpenRateUs -> {
                 viewModelScope.launch {
                     _event.send(SettingEvent.RateUs)

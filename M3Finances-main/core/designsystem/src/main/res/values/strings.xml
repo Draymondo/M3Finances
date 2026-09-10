@@ -14,6 +14,7 @@
     <string name="transaction_summary">Summary</string>
     <string name="total">Total</string>
 
+    <string name="edit">Edit</string>
     <string name="delete">Delete</string>
     <string name="delete_item_message">Are you sure want to delete this item? Deleted item cannot retrieved.</string>
     <string name="yes_delete">Yes, Delete</string>

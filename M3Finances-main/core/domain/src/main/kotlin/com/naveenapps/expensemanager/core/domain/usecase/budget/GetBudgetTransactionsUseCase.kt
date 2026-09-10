@@ -52,7 +52,7 @@ class GetBudgetTransactionsUseCase(
             BudgetPeriod.DAILY -> budget.selectedMonth.fromDayKey()
         }
 
-        date ?: return Resource.Error(IllegalArgumentException("Unknown month value"))
+        date ?: return Resource.Error(IllegalArgumentException("Valeur de date inconnue"))
 
         val startDate = when (budget.periodType) {
             BudgetPeriod.YEARLY -> date.getStartOfTheYear()

@@ -11,6 +11,14 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface PendingTransactionDao {
 
+    /**
+     * Returns only actionable pending transactions:
+     * - SMS-captured rows (scheduled_date IS NULL)
+     * - Scheduled rows whose date has been reached (scheduled_date <= :now)
+     */
+    @Query("SELECT * FROM pending_transaction WHERE scheduled_date IS NULL OR scheduled_date <= :now ORDER BY created_on DESC")
+    fun getActionablePendingTransactions(now: Long): Flow<List<PendingTransactionEntity>>
+
     @Query("SELECT * FROM pending_transaction ORDER BY created_on DESC")
     fun getAllPendingTransactions(): Flow<List<PendingTransactionEntity>>
 
@@ -28,5 +36,13 @@ interface PendingTransactionDao {
     
     @Query("DELETE FROM pending_transaction")
     suspend fun deleteAll()
-}
 
+    @Query("UPDATE pending_transaction SET scheduled_date = :newDate WHERE id = :id")
+    suspend fun updateScheduledDate(id: String, newDate: Long)
+
+    /**
+     * Count of scheduled transactions that are now due (scheduled_date reached).
+     */
+    @Query("SELECT COUNT(*) FROM pending_transaction WHERE scheduled_date IS NOT NULL AND scheduled_date <= :now")
+    suspend fun countScheduledDue(now: Long): Int
+}

@@ -8,6 +8,7 @@ import com.naveenapps.expensemanager.core.datastore.LocaleDataStore
 import com.naveenapps.expensemanager.core.datastore.ReminderTimeDataStore
 import com.naveenapps.expensemanager.core.datastore.SettingsDataStore
 import com.naveenapps.expensemanager.core.datastore.ThemeDataStore
+import com.naveenapps.expensemanager.core.datastore.ToolUsageDataStore
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
@@ -25,5 +26,6 @@ val DatastoreModule = module {
     single { DateRangeDataStore(get()) }
     single { FeedbackDataStore(get()) }
     single { CloudSyncDataStore(get()) }
+    single { ToolUsageDataStore(get()) }
 }
 

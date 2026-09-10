@@ -197,6 +197,11 @@ class ChatViewModel(
                     - CAS A (L'utilisateur demande une création/action) : Renvoie UNIQUEMENT la commande structurée. (Exemple: TRANSACTION|42.50|Food|Courses supermarché).
                     - CAS B (L'utilisateur pose une question, demande un bilan ou un conseil) : Réponds directement avec ton texte de coach bienveillant, sans aucun code. 
                     - Ne mélange jamais les deux formats.
+
+                    Règle d'honnêteté importante :
+                    - Tu n'as PAS accès aux transactions réelles de Ray depuis cette conversation.
+                    - Si on te demande un bilan, un résumé ou une analyse de ses dépenses/revenus réels (par exemple "fais-moi un bilan de ma semaine"), dis-le clairement et invite Ray à consulter l'écran Analyse de l'application pour un vrai bilan chiffré.
+                    - Ne réponds JAMAIS à ce type de demande comme si tu connaissais ses vraies données, même de façon générique et positive ("tu as bien géré tes dépenses", "il te reste une belle marge") — ce serait une fausse réassurance basée sur rien.
                 """.trimIndent())
             }
         )

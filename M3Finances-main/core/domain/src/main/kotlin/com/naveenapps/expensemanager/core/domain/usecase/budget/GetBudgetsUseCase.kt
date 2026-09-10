@@ -80,49 +80,50 @@ private val shortMonthFormat = SimpleDateFormat("MMM yyyy", Locale.getDefault())
 private val shortDayFormat = SimpleDateFormat("dd MMM", Locale.getDefault())
 
 fun budgetName(selectedMonth: String, periodType: BudgetPeriod = BudgetPeriod.MONTHLY): String {
+    val isFr = Locale.getDefault().language.lowercase().startsWith("fr")
     return when (periodType) {
         BudgetPeriod.YEARLY -> {
             val currentYear = Date().toYear()
             if (selectedMonth == currentYear) {
-                "This Year Budget"
+                if (isFr) "Budget de cette année" else "This Year Budget"
             } else {
-                "$selectedMonth Budget"
+                if (isFr) "Budget $selectedMonth" else "$selectedMonth Budget"
             }
         }
 
         BudgetPeriod.MONTHLY -> {
             val currentMonth = Date().toMonthAndYearKey()
             if (selectedMonth == currentMonth) {
-                "This Month Budget"
+                if (isFr) "Budget de ce mois" else "This Month Budget"
             } else {
                 val short = selectedMonth.fromMonthAndYearKey()
                     ?.let { shortMonthFormat.format(it) }
                     ?: selectedMonth
-                "$short Budget"
+                if (isFr) "Budget $short" else "$short Budget"
             }
         }
 
         BudgetPeriod.WEEKLY -> {
             val currentWeek = Date().toWeekKey()
             if (selectedMonth == currentWeek) {
-                "This Week Budget"
+                if (isFr) "Budget de cette semaine" else "This Week Budget"
             } else {
                 val short = selectedMonth.fromWeekKey()
                     ?.let { shortDayFormat.format(it) }
                     ?: selectedMonth
-                "Week of $short Budget"
+                if (isFr) "Budget semaine du $short" else "Week of $short Budget"
             }
         }
 
         BudgetPeriod.DAILY -> {
             val currentDay = Date().toDayKey()
             if (selectedMonth == currentDay) {
-                "Today Budget"
+                if (isFr) "Budget d'aujourd'hui" else "Today Budget"
             } else {
                 val short = selectedMonth.fromDayKey()
                     ?.let { shortDayFormat.format(it) }
                     ?: selectedMonth
-                "$short Budget"
+                if (isFr) "Budget $short" else "$short Budget"
             }
         }
     }

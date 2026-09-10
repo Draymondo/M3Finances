@@ -15,8 +15,10 @@ import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
+import androidx.glance.LocalContext
 import androidx.glance.LocalSize
 import androidx.glance.action.ActionParameters
+import com.naveenapps.expensemanager.R
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetManager
@@ -301,6 +303,7 @@ class ExpenseWidget : GlanceAppWidget() {
 
 @Composable
 fun CompactWidget(data: ExpenseWidgetData) {
+    val context = LocalContext.current
     Box(
         modifier = GlanceModifier
             .fillMaxSize()
@@ -332,7 +335,7 @@ fun CompactWidget(data: ExpenseWidgetData) {
 
             Column(modifier = GlanceModifier.defaultWeight()) {
                 Text(
-                    text = "Balance",
+                    text = context.getString(R.string.widget_balance),
                     style = TextStyle(
                         color = fixedColor(WidgetColors.WhiteDim),
                         fontSize = 10.sp
@@ -380,6 +383,7 @@ fun CompactWidget(data: ExpenseWidgetData) {
 
 @Composable
 fun StandardWidget(data: ExpenseWidgetData) {
+    val context = LocalContext.current
     val spentPercent = if (data.income > 0.0) {
         ((data.expenses / data.income) * 100).toInt().coerceIn(0, 100)
     } else 0
@@ -397,7 +401,7 @@ fun StandardWidget(data: ExpenseWidgetData) {
         ) {
             Column(modifier = GlanceModifier.defaultWeight()) {
                 Text(
-                    text = "Total balance",
+                    text = context.getString(R.string.widget_total_balance),
                     style = TextStyle(
                         color = fixedColor(WidgetColors.WhiteDim),
                         fontSize = 11.sp
@@ -420,7 +424,7 @@ fun StandardWidget(data: ExpenseWidgetData) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "${data.changePercent}% saved",
+                        text = context.getString(R.string.widget_saved_pct, data.changePercent.toString()),
                         style = TextStyle(
                             color = fixedColor(WidgetColors.Green),
                             fontSize = 10.sp
@@ -441,7 +445,7 @@ fun StandardWidget(data: ExpenseWidgetData) {
             ) {
                 Image(
                     provider = ImageProvider(com.naveenapps.expensemanager.R.drawable.ic_sync),
-                    contentDescription = "Refresh",
+                    contentDescription = context.getString(R.string.widget_refresh),
                     modifier = GlanceModifier.size(18.dp),
                     colorFilter = ColorFilter.tint(fixedColor(WidgetColors.Purple))
                 )
@@ -452,14 +456,14 @@ fun StandardWidget(data: ExpenseWidgetData) {
 
         Row(modifier = GlanceModifier.fillMaxWidth()) {
             StatPill(
-                label = "Income",
+                label = context.getString(R.string.widget_income),
                 value = data.incomeStr,
                 valueColor = WidgetColors.Green,
                 modifier = GlanceModifier.defaultWeight()
             )
             Spacer(modifier = GlanceModifier.width(8.dp))
             StatPill(
-                label = "Expenses",
+                label = context.getString(R.string.widget_expenses),
                 value = data.expensesStr,
                 valueColor = WidgetColors.Red,
                 modifier = GlanceModifier.defaultWeight()
@@ -479,12 +483,12 @@ fun StandardWidget(data: ExpenseWidgetData) {
 
         Row(modifier = GlanceModifier.fillMaxWidth()) {
             Text(
-                text = "$spentPercent% of income spent",
+                text = context.getString(R.string.widget_income_spent_pct, spentPercent),
                 style = TextStyle(color = fixedColor(WidgetColors.WhiteDim), fontSize = 10.sp),
                 modifier = GlanceModifier.defaultWeight()
             )
             Text(
-                text = "${data.balanceStr} saved",
+                text = context.getString(R.string.widget_amount_saved, data.balanceStr),
                 style = TextStyle(color = fixedColor(WidgetColors.WhiteDim), fontSize = 10.sp)
             )
         }
@@ -521,6 +525,7 @@ private fun StatPill(
 
 @Composable
 fun ExpandedWidget(data: ExpenseWidgetData) {
+    val context = LocalContext.current
     Row(
         modifier = GlanceModifier
             .fillMaxSize()
@@ -534,7 +539,7 @@ fun ExpandedWidget(data: ExpenseWidgetData) {
                 .fillMaxHeight()
         ) {
             Text(
-                text = "Total balance",
+                text = context.getString(R.string.widget_total_balance),
                 style = TextStyle(color = fixedColor(WidgetColors.WhiteDim), fontSize = 10.sp)
             )
             Text(
@@ -553,7 +558,7 @@ fun ExpandedWidget(data: ExpenseWidgetData) {
                     .padding(horizontal = 8.dp, vertical = 2.dp)
             ) {
                 Text(
-                    text = "${data.changePercent}% saved",
+                    text = context.getString(R.string.widget_saved_pct, data.changePercent.toString()),
                     style = TextStyle(color = fixedColor(WidgetColors.Green), fontSize = 10.sp)
                 )
             }
@@ -562,14 +567,14 @@ fun ExpandedWidget(data: ExpenseWidgetData) {
 
             Row(modifier = GlanceModifier.fillMaxWidth()) {
                 MiniStatBox(
-                    label = "Income",
+                    label = context.getString(R.string.widget_income),
                     value = data.incomeStr,
                     valueColor = WidgetColors.Green,
                     modifier = GlanceModifier.defaultWeight()
                 )
                 Spacer(modifier = GlanceModifier.width(6.dp))
                 MiniStatBox(
-                    label = "Spent",
+                    label = context.getString(R.string.widget_spent),
                     value = data.expensesStr,
                     valueColor = WidgetColors.Red,
                     modifier = GlanceModifier.defaultWeight()
@@ -596,7 +601,7 @@ fun ExpandedWidget(data: ExpenseWidgetData) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Recent",
+                    text = context.getString(R.string.widget_recent),
                     style = TextStyle(color = fixedColor(WidgetColors.WhiteDim), fontSize = 10.sp),
                     modifier = GlanceModifier.defaultWeight()
                 )
@@ -610,7 +615,7 @@ fun ExpandedWidget(data: ExpenseWidgetData) {
                 ) {
                     Image(
                         provider = ImageProvider(com.naveenapps.expensemanager.R.drawable.ic_sync),
-                        contentDescription = "Refresh",
+                        contentDescription = context.getString(R.string.widget_refresh),
                         modifier = GlanceModifier.size(13.dp),
                         colorFilter = ColorFilter.tint(fixedColor(WidgetColors.Purple))
                     )
@@ -620,7 +625,7 @@ fun ExpandedWidget(data: ExpenseWidgetData) {
 
             if (data.recentTransactions.isEmpty()) {
                 Text(
-                    text = "No transactions",
+                    text = context.getString(R.string.widget_no_transactions),
                     style = TextStyle(color = fixedColor(WidgetColors.WhiteDim), fontSize = 11.sp)
                 )
             } else {

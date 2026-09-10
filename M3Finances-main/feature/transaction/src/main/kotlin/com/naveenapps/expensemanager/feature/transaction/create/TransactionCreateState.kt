@@ -42,6 +42,7 @@ data class TransactionCreateState(
     val isCategoryAutoSelected: Boolean = false,
     val showSuggestionDialog: Boolean = false,
     val suggestedContributions: Map<SavingsGoal, Amount> = emptyMap(),
+    val isFutureDate: Boolean = false,
 )
 
 data class TransactionSplitItemState(

@@ -11,7 +11,7 @@ class UpdateAllAccountUseCase(
 
     suspend operator fun invoke(accounts: List<Account>): Resource<Boolean> {
         if (accounts.isEmpty()) {
-            return Resource.Error(Exception("Accounts are empty"))
+            return Resource.Error(Exception("La liste des comptes est vide"))
         }
 
         var failedResponse: Resource.Error? = null

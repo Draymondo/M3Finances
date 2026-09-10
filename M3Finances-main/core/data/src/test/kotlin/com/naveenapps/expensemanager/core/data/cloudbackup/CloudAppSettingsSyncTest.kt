@@ -40,7 +40,8 @@ class CloudAppSettingsSyncTest {
         val settings = SettingsDataStore(mainStore)
         val dateRange = DateRangeDataStore(mainStore)
         val numberFormat = NumberFormatSettingsDatastore(numberFormatStore)
-        val sync = CloudAppSettingsSync(theme, locale, currency, reminder, settings, dateRange, numberFormat)
+        val toolUsage = com.naveenapps.expensemanager.core.datastore.ToolUsageDataStore(mainStore)
+        val sync = CloudAppSettingsSync(theme, locale, currency, reminder, settings, dateRange, numberFormat, toolUsage)
 
         theme.setTheme(2)
         locale.setLocaleTag("fr")

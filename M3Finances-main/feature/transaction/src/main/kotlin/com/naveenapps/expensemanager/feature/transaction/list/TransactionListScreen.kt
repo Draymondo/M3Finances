@@ -85,12 +85,12 @@ private fun TransactionListScreenContent(
                     title = { Text(text = "${state.selectedTransactions.size} sélectionnés") },
                     navigationIcon = {
                         IconButton(onClick = { onAction(TransactionListAction.ClearSelection) }) {
-                            Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Clear")
+                            Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = stringResource(R.string.clear))
                         }
                     },
                     actions = {
                         IconButton(onClick = { onAction(TransactionListAction.DeleteSelected) }) {
-                            Icon(Icons.Outlined.Delete, contentDescription = "Delete")
+                            Icon(Icons.Outlined.Delete, contentDescription = stringResource(R.string.delete))
                         }
                     },
                     colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(

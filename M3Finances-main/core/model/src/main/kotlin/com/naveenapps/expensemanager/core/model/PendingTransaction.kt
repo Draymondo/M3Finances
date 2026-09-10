@@ -13,5 +13,8 @@ data class PendingTransaction(
     val rawNotification: String?,
     val source: TransactionSource = TransactionSource.UNKNOWN,
     val confidence: Float? = null,
+    val scheduledDate: Date? = null,
+    val accountId: String? = null,
+    val categoryId: String? = null,
 )
 

@@ -45,6 +45,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import com.naveenapps.expensemanager.feature.transaction.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
@@ -116,7 +118,7 @@ fun TransactionItem(
                 if (onEdit != null) {
                     SwipeAction(
                         icon = Icons.Outlined.Edit,
-                        label = "Edit",
+                        label = stringResource(R.string.edit),
                         color = MaterialTheme.colorScheme.primary,
                         onClick = {
                             rawOffset = 0f
@@ -127,7 +129,7 @@ fun TransactionItem(
                 if (onDelete != null) {
                     SwipeAction(
                         icon = Icons.Outlined.Delete,
-                        label = "Delete",
+                        label = stringResource(R.string.delete),
                         color = colorResource(
                             id = com.naveenapps.expensemanager.core.common.R.color.red_500,
                         ),

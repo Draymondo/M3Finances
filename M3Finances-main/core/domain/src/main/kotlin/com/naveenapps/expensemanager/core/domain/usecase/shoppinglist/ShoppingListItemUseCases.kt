@@ -18,10 +18,10 @@ class AddShoppingListItemUseCase(
 ) {
     suspend operator fun invoke(item: ShoppingListItem): Resource<Boolean> {
         if (item.name.isBlank()) {
-            return Resource.Error(Exception("Name shouldn't be blank"))
+            return Resource.Error(Exception("Le nom ne doit pas être vide"))
         }
         if (item.price < 0.0) {
-            return Resource.Error(Exception("Price can't be negative"))
+            return Resource.Error(Exception("Le prix ne peut pas être négatif"))
         }
         return repository.addShoppingListItem(item)
     }

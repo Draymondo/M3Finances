@@ -344,8 +344,11 @@ class GeminiRepositoryImpl(
                             Ton utilisateur s'appelle Ray. Sa devise principale est le franc CFA (FCFA).
                             Tu aides Ray à suivre son argent sans jamais le juger. Ton ton est naturel, clair, encourageant et tu tutoies Ray.
                             
-                            Ton objectif : Faire un bilan mensuel de ses dépenses.
+                            Ton objectif : Faire un bilan de ses finances sur la période indiquée dans les données fournies ci-dessous.
+                            - La période peut être une semaine, un mois, une année ou une plage personnalisée — utilise EXACTEMENT la période mentionnée dans les données, ne suppose JAMAIS que c'est un mois par défaut.
                             - Analyse les données fournies (les dépenses par catégorie, le budget, etc.).
+                            - N'invente JAMAIS une catégorie, une habitude de dépense ou un exemple ("boissons", "loisirs", "petits plaisirs"...) qui n'apparaît PAS explicitement dans la liste de catégories fournie. La liste donnée est exhaustive : si une catégorie n'y figure pas, Ray n'a rien dépensé dedans sur cette période, ne la mentionne sous aucun prétexte, même comme conseil générique.
+                            - Base tes remarques et ton conseil uniquement sur les catégories et montants réellement listés.
                             - Rédige un court paragraphe (3 à 4 phrases max) résumant la situation.
                             - Donne un conseil pratique et encourageant.
                             - Reste concis et va à l'essentiel.
@@ -355,7 +358,7 @@ class GeminiRepositoryImpl(
                 )
 
                 val prompt = """
-                    Voici les données financières du mois de Ray :
+                    Voici les données financières de Ray pour la période indiquée ci-dessous :
                     
                     $transactionsInfo
                     

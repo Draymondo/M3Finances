@@ -21,12 +21,35 @@ import com.naveenapps.expensemanager.core.model.TransactionSource
 import com.naveenapps.expensemanager.feature.transaction.R
 import org.koin.compose.viewmodel.koinViewModel
 
+import androidx.compose.material.icons.filled.EditCalendar
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.naveenapps.expensemanager.core.designsystem.ui.components.AppDatePickerDialog
+import java.util.Date
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PendingTransactionListScreen(
     viewModel: PendingTransactionListViewModel = koinViewModel()
 ) {
     val pendingTransactions by viewModel.pendingTransactions.collectAsState()
+    var transactionToPostpone by remember { mutableStateOf<PendingTransaction?>(null) }
+
+    if (transactionToPostpone != null) {
+        AppDatePickerDialog(
+            selectedDate = transactionToPostpone?.scheduledDate ?: Date(),
+            onDateSelected = { newDate ->
+                transactionToPostpone?.let { tx ->
+                    viewModel.postponeTransaction(tx.id, newDate)
+                }
+                transactionToPostpone = null
+            },
+            onDismiss = {
+                transactionToPostpone = null
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -51,7 +74,10 @@ fun PendingTransactionListScreen(
                     PendingTransactionItem(
                         transaction = transaction,
                         onClick = { viewModel.openTransactionCreate(transaction) },
-                        onDelete = { viewModel.dismissTransaction(transaction.id) }
+                        onDelete = { viewModel.dismissTransaction(transaction.id) },
+                        onPostpone = if (transaction.source == TransactionSource.SCHEDULED) {
+                            { transactionToPostpone = transaction }
+                        } else null
                     )
                 }
             }
@@ -64,6 +90,7 @@ fun PendingTransactionItem(
     transaction: PendingTransaction,
     onClick: () -> Unit,
     onDelete: () -> Unit,
+    onPostpone: (() -> Unit)? = null,
 ) {
     Card(
         modifier = Modifier
@@ -112,14 +139,17 @@ fun PendingTransactionItem(
                     )
                 }
             }
+            if (onPostpone != null) {
+                IconButton(onClick = onPostpone) {
+                    Icon(imageVector = Icons.Default.EditCalendar, contentDescription = "Reporter")
+                }
+            }
             IconButton(onClick = onDelete) {
                 Icon(imageVector = Icons.Default.Delete, contentDescription = "Supprimer")
             }
         }
     }
 }
-
-
 
 private fun sourceLabel(source: TransactionSource): String {
     return when (source) {
@@ -130,6 +160,7 @@ private fun sourceLabel(source: TransactionSource): String {
         TransactionSource.DJAMO -> "🔷 Djamo"
         TransactionSource.PAYPAL -> "🔵 PayPal"
         TransactionSource.SMS -> "✉️ SMS"
+        TransactionSource.SCHEDULED -> "📅 Prévue"
         TransactionSource.UNKNOWN -> "❓ Source inconnue"
     }
 }

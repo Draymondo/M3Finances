@@ -45,4 +45,6 @@
     <string name="expense">Expense</string>
     <string name="income">Income</string>
     <string name="budget_name_optional">Name (optional)</string>
+    <string name="budget_spent_of_total">%1$s of %2$s</string>
+    <string name="budget_of_amount"> of %1$s</string>
 </resources>

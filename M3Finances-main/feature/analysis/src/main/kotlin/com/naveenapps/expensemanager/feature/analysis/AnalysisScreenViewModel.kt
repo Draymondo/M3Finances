@@ -150,16 +150,25 @@ class AnalysisScreenViewModel(
 
             val txs = _graphItems.value?.transactions ?: emptyList()
             if (txs.isEmpty()) {
-                _aiReportState.value = AiReportState.Error("Aucune transaction ce mois-ci.")
+                val periodLabel = _transactionPeriod.value.ifBlank { "cette période" }
+                _aiReportState.value = AiReportState.Error("Aucune transaction sur $periodLabel.")
                 return@launch
             }
 
             val text = buildString {
+                appendLine("Période sélectionnée : ${_transactionPeriod.value.ifBlank { "non précisée" }}")
                 appendLine("Entrées totales: ${_expenseFlowState.value.income}")
                 appendLine("Dépenses totales: ${_expenseFlowState.value.expense}")
-                appendLine("Transactions récentes:")
-                txs.take(20).forEach {
-                    appendLine("- ${it.categoryName}: ${it.amount.amountString}")
+
+                val categoryTotals = txs
+                    .groupBy { it.categoryName }
+                    .mapValues { (_, items) -> items.sumOf { it.amount.amount } }
+                    .entries
+                    .sortedByDescending { it.value }
+
+                appendLine("Répartition des dépenses/revenus par catégorie (liste EXHAUSTIVE — aucune autre catégorie n'existe sur cette période) :")
+                categoryTotals.forEach { (category, total) ->
+                    appendLine("- $category: $total")
                 }
             }
 

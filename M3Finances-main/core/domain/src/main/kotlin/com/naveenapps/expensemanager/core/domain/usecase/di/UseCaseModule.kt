@@ -11,6 +11,7 @@ import com.naveenapps.expensemanager.core.domain.usecase.savingsgoal.SavingsGoal
 import com.naveenapps.expensemanager.core.domain.usecase.shoppinglist.ShoppingListUseCaseModule
 import com.naveenapps.expensemanager.core.domain.usecase.settings.SettingsUseCaseModule
 import com.naveenapps.expensemanager.core.domain.usecase.settings.filter.FilterUseCaseModule
+import com.naveenapps.expensemanager.core.domain.usecase.tools.ToolsUseCaseModule
 import com.naveenapps.expensemanager.core.domain.usecase.transaction.TransactionUseCaseModule
 import org.koin.dsl.module
 
@@ -28,6 +29,7 @@ val UseCaseModule = module {
         SavingsGoalUseCaseModule,
         NetWorthUseCaseModule,
         ShoppingListUseCaseModule,
+        ToolsUseCaseModule,
         com.naveenapps.expensemanager.core.domain.usecase.analysis.AnalysisUseCaseModule,
     )
 }

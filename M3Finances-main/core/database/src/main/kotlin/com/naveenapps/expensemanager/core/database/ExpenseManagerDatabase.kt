@@ -63,7 +63,7 @@ const val DATABASE_FILE_NAME = "expense_manager_database.db"
         ShoppingListItemEntity::class,
         com.naveenapps.expensemanager.core.database.entity.PendingTransactionEntity::class,
     ],
-    version = 17,
+    version = 18,
     exportSchema = true,
 )
 @TypeConverters(

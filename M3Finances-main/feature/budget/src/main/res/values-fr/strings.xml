@@ -45,4 +45,6 @@
     <string name="expense">Dépense</string>
     <string name="income">Revenu</string>
     <string name="budget_name_optional">Nom (optionnel)</string>
+    <string name="budget_spent_of_total">%1$s sur %2$s</string>
+    <string name="budget_of_amount"> sur %1$s</string>
 </resources>

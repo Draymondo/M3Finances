@@ -108,7 +108,7 @@ fun AmountInfoWidget(
                 .padding(18.dp),
         ) {
             Text(
-                text = "Total",
+                text = stringResource(R.string.total),
                 style = MaterialTheme.typography.labelLarge.copy(
                     fontWeight = FontWeight.Medium,
                 ),
@@ -155,7 +155,7 @@ fun AmountInfoWidget(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 SummaryCard(
-                    label = "Sortie",
+                    label = stringResource(R.string.expense),
                     amount = expenseAmount,
                     icon = Icons.Default.ArrowUpward,
                     tintColor = expenseColor,
@@ -163,7 +163,7 @@ fun AmountInfoWidget(
                     cardColor = Color(0xFF1E2429),
                 )
                 SummaryCard(
-                    label = "Entrée",
+                    label = stringResource(R.string.income),
                     amount = incomeAmount,
                     icon = Icons.Default.ArrowDownward,
                     tintColor = incomeColor,

@@ -24,4 +24,5 @@
     <string name="daily_summary_debt_reminder">Debt reminders today: %1$d</string>
     <string name="daily_summary_debt_overdue">Overdue debts: %1$d</string>
     <string name="daily_summary_recurring_processed">%1$d recurring transactions processed</string>
+    <string name="daily_summary_scheduled_due">Scheduled transactions to review: %1$d</string>
 </resources>

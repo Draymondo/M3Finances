@@ -43,6 +43,10 @@
     <string name="defaults">Valeurs par défaut</string>
     <string name="others">Autres paramètres</string>
     <string name="tools_and_features">Outils de gestion</string>
+    <string name="tools">Outils</string>
+    <string name="tools_subtitle">Transactions récurrentes, dettes, épargne, courses et prévisions</string>
+    <string name="scheduled_transactions_settings">Transactions prévues</string>
+    <string name="scheduled_transactions_settings_subtitle">Consulter et valider les transactions en attente d\'échéance</string>
 
     <string name="personalization">Personnalisation</string>
     <string name="notifications">Notifications</string>

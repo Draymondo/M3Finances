@@ -16,13 +16,7 @@ sealed class SettingAction {
 
     data object OpenNotification : SettingAction()
 
-    data object OpenRecurringTransactions : SettingAction()
-
-    data object OpenDebts : SettingAction()
-
-    data object OpenSavingsGoals : SettingAction()
-
-    data object OpenShoppingLists : SettingAction()
+    data object OpenTools : SettingAction()
 
     data object OpenCurrencyEdit : SettingAction()
 

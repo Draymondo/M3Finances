@@ -43,6 +43,10 @@
     <string name="defaults">Defaults</string>
     <string name="others">Other Settings</string>
     <string name="tools_and_features">Tools &amp; Features</string>
+    <string name="tools">Tools</string>
+    <string name="tools_subtitle">Recurring, debts, savings, shopping and scheduled transactions</string>
+    <string name="scheduled_transactions_settings">Scheduled Transactions</string>
+    <string name="scheduled_transactions_settings_subtitle">Review and manage upcoming transactions</string>
 
     <string name="personalization">Personalization</string>
     <string name="notifications">Notifications</string>

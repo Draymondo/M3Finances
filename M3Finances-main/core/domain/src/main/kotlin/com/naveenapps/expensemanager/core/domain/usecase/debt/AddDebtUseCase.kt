@@ -47,11 +47,11 @@ class AddDebtUseCase(
 ) {
     suspend operator fun invoke(debt: Debt, initialAmount: Double, realAccountId: String?): Resource<Boolean> {
         if (debt.personName.isBlank()) {
-            return Resource.Error(Exception("Person name shouldn't be blank"))
+            return Resource.Error(Exception("Le nom de la personne ne doit pas être vide"))
         }
 
         if (initialAmount <= 0.0) {
-            return Resource.Error(Exception("Amount should be greater than 0"))
+            return Resource.Error(Exception("Le montant doit être supérieur à 0"))
         }
 
         val hiddenAccount = Account(
@@ -81,7 +81,7 @@ class AddDebtUseCase(
             // matching how the regular transaction-create screen already picks an arbitrary
             // category for transfers.
             val fallbackCategoryId = getAllCategoryUseCase.invoke().first().firstOrNull()?.id
-                ?: return Resource.Error(Exception("No category available"))
+                ?: return Resource.Error(Exception("Aucune catégorie disponible"))
 
             val (fromAccountId, toAccountId) = if (debt.direction.isLent()) {
                 realAccountId to debt.accountId

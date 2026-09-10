@@ -272,6 +272,7 @@ val RepositoryModule = module {
             settingsDataStore = get(),
             dateRangeDataStore = get(),
             numberFormatSettingsDatastore = get(),
+            toolUsageDataStore = get(),
         )
     }
     worker {
@@ -285,6 +286,11 @@ val RepositoryModule = module {
     single<com.naveenapps.expensemanager.core.repository.PendingTransactionRepository> {
         com.naveenapps.expensemanager.core.data.repository.PendingTransactionRepositoryImpl(
             pendingTransactionDao = get()
+        )
+    }
+    single<com.naveenapps.expensemanager.core.repository.ToolUsageRepository> {
+        com.naveenapps.expensemanager.core.data.repository.ToolUsageRepositoryImpl(
+            toolUsageDataStore = get()
         )
     }
 }

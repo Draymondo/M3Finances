@@ -21,6 +21,7 @@ val NotificationModule = module {
             debtReminderRepository = get(),
             getBudgetsUseCase = get(),
             processDueRecurringTransactionsUseCase = get(),
+            pendingTransactionRepository = get(),
         )
     }
 }

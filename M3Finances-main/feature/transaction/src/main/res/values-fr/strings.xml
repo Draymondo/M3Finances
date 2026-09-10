@@ -50,8 +50,10 @@
     <string name="edit_transaction">Modifier la transaction</string>
     <string name="create_transaction">Nouvelle transaction</string>
     <string name="date_and_time">Date &amp; heure</string>
+    <string name="edit">Modifier</string>
     <string name="delete">Supprimer</string>
     <string name="save">Enregistrer</string>
+    <string name="schedule">Planifier</string>
     <string name="transaction_type">Type de transaction</string>
     <string name="details">Détails</string>
 

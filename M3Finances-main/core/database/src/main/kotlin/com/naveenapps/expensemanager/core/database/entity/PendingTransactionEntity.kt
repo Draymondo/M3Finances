@@ -30,6 +30,12 @@ data class PendingTransactionEntity(
     @ColumnInfo(name = "confidence")
     val confidence: Float?,
     @ColumnInfo(name = "created_on")
-    val createdOn: Long
+    val createdOn: Long,
+    @ColumnInfo(name = "scheduled_date")
+    val scheduledDate: Long? = null,
+    @ColumnInfo(name = "account_id")
+    val accountId: String? = null,
+    @ColumnInfo(name = "category_id")
+    val categoryId: String? = null,
 )
 

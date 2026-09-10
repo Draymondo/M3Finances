@@ -28,6 +28,7 @@ class NotificationWorker(
     private val debtReminderRepository: DebtReminderRepository,
     private val getBudgetsUseCase: GetBudgetsUseCase,
     private val processDueRecurringTransactionsUseCase: ProcessDueRecurringTransactionsUseCase,
+    private val pendingTransactionRepository: com.naveenapps.expensemanager.core.repository.PendingTransactionRepository,
 ) : CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result {
@@ -60,6 +61,13 @@ class NotificationWorker(
             response is Resource.Success && !response.data.isSettled
         }.size
 
+        // 5. Scheduled transactions due today
+        val scheduledDueCount = try {
+            pendingTransactionRepository.countScheduledDue()
+        } catch (e: Exception) {
+            0
+        }
+
         // Build summary notification content
         val lines = mutableListOf<String>()
         if (exceededBudgetsCount > 0) {
@@ -76,6 +84,9 @@ class NotificationWorker(
         }
         if (recurringProcessedCount > 0) {
             lines.add(context.getString(R.string.daily_summary_recurring_processed, recurringProcessedCount))
+        }
+        if (scheduledDueCount > 0) {
+            lines.add(context.getString(R.string.daily_summary_scheduled_due, scheduledDueCount))
         }
 
         val (title, content) = if (lines.isNotEmpty()) {

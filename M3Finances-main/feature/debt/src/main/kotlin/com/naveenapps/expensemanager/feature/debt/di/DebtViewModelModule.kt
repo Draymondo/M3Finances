@@ -9,6 +9,7 @@ val DebtViewModelModule = module {
     viewModel {
         DebtListViewModel(
             getDebtsUseCase = get(),
+            trackToolUsageUseCase = get(),
             appComposeNavigator = get(),
         )
     }

@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 import org.koin.core.context.GlobalContext
 import java.util.Calendar
 import java.util.Date
+import java.util.Locale
 
 val BASE_CATEGORY_LIST = listOf(
     Category(
@@ -155,41 +156,45 @@ val BASE_CATEGORY_LIST = listOf(
     ),
 )
 
-val BASE_ACCOUNT_LIST = listOf(
-    Account(
-        "1",
-        "Cash",
-        AccountType.REGULAR,
-        storedIcon = StoredIcon(
-            name = "savings",
-            backgroundColor = "#4CAF50",
-        ),
-        Calendar.getInstance().time,
-        Calendar.getInstance().time,
-    ),
-    Account(
-        "2",
-        "Card-xxx",
-        AccountType.CREDIT,
-        storedIcon = StoredIcon(
-            name = "credit_card",
-            backgroundColor = "#4CAF50",
-        ),
-        Calendar.getInstance().time,
-        Calendar.getInstance().time,
-    ),
-    Account(
-        "3",
-        "Bank Account",
-        AccountType.REGULAR,
-        storedIcon = StoredIcon(
-            name = "account_balance",
-            backgroundColor = "#4CAF50",
-        ),
-        Calendar.getInstance().time,
-        Calendar.getInstance().time,
-    ),
-)
+val BASE_ACCOUNT_LIST: List<Account>
+    get() {
+        val isFr = Locale.getDefault().language.lowercase().startsWith("fr")
+        return listOf(
+            Account(
+                "1",
+                if (isFr) "Espèces" else "Cash",
+                AccountType.REGULAR,
+                storedIcon = StoredIcon(
+                    name = "savings",
+                    backgroundColor = "#4CAF50",
+                ),
+                Calendar.getInstance().time,
+                Calendar.getInstance().time,
+            ),
+            Account(
+                "2",
+                if (isFr) "Carte-xxx" else "Card-xxx",
+                AccountType.CREDIT,
+                storedIcon = StoredIcon(
+                    name = "credit_card",
+                    backgroundColor = "#4CAF50",
+                ),
+                Calendar.getInstance().time,
+                Calendar.getInstance().time,
+            ),
+            Account(
+                "3",
+                if (isFr) "Compte bancaire" else "Bank Account",
+                AccountType.REGULAR,
+                storedIcon = StoredIcon(
+                    name = "account_balance",
+                    backgroundColor = "#4CAF50",
+                ),
+                Calendar.getInstance().time,
+                Calendar.getInstance().time,
+            ),
+        )
+    }
 
 class PreloadDatabaseInitializer : Initializer<Unit> {
 

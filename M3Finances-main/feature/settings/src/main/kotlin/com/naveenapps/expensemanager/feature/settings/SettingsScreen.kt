@@ -26,6 +26,7 @@ import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material.icons.outlined.CloudSync
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Handshake
+import androidx.compose.material.icons.outlined.Handyman
 import androidx.compose.material.icons.outlined.Savings
 import androidx.compose.material.icons.outlined.DashboardCustomize
 import androidx.compose.material.icons.outlined.EditNotifications
@@ -228,31 +229,10 @@ private fun SettingsScreenContent(
         SettingsSection(title = stringResource(id = R.string.tools_and_features)) {
             AppCardView {
                 SettingRow(
-                    onClick = { onAction.invoke(SettingAction.OpenRecurringTransactions) },
-                    title = stringResource(id = R.string.recurring_transactions_settings),
-                    subtitle = stringResource(id = R.string.recurring_transactions_settings_subtitle),
-                    icon = Icons.Outlined.Autorenew,
-                    showDivider = true,
-                )
-                SettingRow(
-                    onClick = { onAction.invoke(SettingAction.OpenDebts) },
-                    title = stringResource(id = R.string.debts_settings),
-                    subtitle = stringResource(id = R.string.debts_settings_subtitle),
-                    icon = Icons.Outlined.Handshake,
-                    showDivider = true,
-                )
-                SettingRow(
-                    onClick = { onAction.invoke(SettingAction.OpenSavingsGoals) },
-                    title = stringResource(id = R.string.savings_goals_settings),
-                    subtitle = stringResource(id = R.string.savings_goals_settings_subtitle),
-                    icon = Icons.Outlined.Savings,
-                    showDivider = true,
-                )
-                SettingRow(
-                    onClick = { onAction.invoke(SettingAction.OpenShoppingLists) },
-                    title = stringResource(id = R.string.shopping_lists_settings),
-                    subtitle = stringResource(id = R.string.shopping_lists_settings_subtitle),
-                    icon = Icons.Outlined.ShoppingCart,
+                    onClick = { onAction.invoke(SettingAction.OpenTools) },
+                    title = stringResource(id = R.string.tools),
+                    subtitle = stringResource(id = R.string.tools_subtitle),
+                    icon = Icons.Outlined.Handyman,
                 )
             }
         }

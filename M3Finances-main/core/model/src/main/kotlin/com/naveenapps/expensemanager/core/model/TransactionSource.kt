@@ -8,5 +8,6 @@ enum class TransactionSource {
     DJAMO,
     PAYPAL,
     SMS,
-    UNKNOWN
+    UNKNOWN,
+    SCHEDULED
 }

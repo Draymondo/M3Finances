@@ -53,4 +53,16 @@
     <string name="notification_listener_warning_title">Notification access cut off</string>
     <string name="notification_listener_warning_desc">Battery saver may have stopped the service. Re-enable it to avoid missing automatic transactions.</string>
     <string name="notification_listener_warning_action">Fix now</string>
+
+    <string name="widget_total_balance">Total balance</string>
+    <string name="widget_balance">Balance</string>
+    <string name="widget_income">Income</string>
+    <string name="widget_expenses">Expenses</string>
+    <string name="widget_spent">Spent</string>
+    <string name="widget_recent">Recent</string>
+    <string name="widget_no_transactions">No transactions</string>
+    <string name="widget_refresh">Refresh</string>
+    <string name="widget_saved_pct">%1$s%% saved</string>
+    <string name="widget_income_spent_pct">%1$d%% of income spent</string>
+    <string name="widget_amount_saved">%1$s saved</string>
 </resources>

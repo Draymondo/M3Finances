@@ -17,7 +17,7 @@ class AddShoppingListUseCase(
 ) {
     suspend operator fun invoke(shoppingList: ShoppingList): Resource<Boolean> {
         if (shoppingList.name.isBlank()) {
-            return Resource.Error(Exception("Name shouldn't be blank"))
+            return Resource.Error(Exception("Le nom ne doit pas être vide"))
         }
         return repository.addShoppingList(shoppingList)
     }
@@ -28,7 +28,7 @@ class UpdateShoppingListUseCase(
 ) {
     suspend operator fun invoke(shoppingList: ShoppingList): Resource<Boolean> {
         if (shoppingList.name.isBlank()) {
-            return Resource.Error(Exception("Name shouldn't be blank"))
+            return Resource.Error(Exception("Le nom ne doit pas être vide"))
         }
         return repository.updateShoppingList(shoppingList)
     }

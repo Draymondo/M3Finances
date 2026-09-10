@@ -10,7 +10,7 @@ internal fun validateAndNormalizeSplit(transaction: Transaction): Resource<Trans
     }
 
     if (transaction.splitItems.any { it.categoryId.isBlank() || it.amount.amount <= 0.0 }) {
-        return Resource.Error(IllegalArgumentException("Split items must have a category and a positive amount"))
+        return Resource.Error(IllegalArgumentException("Chaque ligne doit avoir une catégorie et un montant positif"))
     }
 
     val splitTotal = transaction.splitItems
@@ -18,7 +18,7 @@ internal fun validateAndNormalizeSplit(transaction: Transaction): Resource<Trans
         .reduce(BigDecimal::add)
     val transactionTotal = BigDecimal.valueOf(transaction.amount.amount)
     if (splitTotal.compareTo(transactionTotal) != 0) {
-        return Resource.Error(IllegalArgumentException("Split items must equal the transaction amount"))
+        return Resource.Error(IllegalArgumentException("La somme des lignes doit être égale au montant de la transaction"))
     }
 
     val defaultCategoryId = transaction.splitItems.maxBy { it.amount.amount }.categoryId

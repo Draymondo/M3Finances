@@ -36,6 +36,7 @@ val TransactionViewModelModule = module {
         com.naveenapps.expensemanager.feature.transaction.pending.PendingTransactionListViewModel(
             getPendingTransactionsUseCase = get(),
             pendingTransactionRepository = get(),
+            trackToolUsageUseCase = get(),
             appComposeNavigator = get(),
         )
     }

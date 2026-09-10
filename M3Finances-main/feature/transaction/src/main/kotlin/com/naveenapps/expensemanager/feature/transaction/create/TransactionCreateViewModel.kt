@@ -221,11 +221,14 @@ class TransactionCreateViewModel(
         transactionType.value = pendingTransaction.transactionType
         
         _state.update { current ->
-            // Try to match suggested category
-            val suggestedCategory = current.categories.matchCategory(pendingTransaction.suggestedCategory)
+            // Try to match stored categoryId first, then suggested category
+            val savedCategory = pendingTransaction.categoryId?.let { id -> current.categories.find { it.id == id } }
+            val suggestedCategory = savedCategory
+                ?: current.categories.matchCategory(pendingTransaction.suggestedCategory)
                 ?: defaultCategory
 
-            // Select Mobile Money account if possible
+            // Select stored accountId first, then Mobile Money account if possible
+            val savedAccount = pendingTransaction.accountId?.let { id -> current.accounts.find { it.id == id } }
             val mmAccount = current.accounts.find {
                 it.name.contains("Wave", ignoreCase = true) ||
                 it.name.contains("Orange", ignoreCase = true) ||
@@ -233,7 +236,7 @@ class TransactionCreateViewModel(
                 it.name.contains("MoMo", ignoreCase = true) ||
                 it.name.contains("Mobile Money", ignoreCase = true)
             }
-            val targetAccount = mmAccount ?: current.selectedFromAccount
+            val targetAccount = savedAccount ?: mmAccount ?: current.selectedFromAccount
 
             current.copy(
                 amount = current.amount.copy(
@@ -337,8 +340,42 @@ class TransactionCreateViewModel(
             }
         }
 
+        // If date is in the future and this is a new transaction, schedule it as a PendingTransaction
+        if (currentState.isFutureDate && editingTransaction == null) {
+            schedulePendingTransaction(currentState, amountValue)
+            return
+        }
+
         // amountValue is smart-cast to Double after the null check above
         persistTransaction(buildTransactionFromState(currentState, amountValue))
+    }
+
+    private fun schedulePendingTransaction(state: TransactionCreateState, amountValue: Double) {
+        viewModelScope.launch {
+            val scheduledTx = com.naveenapps.expensemanager.core.model.PendingTransaction(
+                id = UUID.randomUUID().toString(),
+                amount = amountValue,
+                fee = null,
+                merchant = state.notes.value.ifBlank { null },
+                date = state.dateTime,
+                transactionType = state.transactionType,
+                suggestedCategory = state.selectedCategory.name,
+                rawNotification = null,
+                source = com.naveenapps.expensemanager.core.model.TransactionSource.SCHEDULED,
+                confidence = 1.0f,
+                scheduledDate = state.dateTime,
+                accountId = state.selectedFromAccount.id,
+                categoryId = state.selectedCategory.id,
+            )
+            when (val result = pendingTransactionRepository.addPendingTransaction(scheduledTx)) {
+                is com.naveenapps.expensemanager.core.model.Resource.Success -> {
+                    closePage()
+                }
+                is com.naveenapps.expensemanager.core.model.Resource.Error -> {
+                    _state.update { it.copy(saveError = result.exception.message ?: "Erreur lors de la planification") }
+                }
+            }
+        }
     }
 
     internal fun buildTransactionFromState(
@@ -718,12 +755,18 @@ class TransactionCreateViewModel(
                 it.copy(showDateSelection = false, showTimeSelection = false)
             }
 
-            is TransactionCreateAction.SelectDate -> _state.update {
-                it.copy(
-                    dateTime = action.date,
-                    showDateSelection = false,
-                    showTimeSelection = false
-                )
+            is TransactionCreateAction.SelectDate -> {
+                val nowCal = Calendar.getInstance()
+                val selectedCal = Calendar.getInstance().apply { time = action.date }
+                val isFuture = selectedCal.after(nowCal)
+                _state.update {
+                    it.copy(
+                        dateTime = action.date,
+                        isFutureDate = isFuture,
+                        showDateSelection = false,
+                        showTimeSelection = false
+                    )
+                }
             }
 
             is TransactionCreateAction.ScanReceipt -> {

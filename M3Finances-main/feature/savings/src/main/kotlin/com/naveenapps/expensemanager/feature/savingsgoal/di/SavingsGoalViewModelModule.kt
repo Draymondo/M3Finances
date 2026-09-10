@@ -9,6 +9,7 @@ val SavingsGoalViewModelModule = module {
     viewModel {
         SavingsGoalListViewModel(
             getSavingsGoalsUseCase = get(),
+            trackToolUsageUseCase = get(),
             appComposeNavigator = get(),
         )
     }

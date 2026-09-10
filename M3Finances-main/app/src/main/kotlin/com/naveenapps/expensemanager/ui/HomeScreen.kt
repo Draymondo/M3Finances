@@ -191,6 +191,9 @@ fun NavGraphBuilder.expenseManagerNavigation(
     composable<ExpenseManagerScreens.AdvancedSettingsScreen> {
         AdvancedSettingsScreen()
     }
+    composable<ExpenseManagerScreens.ToolsScreen> {
+        com.naveenapps.expensemanager.feature.settings.tools.ToolsScreen()
+    }
     composable<ExpenseManagerScreens.AccountReOrderScreen> {
         AccountReOrderScreen()
     }

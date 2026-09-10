@@ -8,7 +8,7 @@ class FindBudgetByIdUseCase(private val repository: BudgetRepository) {
 
     suspend operator fun invoke(budgetId: String?): Resource<Budget> {
         if (budgetId.isNullOrBlank()) {
-            return Resource.Error(Exception("Provide valid budget id value"))
+            return Resource.Error(Exception("Identifiant de budget invalide"))
         }
 
         return repository.findBudgetById(budgetId)

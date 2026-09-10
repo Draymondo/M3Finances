@@ -2,6 +2,7 @@ package com.naveenapps.expensemanager.feature.settings.di
 
 import com.naveenapps.expensemanager.feature.settings.SettingsViewModel
 import com.naveenapps.expensemanager.feature.settings.advanced.AdvancedSettingsViewModel
+import com.naveenapps.expensemanager.feature.settings.tools.ToolsViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
@@ -22,6 +23,12 @@ val SettingsViewModelModule = module {
     }
     viewModel {
         AdvancedSettingsViewModel(
+            appComposeNavigator = get()
+        )
+    }
+    viewModel {
+        ToolsViewModel(
+            getToolUsageUseCase = get(),
             appComposeNavigator = get()
         )
     }

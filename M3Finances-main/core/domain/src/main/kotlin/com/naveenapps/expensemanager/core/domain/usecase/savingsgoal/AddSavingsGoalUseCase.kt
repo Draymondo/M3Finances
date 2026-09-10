@@ -37,22 +37,22 @@ class AddSavingsGoalUseCase(
         realAccountId: String?,
     ): Resource<Boolean> {
         if (savingsGoal.name.isBlank()) {
-            return Resource.Error(Exception("Name shouldn't be blank"))
+            return Resource.Error(Exception("Le nom ne doit pas être vide"))
         }
 
         if (savingsGoal.targetAmount <= 0.0) {
-            return Resource.Error(Exception("Target amount should be greater than 0"))
+            return Resource.Error(Exception("Le montant cible doit être supérieur à 0"))
         }
 
         if (savingsGoal.savingsStrategy == com.naveenapps.expensemanager.core.model.SavingsStrategy.PERCENTAGE_INCOME) {
             val pct = savingsGoal.targetPercentage
             if (pct == null || pct <= 0.0 || pct > 100.0) {
-                return Resource.Error(Exception("Target percentage must be between 0 and 100"))
+                return Resource.Error(Exception("Le pourcentage cible doit être compris entre 0 et 100"))
             }
         }
 
         if (initialAmount < 0.0) {
-            return Resource.Error(Exception("Initial amount can't be negative"))
+            return Resource.Error(Exception("Le montant initial ne peut pas être négatif"))
         }
 
         val hiddenAccount = Account(
@@ -75,7 +75,7 @@ class AddSavingsGoalUseCase(
             // Any category works here — transfers aren't shown by category in the UI, this only
             // exists to satisfy AddTransactionUseCase's non-blank categoryId requirement.
             val fallbackCategoryId = getAllCategoryUseCase.invoke().first().firstOrNull()?.id
-                ?: return Resource.Error(Exception("No category available"))
+                ?: return Resource.Error(Exception("Aucune catégorie disponible"))
 
             val transactionResult = addTransactionUseCase.invoke(
                 Transaction(

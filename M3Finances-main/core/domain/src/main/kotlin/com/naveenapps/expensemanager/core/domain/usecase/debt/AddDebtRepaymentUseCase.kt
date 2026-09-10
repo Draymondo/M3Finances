@@ -29,11 +29,11 @@ class AddDebtRepaymentUseCase(
         notes: String,
     ): Resource<Boolean> {
         if (amount <= 0.0) {
-            return Resource.Error(Exception("Amount should be greater than 0"))
+            return Resource.Error(Exception("Le montant doit être supérieur à 0"))
         }
 
         val fallbackCategoryId = getAllCategoryUseCase.invoke().first().firstOrNull()?.id
-            ?: return Resource.Error(Exception("No category available"))
+            ?: return Resource.Error(Exception("Aucune catégorie disponible"))
 
         val (fromAccountId, toAccountId) = if (debt.direction.isLent()) {
             debt.accountId to realAccountId

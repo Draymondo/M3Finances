@@ -10,15 +10,15 @@ class AddTransactionUseCase(
 
     suspend operator fun invoke(transaction: Transaction): Resource<Boolean> {
         if (transaction.id.isBlank()) {
-            return Resource.Error(Exception("ID shouldn't be blank"))
+            return Resource.Error(Exception("L'identifiant ne doit pas être vide"))
         }
 
         if (transaction.categoryId.isBlank()) {
-            return Resource.Error(Exception("Category shouldn't be blank"))
+            return Resource.Error(Exception("La catégorie ne doit pas être vide"))
         }
 
         if (transaction.amount.amount <= 0.0) {
-            return Resource.Error(Exception("Amount should be greater than 0"))
+            return Resource.Error(Exception("Le montant doit être supérieur à 0"))
         }
 
         return when (val validation = validateAndNormalizeSplit(transaction)) {

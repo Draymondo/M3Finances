@@ -8,7 +8,7 @@ class FindAccountByIdUseCase(private val repository: AccountRepository) {
 
     suspend operator fun invoke(accountId: String?): Resource<Account> {
         if (accountId.isNullOrBlank()) {
-            return Resource.Error(Exception("Provide valid account id value"))
+            return Resource.Error(Exception("Identifiant de compte invalide"))
         }
 
         return repository.findAccount(accountId)

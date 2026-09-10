@@ -10,6 +10,7 @@ val ShoppingListViewModelModule = module {
     viewModel {
         ShoppingListListViewModel(
             getShoppingListsUseCase = get(),
+            trackToolUsageUseCase = get(),
             appComposeNavigator = get(),
         )
     }

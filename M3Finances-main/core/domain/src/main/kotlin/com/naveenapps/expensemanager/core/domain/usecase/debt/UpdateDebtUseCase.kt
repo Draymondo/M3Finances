@@ -11,7 +11,7 @@ class UpdateDebtUseCase(
 ) {
     suspend operator fun invoke(debt: Debt): Resource<Boolean> {
         if (debt.personName.isBlank()) {
-            return Resource.Error(Exception("Person name shouldn't be blank"))
+            return Resource.Error(Exception("Le nom de la personne ne doit pas être vide"))
         }
 
         return repository.updateDebt(debt)

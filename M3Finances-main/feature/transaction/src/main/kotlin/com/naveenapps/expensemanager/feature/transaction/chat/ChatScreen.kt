@@ -26,14 +26,17 @@ import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
@@ -739,13 +742,17 @@ private fun ChatInputArea(
     }
     
     var isListening by remember { mutableStateOf(false) }
+    var listeningBaseText by remember { mutableStateOf("") }
+    var rmsLevel by remember { mutableFloatStateOf(0f) }
     val speechRecognizer = remember { android.speech.SpeechRecognizer.createSpeechRecognizer(context) }
     
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (isGranted) {
             val intent = android.content.Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
             }
+            listeningBaseText = inputText
             speechRecognizer.startListening(intent)
             isListening = true
         }
@@ -755,19 +762,28 @@ private fun ChatInputArea(
         val listener = object : android.speech.RecognitionListener {
             override fun onReadyForSpeech(params: android.os.Bundle?) {}
             override fun onBeginningOfSpeech() {}
-            override fun onRmsChanged(rmsdB: Float) {}
+            override fun onRmsChanged(rmsdB: Float) {
+                rmsLevel = rmsdB.coerceIn(0f, 10f)
+            }
             override fun onBufferReceived(buffer: ByteArray?) {}
-            override fun onEndOfSpeech() { isListening = false }
-            override fun onError(error: Int) { isListening = false }
+            override fun onEndOfSpeech() { isListening = false; rmsLevel = 0f }
+            override fun onError(error: Int) { isListening = false; rmsLevel = 0f }
             override fun onResults(results: android.os.Bundle?) {
                 val matches = results?.getStringArrayList(android.speech.SpeechRecognizer.RESULTS_RECOGNITION)
                 if (!matches.isNullOrEmpty()) {
                     val text = matches[0]
-                    inputText = if (inputText.isEmpty()) text else "$inputText $text"
+                    inputText = if (listeningBaseText.isEmpty()) text else "$listeningBaseText $text"
                 }
                 isListening = false
+                rmsLevel = 0f
             }
-            override fun onPartialResults(partialResults: android.os.Bundle?) {}
+            override fun onPartialResults(partialResults: android.os.Bundle?) {
+                val matches = partialResults?.getStringArrayList(android.speech.SpeechRecognizer.RESULTS_RECOGNITION)
+                if (!matches.isNullOrEmpty()) {
+                    val partial = matches[0]
+                    inputText = if (listeningBaseText.isEmpty()) partial else "$listeningBaseText $partial"
+                }
+            }
             override fun onEvent(eventType: Int, params: android.os.Bundle?) {}
         }
         speechRecognizer.setRecognitionListener(listener)
@@ -863,26 +879,54 @@ private fun ChatInputArea(
                 enabled = !isLoading
             )
             
-            IconButton(
-                onClick = {
-                    if (isListening) {
-                        speechRecognizer.stopListening()
+            // Cancel button — visible only while listening
+            if (isListening) {
+                IconButton(
+                    onClick = {
+                        speechRecognizer.cancel()
+                        inputText = listeningBaseText
                         isListening = false
-                    } else {
-                        if (androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                            val intent = android.content.Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                                putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                            }
-                            speechRecognizer.startListening(intent)
-                            isListening = true
-                        } else {
-                            permissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
-                        }
+                        rmsLevel = 0f
                     }
-                },
-                enabled = !isLoading
-            ) {
-                Icon(Icons.Default.Mic, contentDescription = "Vocal", tint = if (isListening) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
+                ) {
+                    Icon(Icons.Default.Close, contentDescription = "Annuler dictée", tint = MaterialTheme.colorScheme.error)
+                }
+            }
+
+            // Mic button with animated volume ring
+            val animatedRms by animateFloatAsState(targetValue = rmsLevel, label = "rms")
+            val micRingColor = MaterialTheme.colorScheme.error.copy(alpha = 0.5f)
+            Box(contentAlignment = Alignment.Center) {
+                IconButton(
+                    onClick = {
+                        if (isListening) {
+                            speechRecognizer.stopListening()
+                            isListening = false
+                            rmsLevel = 0f
+                        } else {
+                            if (androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                                val intent = android.content.Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                                    putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                                    putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+                                }
+                                listeningBaseText = inputText
+                                speechRecognizer.startListening(intent)
+                                isListening = true
+                            } else {
+                                permissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
+                            }
+                        }
+                    },
+                    enabled = !isLoading,
+                    modifier = if (isListening) {
+                        Modifier.drawBehind {
+                            val radius = size.minDimension / 2f + (animatedRms / 10f) * 16.dp.toPx()
+                            drawCircle(color = micRingColor, radius = radius, style = Stroke(width = 3.dp.toPx()))
+                        }
+                    } else Modifier
+                ) {
+                    Icon(Icons.Default.Mic, contentDescription = "Vocal", tint = if (isListening) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
 
             val isSendEnabled = !isLoading && (inputText.isNotBlank() || selectedImage != null)

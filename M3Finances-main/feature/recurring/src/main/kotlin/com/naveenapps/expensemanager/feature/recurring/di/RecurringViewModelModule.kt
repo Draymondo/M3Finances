@@ -9,6 +9,7 @@ val RecurringViewModelModule = module {
     viewModel {
         RecurringTransactionListViewModel(
             getRecurringTransactionsUseCase = get(),
+            trackToolUsageUseCase = get(),
             appComposeNavigator = get(),
         )
     }

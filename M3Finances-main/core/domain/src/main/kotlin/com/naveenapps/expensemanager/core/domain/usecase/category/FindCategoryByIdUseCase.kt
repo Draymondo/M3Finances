@@ -8,7 +8,7 @@ class FindCategoryByIdUseCase(private val repository: CategoryRepository) {
 
     suspend operator fun invoke(categoryId: String?): Resource<Category> {
         if (categoryId.isNullOrBlank()) {
-            return Resource.Error(Exception("Provide valid category id value"))
+            return Resource.Error(Exception("Identifiant de catégorie invalide"))
         }
 
         return repository.findCategory(categoryId)

@@ -53,4 +53,16 @@
     <string name="notification_listener_warning_title">Accès aux notifications coupé</string>
     <string name="notification_listener_warning_desc">L\'économiseur de batterie a peut-être coupé le service. Réactivez-le pour continuer à capturer vos transactions automatiquement.</string>
     <string name="notification_listener_warning_action">Réparer</string>
+
+    <string name="widget_total_balance">Solde total</string>
+    <string name="widget_balance">Solde</string>
+    <string name="widget_income">Revenus</string>
+    <string name="widget_expenses">Dépenses</string>
+    <string name="widget_spent">Dépenses</string>
+    <string name="widget_recent">Récentes</string>
+    <string name="widget_no_transactions">Aucune transaction</string>
+    <string name="widget_refresh">Actualiser</string>
+    <string name="widget_saved_pct">%1$s%% économisés</string>
+    <string name="widget_income_spent_pct">%1$d%% des revenus dépensés</string>
+    <string name="widget_amount_saved">%1$s épargnés</string>
 </resources>

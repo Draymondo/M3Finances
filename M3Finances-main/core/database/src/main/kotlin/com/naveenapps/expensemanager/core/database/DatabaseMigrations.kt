@@ -282,3 +282,16 @@ internal val MIGRATION_16_17 = object : Migration(16, 17) {
     }
 }
 
+/**
+ * Adds `scheduled_date`, `account_id` and `category_id` to `pending_transaction` for the
+ * "scheduled transaction" feature — a manually-entered transaction planned for a future date.
+ * `scheduled_date` is null for classic SMS-captured pending rows; when non-null and in the
+ * future the row is hidden from the actionable list until the date is reached.
+ */
+internal val MIGRATION_17_18 = object : Migration(17, 18) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `pending_transaction` ADD COLUMN `scheduled_date` INTEGER DEFAULT NULL")
+        db.execSQL("ALTER TABLE `pending_transaction` ADD COLUMN `account_id` TEXT DEFAULT NULL")
+        db.execSQL("ALTER TABLE `pending_transaction` ADD COLUMN `category_id` TEXT DEFAULT NULL")
+    }
+}

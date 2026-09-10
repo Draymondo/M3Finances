@@ -24,4 +24,5 @@
     <string name="daily_summary_debt_reminder">Rappels de dettes aujourd\'hui : %1$d</string>
     <string name="daily_summary_debt_overdue">Dettes en retard : %1$d</string>
     <string name="daily_summary_recurring_processed">%1$d transactions récurrentes appliquées</string>
+    <string name="daily_summary_scheduled_due">Transactions prévues à valider : %1$d</string>
 </resources>

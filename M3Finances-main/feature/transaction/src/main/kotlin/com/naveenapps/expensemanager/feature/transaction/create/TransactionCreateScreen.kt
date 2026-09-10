@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Delete
@@ -220,12 +221,17 @@ private fun TransactionCreateScreenContent(
                 onClick = { onAction.invoke(TransactionCreateAction.Save) },
                 icon = {
                     Icon(
-                        imageVector = Icons.Default.Done,
+                        imageVector = if (state.isFutureDate && !state.showDeleteButton) Icons.Default.DateRange else Icons.Default.Done,
                         contentDescription = null,
                     )
                 },
                 text = {
-                    Text(text = stringResource(R.string.save))
+                    Text(
+                        text = if (state.isFutureDate && !state.showDeleteButton)
+                            stringResource(R.string.schedule)
+                        else
+                            stringResource(R.string.save)
+                    )
                 },
             )
         },

@@ -14,7 +14,7 @@ class PendingTransactionRepositoryImpl(
 ) : PendingTransactionRepository {
 
     override fun getAllPendingTransactions(): Flow<List<PendingTransaction>> {
-        return pendingTransactionDao.getAllPendingTransactions().map { entities ->
+        return pendingTransactionDao.getActionablePendingTransactions(System.currentTimeMillis()).map { entities ->
             entities.map { it.toDomainModel() }
         }
     }
@@ -50,6 +50,23 @@ class PendingTransactionRepositoryImpl(
         }
     }
 
+    override suspend fun updateScheduledDate(id: String, newDate: Date): Resource<Boolean> {
+        return try {
+            pendingTransactionDao.updateScheduledDate(id, newDate.time)
+            Resource.Success(true)
+        } catch (e: Exception) {
+            Resource.Error(e)
+        }
+    }
+
+    override suspend fun countScheduledDue(): Int {
+        return try {
+            pendingTransactionDao.countScheduledDue(System.currentTimeMillis())
+        } catch (e: Exception) {
+            0
+        }
+    }
+
     private fun PendingTransactionEntity.toDomainModel(): PendingTransaction {
         return PendingTransaction(
             id = id,
@@ -61,7 +78,10 @@ class PendingTransactionRepositoryImpl(
             suggestedCategory = suggestedCategory,
             rawNotification = rawNotification,
             source = source,
-            confidence = confidence
+            confidence = confidence,
+            scheduledDate = scheduledDate?.let { Date(it) },
+            accountId = accountId,
+            categoryId = categoryId,
         )
     }
 
@@ -77,7 +97,10 @@ class PendingTransactionRepositoryImpl(
             rawNotification = rawNotification,
             source = source,
             confidence = confidence,
-            createdOn = System.currentTimeMillis()
+            createdOn = System.currentTimeMillis(),
+            scheduledDate = scheduledDate?.time,
+            accountId = accountId,
+            categoryId = categoryId,
         )
     }
 }

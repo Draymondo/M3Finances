@@ -12,11 +12,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
+import com.naveenapps.expensemanager.core.domain.usecase.tools.TrackToolUsageUseCase
+import com.naveenapps.expensemanager.core.model.ToolType
 import kotlinx.coroutines.launch
 
 class PendingTransactionListViewModel(
     getPendingTransactionsUseCase: GetPendingTransactionsUseCase,
     private val pendingTransactionRepository: PendingTransactionRepository,
+    private val trackToolUsageUseCase: TrackToolUsageUseCase,
     private val appComposeNavigator: AppComposeNavigator
 ) : ViewModel() {
 
@@ -24,6 +27,9 @@ class PendingTransactionListViewModel(
     val pendingTransactions = _pendingTransactions.asStateFlow()
 
     init {
+        viewModelScope.launch {
+            trackToolUsageUseCase(ToolType.SCHEDULED_TRANSACTIONS)
+        }
         getPendingTransactionsUseCase.invoke()
             .onEach { list ->
                 _pendingTransactions.update { list }
@@ -37,6 +43,12 @@ class PendingTransactionListViewModel(
     fun dismissTransaction(id: String) {
         viewModelScope.launch {
             pendingTransactionRepository.deletePendingTransaction(id)
+        }
+    }
+
+    fun postponeTransaction(id: String, newDate: java.util.Date) {
+        viewModelScope.launch {
+            pendingTransactionRepository.updateScheduledDate(id, newDate)
         }
     }
     

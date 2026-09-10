@@ -4,7 +4,7 @@
     <string name="cancel">Annuler</string>
     <string name="choose_web_browser">Choisir un navigateur</string>
     <string name="select">Sélectionner</string>
-    <string name="page_name" translatable="false">Page Name</string>
+    <string name="page_name">Nom de page</string>
     <string name="choose_icon">Choisir une icône</string>
     <string name="choose_color">Choisir une couleur</string>
     <string name="view_all">Tout afficher</string>
@@ -14,6 +14,7 @@
     <string name="transaction_summary">Résumé</string>
     <string name="total">Total</string>
 
+    <string name="edit">Modifier</string>
     <string name="delete">Supprimer</string>
     <string name="delete_item_message">Voulez-vous vraiment supprimer cet élément ? Un élément supprimé ne peut pas être récupéré.</string>
     <string name="yes_delete">Oui, supprimer</string>
