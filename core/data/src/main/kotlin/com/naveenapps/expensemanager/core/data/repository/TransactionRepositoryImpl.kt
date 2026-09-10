@@ -35,12 +35,29 @@ class TransactionRepositoryImpl(
         }
 
     override fun searchTransactions(query: String): Flow<List<Transaction>?> {
-        val normalizedQuery = Normalizer.normalize(query, Normalizer.Form.NFD)
+        val normalizedQuery = normalizeForSearch(query)
+        return transactionDao.getAllTransaction().map { relations ->
+            convertTransactionAndCategory(relations)
+                .filter { it.matchesSearch(normalizedQuery) }
+                .sortedByDescending { it.createdOn }
+        }
+    }
+
+    /** Strips accents and lowercases, e.g. "Épargne" -> "epargne", so search is
+     * accent/case-insensitive. Kept in Kotlin (rather than SQL REPLACE chains) since
+     * Room/KSP's compile-time query validator can overflow its parser on deeply nested
+     * SQL expressions. */
+    private fun normalizeForSearch(text: String): String =
+        Normalizer.normalize(text, Normalizer.Form.NFD)
             .replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "")
             .lowercase()
-        return transactionDao.searchTransactions(normalizedQuery).map {
-            convertTransactionAndCategory(it)
-        }
+
+    private fun Transaction.matchesSearch(normalizedQuery: String): Boolean {
+        if (normalizeForSearch(notes).contains(normalizedQuery)) return true
+        if (normalizeForSearch(category.name).contains(normalizedQuery)) return true
+        if (normalizeForSearch(fromAccount.name).contains(normalizedQuery)) return true
+        toAccount?.let { if (normalizeForSearch(it.name).contains(normalizedQuery)) return true }
+        return splitItems.any { normalizeForSearch(it.category?.name ?: "").contains(normalizedQuery) }
     }
 
     override suspend fun findTransactionById(transactionId: String): Resource<Transaction> =

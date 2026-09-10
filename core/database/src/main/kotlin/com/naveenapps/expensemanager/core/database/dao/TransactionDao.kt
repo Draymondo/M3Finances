@@ -44,27 +44,6 @@ interface TransactionDao : BaseDao<TransactionEntity> {
 
     @Query(
         """
-          SELECT t.* FROM `transaction` AS t
-          INNER JOIN category ON category.id = t.category_id
-          INNER JOIN account AS from_account ON from_account.id = t.from_account_id
-          LEFT JOIN account AS to_account ON to_account.id = t.to_account_id
-          WHERE LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(t.notes, 'à', 'a'), 'â', 'a'), 'À', 'a'), 'Â', 'a'), 'é', 'e'), 'è', 'e'), 'ê', 'e'), 'ë', 'e'), 'É', 'e'), 'È', 'e'), 'Ê', 'e'), 'Ë', 'e'), 'î', 'i'), 'ï', 'i'), 'Î', 'i'), 'Ï', 'i'), 'ô', 'o'), 'ö', 'o'), 'Ô', 'o'), 'Ö', 'o'), 'ù', 'u'), 'û', 'u'), 'ü', 'u'), 'Ù', 'u'), 'Û', 'u'), 'Ü', 'u'), 'ç', 'c'), 'Ç', 'c')) LIKE '%' || :query || '%'
-              OR LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(category.name, 'à', 'a'), 'â', 'a'), 'À', 'a'), 'Â', 'a'), 'é', 'e'), 'è', 'e'), 'ê', 'e'), 'ë', 'e'), 'É', 'e'), 'È', 'e'), 'Ê', 'e'), 'Ë', 'e'), 'î', 'i'), 'ï', 'i'), 'Î', 'i'), 'Ï', 'i'), 'ô', 'o'), 'ö', 'o'), 'Ô', 'o'), 'Ö', 'o'), 'ù', 'u'), 'û', 'u'), 'ü', 'u'), 'Ù', 'u'), 'Û', 'u'), 'Ü', 'u'), 'ç', 'c'), 'Ç', 'c')) LIKE '%' || :query || '%'
-              OR LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(from_account.name, 'à', 'a'), 'â', 'a'), 'À', 'a'), 'Â', 'a'), 'é', 'e'), 'è', 'e'), 'ê', 'e'), 'ë', 'e'), 'É', 'e'), 'È', 'e'), 'Ê', 'e'), 'Ë', 'e'), 'î', 'i'), 'ï', 'i'), 'Î', 'i'), 'Ï', 'i'), 'ô', 'o'), 'ö', 'o'), 'Ô', 'o'), 'Ö', 'o'), 'ù', 'u'), 'û', 'u'), 'ü', 'u'), 'Ù', 'u'), 'Û', 'u'), 'Ü', 'u'), 'ç', 'c'), 'Ç', 'c')) LIKE '%' || :query || '%'
-               OR LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(to_account.name, 'à', 'a'), 'â', 'a'), 'À', 'a'), 'Â', 'a'), 'é', 'e'), 'è', 'e'), 'ê', 'e'), 'ë', 'e'), 'É', 'e'), 'È', 'e'), 'Ê', 'e'), 'Ë', 'e'), 'î', 'i'), 'ï', 'i'), 'Î', 'i'), 'Ï', 'i'), 'ô', 'o'), 'ö', 'o'), 'Ô', 'o'), 'Ö', 'o'), 'ù', 'u'), 'û', 'u'), 'ü', 'u'), 'Ù', 'u'), 'Û', 'u'), 'Ü', 'u'), 'ç', 'c'), 'Ç', 'c')) LIKE '%' || :query || '%'
-                            OR EXISTS (
-                                    SELECT 1 FROM transaction_split_item AS split_item
-                                    INNER JOIN category AS split_category ON split_category.id = split_item.category_id
-                                    WHERE split_item.transaction_id = t.id
-                                        AND LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(split_category.name, 'à', 'a'), 'â', 'a'), 'À', 'a'), 'Â', 'a'), 'é', 'e'), 'è', 'e'), 'ê', 'e'), 'ë', 'e'), 'É', 'e'), 'È', 'e'), 'Ê', 'e'), 'Ë', 'e'), 'î', 'i'), 'ï', 'i'), 'Î', 'i'), 'Ï', 'i'), 'ô', 'o'), 'ö', 'o'), 'Ô', 'o'), 'Ö', 'o'), 'ù', 'u'), 'û', 'u'), 'ü', 'u'), 'Ù', 'u'), 'Û', 'u'), 'Ü', 'u'), 'ç', 'c'), 'Ç', 'c')) LIKE '%' || :query || '%'
-                            )
-          ORDER BY t.created_on DESC
-        """,
-    )
-    fun searchTransactions(query: String): Flow<List<TransactionRelation>?>
-
-    @Query(
-        """
         SELECT * FROM `transaction`
         WHERE (`transaction`.from_account_id IN(:accounts) OR `transaction`.to_account_id IN(:accounts))
         AND (`transaction`.category_id IN(:categories) OR EXISTS (SELECT 1 FROM transaction_split_item WHERE transaction_id = `transaction`.id AND category_id IN(:categories)))
