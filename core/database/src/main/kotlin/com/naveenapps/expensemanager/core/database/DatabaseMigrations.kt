@@ -295,3 +295,29 @@ internal val MIGRATION_17_18 = object : Migration(17, 18) {
         db.execSQL("ALTER TABLE `pending_transaction` ADD COLUMN `category_id` TEXT DEFAULT NULL")
     }
 }
+
+/**
+ * Creates the `envelope` table for the "Enveloppe" feature — a sum allocated to a single
+ * category, tracked only in its own screen, separate from `budget`. Same period-key convention
+ * as `budget` (`selected_month` + `period_type`, raw `BudgetPeriod` ordinal).
+ */
+internal val MIGRATION_18_19 = object : Migration(18, 19) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `envelope` (" +
+                "`id` TEXT NOT NULL, " +
+                "`category_id` TEXT NOT NULL, " +
+                "`name` TEXT, " +
+                "`amount` REAL NOT NULL, " +
+                "`selected_month` TEXT NOT NULL, " +
+                "`period_type` INTEGER NOT NULL DEFAULT 0, " +
+                "`created_on` INTEGER NOT NULL, " +
+                "`updated_on` INTEGER NOT NULL, " +
+                "PRIMARY KEY(`id`), " +
+                "FOREIGN KEY(`category_id`) REFERENCES `category`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)"
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_envelope_category_id` ON `envelope` (`category_id`)"
+        )
+    }
+}

@@ -13,6 +13,7 @@ import com.naveenapps.expensemanager.core.data.repository.GoogleAuthRepositoryIm
 import com.naveenapps.expensemanager.core.data.repository.RecurringTransactionRepositoryImpl
 import com.naveenapps.expensemanager.core.data.repository.DebtRepositoryImpl
 import com.naveenapps.expensemanager.core.data.repository.DebtReminderRepositoryImpl
+import com.naveenapps.expensemanager.core.data.repository.EnvelopeRepositoryImpl
 import com.naveenapps.expensemanager.core.data.repository.SavingsGoalRepositoryImpl
 import com.naveenapps.expensemanager.core.data.repository.ShoppingListRepositoryImpl
 import com.naveenapps.expensemanager.core.data.repository.ShoppingListItemRepositoryImpl
@@ -59,6 +60,7 @@ import com.naveenapps.expensemanager.core.repository.GoogleAuthRepository
 import com.naveenapps.expensemanager.core.repository.RecurringTransactionRepository
 import com.naveenapps.expensemanager.core.repository.DebtRepository
 import com.naveenapps.expensemanager.core.repository.DebtReminderRepository
+import com.naveenapps.expensemanager.core.repository.EnvelopeRepository
 import com.naveenapps.expensemanager.core.repository.SavingsGoalRepository
 import com.naveenapps.expensemanager.core.repository.ShoppingListRepository
 import com.naveenapps.expensemanager.core.repository.ShoppingListItemRepository
@@ -200,6 +202,12 @@ val RepositoryModule = module {
         SavingsGoalRepositoryImpl(
             savingsGoalDao = get(),
             accountDao = get(),
+            dispatchers = get(),
+        )
+    }
+    single<EnvelopeRepository> {
+        EnvelopeRepositoryImpl(
+            envelopeDao = get(),
             dispatchers = get(),
         )
     }
