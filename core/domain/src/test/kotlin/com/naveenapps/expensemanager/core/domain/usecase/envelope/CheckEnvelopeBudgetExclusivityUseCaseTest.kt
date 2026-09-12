@@ -37,7 +37,7 @@ class CheckEnvelopeBudgetExclusivityUseCaseTest : BaseCoroutineTest() {
     }
 
     @Test
-    fun checkForEnvelopeShouldFailWhenAnAllCategoriesBudgetExistsForThePeriod() = runTest {
+    fun checkForEnvelopeShouldSucceedWhenOnlyAnAllCategoriesBudgetExistsForThePeriod() = runTest {
         whenever(budgetRepository.getBudgets()).thenReturn(
             flowOf(listOf(FAKE_BUDGET.copy(isAllCategoriesSelected = true))),
         )
@@ -48,7 +48,7 @@ class CheckEnvelopeBudgetExclusivityUseCaseTest : BaseCoroutineTest() {
             periodType = FAKE_BUDGET.periodType,
         )
 
-        Truth.assertThat(response).isInstanceOf(Resource.Error::class.java)
+        Truth.assertThat(response).isInstanceOf(Resource.Success::class.java)
     }
 
     @Test
@@ -81,7 +81,7 @@ class CheckEnvelopeBudgetExclusivityUseCaseTest : BaseCoroutineTest() {
     }
 
     @Test
-    fun checkForBudgetShouldFailWhenIsAllCategoriesSelectedAndAnEnvelopeExistsForThePeriod() = runTest {
+    fun checkForBudgetShouldSucceedWhenIsAllCategoriesSelectedEvenIfEnvelopesExistForThePeriod() = runTest {
         whenever(
             envelopeRepository.findEnvelopesByPeriod(any(), any()),
         ).thenReturn(listOf(FAKE_ENVELOPE))
@@ -93,7 +93,7 @@ class CheckEnvelopeBudgetExclusivityUseCaseTest : BaseCoroutineTest() {
             periodType = FAKE_ENVELOPE.periodType,
         )
 
-        Truth.assertThat(response).isInstanceOf(Resource.Error::class.java)
+        Truth.assertThat(response).isInstanceOf(Resource.Success::class.java)
     }
 
     @Test
