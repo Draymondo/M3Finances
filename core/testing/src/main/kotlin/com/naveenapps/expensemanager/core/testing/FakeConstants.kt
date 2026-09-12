@@ -6,6 +6,7 @@ import com.naveenapps.expensemanager.core.model.Amount
 import com.naveenapps.expensemanager.core.model.Budget
 import com.naveenapps.expensemanager.core.model.Category
 import com.naveenapps.expensemanager.core.model.CategoryType
+import com.naveenapps.expensemanager.core.model.Envelope
 import com.naveenapps.expensemanager.core.model.StoredIcon
 import com.naveenapps.expensemanager.core.model.Transaction
 import com.naveenapps.expensemanager.core.model.TransactionType
@@ -122,6 +123,17 @@ val FAKE_BUDGET = Budget(
     categories = emptyList(),
     isAllAccountsSelected = true,
     isAllCategoriesSelected = true,
+    createdOn = Date(),
+    updatedOn = Date(),
+)
+
+val FAKE_ENVELOPE = Envelope(
+    id = "1",
+    categoryId = "1",
+    amount = 1000.0,
+    // Matches the fixed-locale key format used by Date.toMonthAndYearKey() / String.fromMonthAndYearKey()
+    // so this fixture stays parseable regardless of the test JVM's default locale.
+    selectedMonth = SimpleDateFormat("MMMM yyyy", Locale.ENGLISH).format(Date()),
     createdOn = Date(),
     updatedOn = Date(),
 )

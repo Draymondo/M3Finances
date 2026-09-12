@@ -6,7 +6,8 @@ val BudgetUseCaseModule = module {
     single {
         AddBudgetUseCase(
             repository = get(),
-            checkBudgetValidateUseCase = get()
+            checkBudgetValidateUseCase = get(),
+            checkEnvelopeBudgetExclusivityUseCase = get(),
         )
     }
     single { CheckBudgetValidateUseCase() }
@@ -58,7 +59,8 @@ val BudgetUseCaseModule = module {
     single {
         UpdateBudgetUseCase(
             repository = get(),
-            checkBudgetValidateUseCase = get()
+            checkBudgetValidateUseCase = get(),
+            checkEnvelopeBudgetExclusivityUseCase = get(),
         )
     }
     single {

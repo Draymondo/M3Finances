@@ -1,19 +1,25 @@
 package com.naveenapps.expensemanager.core.domain.usecase.budget
 
 import com.google.common.truth.Truth
+import com.naveenapps.expensemanager.core.domain.usecase.envelope.CheckEnvelopeBudgetExclusivityUseCase
 import com.naveenapps.expensemanager.core.model.Resource
 import com.naveenapps.expensemanager.core.repository.BudgetRepository
+import com.naveenapps.expensemanager.core.repository.EnvelopeRepository
 import com.naveenapps.expensemanager.core.testing.BaseCoroutineTest
 import com.naveenapps.expensemanager.core.testing.FAKE_BUDGET
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
+import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 
 class AddBudgetUseCaseTest : BaseCoroutineTest() {
 
     private val budgetRepository: BudgetRepository = mock()
+    private val envelopeRepository: EnvelopeRepository = mock()
     private val checkBudgetValidateUseCase = CheckBudgetValidateUseCase()
+    private val checkEnvelopeBudgetExclusivityUseCase =
+        CheckEnvelopeBudgetExclusivityUseCase(envelopeRepository, budgetRepository)
     private lateinit var addBudgetUseCase: AddBudgetUseCase
 
     override fun onCreate() {
@@ -22,11 +28,15 @@ class AddBudgetUseCaseTest : BaseCoroutineTest() {
         addBudgetUseCase = AddBudgetUseCase(
             budgetRepository,
             checkBudgetValidateUseCase,
+            checkEnvelopeBudgetExclusivityUseCase,
         )
     }
 
     @Test
     fun whenBudgetIsValidShouldAddSuccessfully() = runTest {
+        whenever(
+            envelopeRepository.findEnvelopesByPeriod(any(), any()),
+        ).thenReturn(emptyList())
         whenever(budgetRepository.addBudget(FAKE_BUDGET)).thenReturn(Resource.Success(true))
 
         val response = addBudgetUseCase.invoke(FAKE_BUDGET)
