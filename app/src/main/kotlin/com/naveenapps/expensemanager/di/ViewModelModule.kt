@@ -16,6 +16,7 @@ import com.naveenapps.expensemanager.feature.language.di.LanguageViewModelModule
 import com.naveenapps.expensemanager.feature.reminder.di.ReminderViewModelModule
 import com.naveenapps.expensemanager.feature.recurring.di.RecurringViewModelModule
 import com.naveenapps.expensemanager.feature.debt.di.DebtViewModelModule
+import com.naveenapps.expensemanager.feature.envelope.di.EnvelopeViewModelModule
 import com.naveenapps.expensemanager.feature.savingsgoal.di.SavingsGoalViewModelModule
 import com.naveenapps.expensemanager.feature.shoppinglist.di.ShoppingListViewModelModule
 import com.naveenapps.expensemanager.feature.settings.di.SettingsViewModelModule
@@ -64,6 +65,7 @@ val ViewModelModule = module {
         RecurringViewModelModule,
         DebtViewModelModule,
         SavingsGoalViewModelModule,
+        EnvelopeViewModelModule,
         ShoppingListViewModelModule,
     )
 }

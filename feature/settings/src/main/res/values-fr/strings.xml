@@ -47,6 +47,8 @@
     <string name="tools_subtitle">Transactions récurrentes, dettes, épargne, courses et prévisions</string>
     <string name="scheduled_transactions_settings">Transactions prévues</string>
     <string name="scheduled_transactions_settings_subtitle">Consulter et valider les transactions en attente d\'échéance</string>
+    <string name="envelopes_settings">Enveloppes</string>
+    <string name="envelopes_settings_subtitle">Plafonner les dépenses d\'une catégorie, séparément des budgets classiques</string>
 
     <string name="personalization">Personnalisation</string>
     <string name="notifications">Notifications</string>

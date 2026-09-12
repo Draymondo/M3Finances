@@ -98,6 +98,12 @@ sealed class ExpenseManagerScreens {
 
     @Serializable
     data class ShoppingListDetail(val id: String?) : ExpenseManagerScreens()
+
+    @Serializable
+    data object EnvelopeList : ExpenseManagerScreens()
+
+    @Serializable
+    data class EnvelopeCreate(val id: String?) : ExpenseManagerScreens()
 }
 
 object ExpenseManagerArgsNames {

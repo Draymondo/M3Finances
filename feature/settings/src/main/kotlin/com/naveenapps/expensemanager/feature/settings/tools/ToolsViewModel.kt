@@ -1,6 +1,7 @@
 ﻿package com.naveenapps.expensemanager.feature.settings.tools
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.Autorenew
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.Handshake
@@ -65,6 +66,13 @@ class ToolsViewModel(
                     icon = Icons.Outlined.DateRange,
                     usageCount = usageMap[ToolType.SCHEDULED_TRANSACTIONS] ?: 0,
                 ),
+                ToolItemUiModel(
+                    type = ToolType.ENVELOPES,
+                    titleRes = R.string.envelopes_settings,
+                    subtitleRes = R.string.envelopes_settings_subtitle,
+                    icon = Icons.Outlined.AccountBalanceWallet,
+                    usageCount = usageMap[ToolType.ENVELOPES] ?: 0,
+                ),
             )
             val sorted = allTools.sortedByDescending { it.usageCount }
             _state.update { it.copy(tools = sorted) }
@@ -86,6 +94,7 @@ class ToolsViewModel(
             ToolType.SAVINGS_GOALS -> appComposeNavigator.navigate(ExpenseManagerScreens.SavingsGoalList)
             ToolType.SHOPPING_LISTS -> appComposeNavigator.navigate(ExpenseManagerScreens.ShoppingListList)
             ToolType.SCHEDULED_TRANSACTIONS -> appComposeNavigator.navigate(ExpenseManagerScreens.PendingTransactionList)
+            ToolType.ENVELOPES -> appComposeNavigator.navigate(ExpenseManagerScreens.EnvelopeList)
         }
     }
 }

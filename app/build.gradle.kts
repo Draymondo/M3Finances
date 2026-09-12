@@ -199,6 +199,7 @@ dependencies {
     implementation(project(":feature:recurring"))
     implementation(project(":feature:debt"))
     implementation(project(":feature:savings"))
+    implementation(project(":feature:envelope"))
     implementation(project(":feature:shopping"))
 
     implementation(libs.androidx.splash.screen)

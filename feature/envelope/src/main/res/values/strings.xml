@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="envelopes">Envelopes</string>
+    <string name="no_envelopes_available">No envelopes yet\nTap + to start one</string>
+    <string name="of_envelope">of %1$s</string>
+
+    <string name="create_envelope">Create envelope</string>
+    <string name="edit_envelope">Edit envelope</string>
+    <string name="delete_envelope">Delete envelope</string>
+    <string name="save">Save</string>
+    <string name="category">Category</string>
+    <string name="select_category_placeholder">Select a category</string>
+    <string name="select_category_error">Please select a category</string>
+    <string name="details">Details</string>
+    <string name="envelope_amount">Amount</string>
+    <string name="envelope_name">Name (optional)</string>
+    <string name="amount_error">Amount should be greater than 0</string>
+    <string name="envelope_monthly_hint">This envelope tracks the current month. Monthly reset happens automatically.</string>
+</resources>

@@ -93,6 +93,8 @@ import com.naveenapps.expensemanager.feature.recurring.create.RecurringTransacti
 import com.naveenapps.expensemanager.feature.recurring.list.RecurringTransactionListScreen
 import com.naveenapps.expensemanager.feature.debt.create.DebtCreateScreen
 import com.naveenapps.expensemanager.feature.debt.list.DebtListScreen
+import com.naveenapps.expensemanager.feature.envelope.create.EnvelopeCreateScreen
+import com.naveenapps.expensemanager.feature.envelope.list.EnvelopeListScreen
 import com.naveenapps.expensemanager.feature.savingsgoal.create.SavingsGoalCreateScreen
 import com.naveenapps.expensemanager.feature.savingsgoal.list.SavingsGoalListScreen
 import com.naveenapps.expensemanager.feature.shoppinglist.create.ShoppingListCreateScreen
@@ -214,6 +216,12 @@ fun NavGraphBuilder.expenseManagerNavigation(
     }
     composable<ExpenseManagerScreens.SavingsGoalCreate> {
         SavingsGoalCreateScreen()
+    }
+    composable<ExpenseManagerScreens.EnvelopeList> {
+        EnvelopeListScreen()
+    }
+    composable<ExpenseManagerScreens.EnvelopeCreate> {
+        EnvelopeCreateScreen()
     }
     composable<ExpenseManagerScreens.ShoppingListList> {
         ShoppingListListScreen()
