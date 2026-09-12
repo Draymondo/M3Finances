@@ -3,6 +3,7 @@ package com.naveenapps.expensemanager.core.database.entity
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.Date
 
@@ -17,6 +18,12 @@ import java.util.Date
             onDelete = ForeignKey.CASCADE,
         ),
     ],
+    // MIGRATION_18_19 creates `index_envelope_category_id` on `category_id` — declared here too
+    // so Room's runtime schema validation (actual on-disk indices vs. what it expects from this
+    // entity) agrees with what the migration actually produced. Without this, Room throws
+    // "Migration didn't properly handle envelope(...)" on every app launch, since it expects
+    // zero indices on this table by default.
+    indices = [Index(value = ["category_id"])],
 )
 data class EnvelopeEntity(
     @PrimaryKey(autoGenerate = false)
