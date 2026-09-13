@@ -1,4 +1,4 @@
-﻿package com.naveenapps.expensemanager.feature.settings.tools
+package com.naveenapps.expensemanager.feature.settings.tools
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
@@ -6,6 +6,7 @@ import androidx.compose.material.icons.outlined.Autorenew
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.Handshake
 import androidx.compose.material.icons.outlined.Savings
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -73,6 +74,13 @@ class ToolsViewModel(
                     icon = Icons.Outlined.AccountBalanceWallet,
                     usageCount = usageMap[ToolType.ENVELOPES] ?: 0,
                 ),
+                ToolItemUiModel(
+                    type = ToolType.WORK_TIME,
+                    titleRes = R.string.work_time_settings,
+                    subtitleRes = R.string.work_time_settings_subtitle,
+                    icon = Icons.Outlined.Schedule,
+                    usageCount = usageMap[ToolType.WORK_TIME] ?: 0,
+                ),
             )
             val sorted = allTools.sortedByDescending { it.usageCount }
             _state.update { it.copy(tools = sorted) }
@@ -95,6 +103,7 @@ class ToolsViewModel(
             ToolType.SHOPPING_LISTS -> appComposeNavigator.navigate(ExpenseManagerScreens.ShoppingListList)
             ToolType.SCHEDULED_TRANSACTIONS -> appComposeNavigator.navigate(ExpenseManagerScreens.PendingTransactionList)
             ToolType.ENVELOPES -> appComposeNavigator.navigate(ExpenseManagerScreens.EnvelopeList)
+            ToolType.WORK_TIME -> appComposeNavigator.navigate(ExpenseManagerScreens.WorkTimeCalculator)
         }
     }
 }

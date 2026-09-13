@@ -201,6 +201,7 @@ dependencies {
     implementation(project(":feature:savings"))
     implementation(project(":feature:envelope"))
     implementation(project(":feature:shopping"))
+    implementation(project(":feature:worktime"))
 
     implementation(libs.androidx.splash.screen)
 

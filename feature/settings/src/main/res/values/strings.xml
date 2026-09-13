@@ -49,6 +49,8 @@
     <string name="scheduled_transactions_settings_subtitle">Review and manage upcoming transactions</string>
     <string name="envelopes_settings">Envelopes</string>
     <string name="envelopes_settings_subtitle">Cap spending on a category, separate from classic budgets</string>
+    <string name="work_time_settings">Work Time Equivalent</string>
+    <string name="work_time_settings_subtitle">Convert a price into the work time needed to afford it</string>
 
     <string name="personalization">Personalization</string>
     <string name="notifications">Notifications</string>

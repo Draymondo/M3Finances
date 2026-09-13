@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tool entry in Settings > Tools -->
+    <string name="work_time_settings">Work Time Equivalent</string>
+    <string name="work_time_settings_subtitle">Convert a price into the work time needed to afford it</string>
+
+    <!-- Calculator screen -->
+    <string name="work_time_calculator_title">Work Time</string>
+    <string name="work_time_price_label">Price</string>
+    <string name="work_time_output_unit_label">Display result in</string>
+    <string name="work_time_calculate">Calculate</string>
+    <string name="work_time_result_label">Work time needed</string>
+    <string name="work_time_open_settings">Settings</string>
+    <string name="work_time_no_settings_hint">Set up your income in the settings to use this tool</string>
+
+    <!-- Auto-detection on calculator -->
+    <string name="work_time_auto_detect_title">Auto-detect income</string>
+    <string name="work_time_auto_detect_enabled_desc">Based on income transactions this month</string>
+    <string name="work_time_auto_detect_disabled_desc">Based on manual income from settings</string>
+
+    <!-- Output units (singular) -->
+    <string name="work_time_unit_minute">Minute</string>
+    <string name="work_time_unit_hour">Hour</string>
+    <string name="work_time_unit_day">Day</string>
+    <string name="work_time_unit_month">Month</string>
+
+    <!-- Output units (plural) -->
+    <string name="work_time_unit_minutes">minutes</string>
+    <string name="work_time_unit_hours">hours</string>
+    <string name="work_time_unit_days">days</string>
+    <string name="work_time_unit_months">months</string>
+
+    <!-- Settings screen -->
+    <string name="work_time_settings_title">WorkTime Settings</string>
+    <string name="work_time_income_label">Income</string>
+    <string name="work_time_income_period_label">Income period</string>
+    <string name="work_time_hours_per_day_label">Hours worked per day</string>
+    <string name="work_time_days_per_week_label">Days worked per week</string>
+    <string name="work_time_auto_detect_categories_label">Income categories for auto-detection</string>
+    <string name="work_time_auto_detect_categories_hint">Select one or more income categories</string>
+    <string name="work_time_save">Save</string>
+    <string name="work_time_settings_saved">Settings saved</string>
+
+    <!-- Income periods -->
+    <string name="work_time_period_hour">Hour</string>
+    <string name="work_time_period_day">Day</string>
+    <string name="work_time_period_week">Week</string>
+    <string name="work_time_period_month">Month</string>
+
+    <!-- Errors -->
+    <string name="work_time_error_hours_per_day">Hours per day must be greater than 0</string>
+    <string name="work_time_error_days_per_week">Days per week must be greater than 0</string>
+</resources>

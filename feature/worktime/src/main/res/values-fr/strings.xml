@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Entrée outil dans Paramètres > Outils -->
+    <string name="work_time_settings">Temps de travail équivalent</string>
+    <string name="work_time_settings_subtitle">Convertit un prix en temps de travail nécessaire pour se le payer</string>
+
+    <!-- Écran calculateur -->
+    <string name="work_time_calculator_title">Temps de travail</string>
+    <string name="work_time_price_label">Prix</string>
+    <string name="work_time_output_unit_label">Afficher le résultat en</string>
+    <string name="work_time_calculate">Calculer</string>
+    <string name="work_time_result_label">Temps de travail nécessaire</string>
+    <string name="work_time_open_settings">Réglages</string>
+    <string name="work_time_no_settings_hint">Configurez votre revenu dans les réglages pour utiliser cet outil</string>
+
+    <!-- Auto-détection sur le calculateur -->
+    <string name="work_time_auto_detect_title">Revenu auto-détecté</string>
+    <string name="work_time_auto_detect_enabled_desc">Calculé d\'après vos revenus du mois en cours</string>
+    <string name="work_time_auto_detect_disabled_desc">Calculé d\'après votre revenu manuel des réglages</string>
+
+    <!-- Unités de sortie (singulier) -->
+    <string name="work_time_unit_minute">Minute</string>
+    <string name="work_time_unit_hour">Heure</string>
+    <string name="work_time_unit_day">Jour</string>
+    <string name="work_time_unit_month">Mois</string>
+
+    <!-- Unités de sortie (pluriel) -->
+    <string name="work_time_unit_minutes">minutes</string>
+    <string name="work_time_unit_hours">heures</string>
+    <string name="work_time_unit_days">jours</string>
+    <string name="work_time_unit_months">mois</string>
+
+    <!-- Écran réglages -->
+    <string name="work_time_settings_title">Réglages — Temps de travail</string>
+    <string name="work_time_income_label">Revenu</string>
+    <string name="work_time_income_period_label">Période du revenu</string>
+    <string name="work_time_hours_per_day_label">Heures travaillées par jour</string>
+    <string name="work_time_days_per_week_label">Jours travaillés par semaine</string>
+    <string name="work_time_auto_detect_categories_label">Catégories de revenu pour l\'auto-détection</string>
+    <string name="work_time_auto_detect_categories_hint">Sélectionnez une ou plusieurs catégories de type Revenu</string>
+    <string name="work_time_save">Enregistrer</string>
+    <string name="work_time_settings_saved">Réglages enregistrés</string>
+
+    <!-- Périodes de revenu -->
+    <string name="work_time_period_hour">Heure</string>
+    <string name="work_time_period_day">Jour</string>
+    <string name="work_time_period_week">Semaine</string>
+    <string name="work_time_period_month">Mois</string>
+
+    <!-- Erreurs -->
+    <string name="work_time_error_hours_per_day">Le nombre d\'heures par jour doit être supérieur à 0</string>
+    <string name="work_time_error_days_per_week">Le nombre de jours par semaine doit être supérieur à 0</string>
+</resources>

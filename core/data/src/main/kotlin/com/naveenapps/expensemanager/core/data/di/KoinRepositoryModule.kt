@@ -301,4 +301,9 @@ val RepositoryModule = module {
             toolUsageDataStore = get()
         )
     }
+    single<com.naveenapps.expensemanager.core.repository.WorkTimeSettingsRepository> {
+        com.naveenapps.expensemanager.core.data.repository.WorkTimeSettingsRepositoryImpl(
+            workTimeSettingsDataStore = get()
+        )
+    }
 }

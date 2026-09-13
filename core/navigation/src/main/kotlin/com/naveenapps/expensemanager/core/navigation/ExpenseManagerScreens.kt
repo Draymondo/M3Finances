@@ -104,6 +104,12 @@ sealed class ExpenseManagerScreens {
 
     @Serializable
     data class EnvelopeCreate(val id: String?) : ExpenseManagerScreens()
+
+    @Serializable
+    data object WorkTimeCalculator : ExpenseManagerScreens()
+
+    @Serializable
+    data object WorkTimeCalculatorSettings : ExpenseManagerScreens()
 }
 
 object ExpenseManagerArgsNames {

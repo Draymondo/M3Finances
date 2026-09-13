@@ -95,6 +95,8 @@ import com.naveenapps.expensemanager.feature.debt.create.DebtCreateScreen
 import com.naveenapps.expensemanager.feature.debt.list.DebtListScreen
 import com.naveenapps.expensemanager.feature.envelope.create.EnvelopeCreateScreen
 import com.naveenapps.expensemanager.feature.envelope.list.EnvelopeListScreen
+import com.naveenapps.expensemanager.feature.worktime.calculator.WorkTimeCalculatorScreen
+import com.naveenapps.expensemanager.feature.worktime.settings.WorkTimeSettingsScreen
 import com.naveenapps.expensemanager.feature.savingsgoal.create.SavingsGoalCreateScreen
 import com.naveenapps.expensemanager.feature.savingsgoal.list.SavingsGoalListScreen
 import com.naveenapps.expensemanager.feature.shoppinglist.create.ShoppingListCreateScreen
@@ -231,6 +233,12 @@ fun NavGraphBuilder.expenseManagerNavigation(
     }
     composable<ExpenseManagerScreens.ShoppingListDetail> {
         ShoppingListDetailScreen()
+    }
+    composable<ExpenseManagerScreens.WorkTimeCalculator> {
+        WorkTimeCalculatorScreen()
+    }
+    composable<ExpenseManagerScreens.WorkTimeCalculatorSettings> {
+        WorkTimeSettingsScreen()
     }
 }
 
