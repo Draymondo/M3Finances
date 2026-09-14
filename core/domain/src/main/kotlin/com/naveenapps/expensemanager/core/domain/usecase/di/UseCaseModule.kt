@@ -4,6 +4,7 @@ import com.naveenapps.expensemanager.core.domain.usecase.account.AccountUseCaseM
 import com.naveenapps.expensemanager.core.domain.usecase.budget.BudgetUseCaseModule
 import com.naveenapps.expensemanager.core.domain.usecase.category.CategoryUseCaseModule
 import com.naveenapps.expensemanager.core.domain.usecase.country.CountryUseCaseModule
+import com.naveenapps.expensemanager.core.domain.usecase.currencyconverter.CurrencyConverterUseCaseModule
 import com.naveenapps.expensemanager.core.domain.usecase.debt.DebtUseCaseModule
 import com.naveenapps.expensemanager.core.domain.usecase.envelope.EnvelopeUseCaseModule
 import com.naveenapps.expensemanager.core.domain.usecase.networth.NetWorthUseCaseModule
@@ -34,6 +35,7 @@ val UseCaseModule = module {
         ShoppingListUseCaseModule,
         ToolsUseCaseModule,
         WorkTimeUseCaseModule,
+        CurrencyConverterUseCaseModule,
         com.naveenapps.expensemanager.core.domain.usecase.analysis.AnalysisUseCaseModule,
     )
 }
