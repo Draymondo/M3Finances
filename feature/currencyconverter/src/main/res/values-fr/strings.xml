@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="currency_converter">Convertisseur de devises</string>
+    <string name="currency_converter_settings">Réglages</string>
+    <string name="from_currency">De</string>
+    <string name="to_currency">Vers</string>
+    <string name="select_currency_placeholder">Sélectionner une devise</string>
+    <string name="swap">Inverser les devises</string>
+    <string name="refresh">Actualiser</string>
+    <string name="amount">Montant</string>
+    <string name="amount_error">Le montant doit être supérieur à 0</string>
+    <string name="currency_converter_placeholder">Choisis une devise source et une devise cible pour convertir</string>
+    <string name="last_updated">Mis à jour %1$s</string>
+    <string name="no_api_key_configured">Aucune clé API configurée pour l\'instant\nAppuie sur l\'icône engrenage pour ajouter ta clé gratuite exchangerate-api.com</string>
+    <string name="save">Enregistrer</string>
+    <string name="api_key">Clé API exchangerate-api.com</string>
+    <string name="api_key_error">La clé API ne peut pas être vide</string>
+    <string name="api_key_hint">Obtiens une clé gratuite en t\'inscrivant sur exchangerate-api.com — elle n\'est stockée que sur cet appareil et jamais partagée.</string>
+</resources>

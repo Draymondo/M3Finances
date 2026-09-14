@@ -51,6 +51,8 @@
     <string name="envelopes_settings_subtitle">Cap spending on a category, separate from classic budgets</string>
     <string name="work_time_settings">Work Time Equivalent</string>
     <string name="work_time_settings_subtitle">Convert a price into the work time needed to afford it</string>
+    <string name="currency_converter_settings_tool">Currency Converter</string>
+    <string name="currency_converter_settings_tool_subtitle">Convert amounts using live exchange rates</string>
 
     <string name="personalization">Personalization</string>
     <string name="notifications">Notifications</string>

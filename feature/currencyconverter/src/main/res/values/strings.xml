@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="currency_converter">Currency converter</string>
+    <string name="currency_converter_settings">Settings</string>
+    <string name="from_currency">From</string>
+    <string name="to_currency">To</string>
+    <string name="select_currency_placeholder">Select a currency</string>
+    <string name="swap">Swap currencies</string>
+    <string name="refresh">Refresh</string>
+    <string name="amount">Amount</string>
+    <string name="amount_error">Amount should be greater than 0</string>
+    <string name="currency_converter_placeholder">Pick a source and target currency to convert</string>
+    <string name="last_updated">Updated %1$s</string>
+    <string name="no_api_key_configured">No API key configured yet\nTap the gear icon to add your free exchangerate-api.com key</string>
+    <string name="save">Save</string>
+    <string name="api_key">exchangerate-api.com API key</string>
+    <string name="api_key_error">The API key cannot be empty</string>
+    <string name="api_key_hint">Get a free key by signing up at exchangerate-api.com — it is stored only on this device and never shared.</string>
+</resources>

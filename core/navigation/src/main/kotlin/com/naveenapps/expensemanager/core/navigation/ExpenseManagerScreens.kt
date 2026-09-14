@@ -110,6 +110,12 @@ sealed class ExpenseManagerScreens {
 
     @Serializable
     data object WorkTimeCalculatorSettings : ExpenseManagerScreens()
+
+    @Serializable
+    data object CurrencyConverter : ExpenseManagerScreens()
+
+    @Serializable
+    data object CurrencyConverterSettings : ExpenseManagerScreens()
 }
 
 object ExpenseManagerArgsNames {
