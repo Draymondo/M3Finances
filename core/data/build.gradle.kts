@@ -3,6 +3,7 @@ plugins {
     id("naveenapps.plugin.kotlin.basic")
     id("naveenapps.plugin.di")
     id("naveenapps.plugin.room")
+    kotlin("plugin.serialization")
 }
 
 android {
@@ -25,6 +26,12 @@ dependencies {
 
     implementation(libs.opencsv)
     implementation(libs.gson)
+
+    // Convertisseur de devises — première intégration réseau du projet
+    implementation(libs.retrofit.core)
+    implementation(libs.retrofit.kotlin.serialization)
+    implementation(libs.okhttp.logging)
+    implementation(libs.kotlinx.serialization.json)
 
     implementation(libs.androidx.dataStore.preference)
     implementation(libs.backup.restore)

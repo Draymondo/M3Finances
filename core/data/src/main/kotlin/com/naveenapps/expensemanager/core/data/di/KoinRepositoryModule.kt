@@ -306,4 +306,11 @@ val RepositoryModule = module {
             workTimeSettingsDataStore = get()
         )
     }
+    single<com.naveenapps.expensemanager.core.repository.CurrencyConverterRepository> {
+        com.naveenapps.expensemanager.core.data.repository.CurrencyConverterRepositoryImpl(
+            dataStore = get(),
+            apiService = get(),
+            dispatchers = get(),
+        )
+    }
 }

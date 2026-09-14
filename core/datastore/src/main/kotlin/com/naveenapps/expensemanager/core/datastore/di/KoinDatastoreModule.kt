@@ -1,6 +1,7 @@
 import android.content.Context
 import androidx.datastore.preferences.preferencesDataStore
 import com.naveenapps.expensemanager.core.datastore.CloudSyncDataStore
+import com.naveenapps.expensemanager.core.datastore.CurrencyConverterDataStore
 import com.naveenapps.expensemanager.core.datastore.CurrencyDataStore
 import com.naveenapps.expensemanager.core.datastore.DateRangeDataStore
 import com.naveenapps.expensemanager.core.datastore.FeedbackDataStore
@@ -29,5 +30,6 @@ val DatastoreModule = module {
     single { CloudSyncDataStore(get()) }
     single { ToolUsageDataStore(get()) }
     single { WorkTimeSettingsDataStore(get()) }
+    single { CurrencyConverterDataStore(get()) }
 }
 
