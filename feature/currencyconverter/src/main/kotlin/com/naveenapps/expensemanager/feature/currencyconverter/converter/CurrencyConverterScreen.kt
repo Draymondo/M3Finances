@@ -233,7 +233,9 @@ private fun CurrencyConverterBody(
 }
 
 private fun formatLastUpdated(date: Date): String {
-    return SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(date)
+    // L'API ne rafraîchit ses taux qu'une fois par jour (minuit UTC) — l'heure serait donc
+    // presque toujours "00:00" et n'apporterait aucune information utile, d'où la date seule.
+    return SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(date)
 }
 
 @Preview
