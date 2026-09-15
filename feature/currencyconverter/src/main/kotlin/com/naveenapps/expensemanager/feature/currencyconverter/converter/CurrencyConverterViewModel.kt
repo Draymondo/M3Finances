@@ -146,7 +146,9 @@ class CurrencyConverterViewModel(
         }
         when (val response = convertCurrencyUseCase(amountValue, toCurrency.currencyCode, rates)) {
             is Resource.Success -> _state.update {
-                it.copy(result = numberFormatRepository.formatForDisplay(response.data))
+                it.copy(
+                    result = "${numberFormatRepository.formatForDisplay(response.data)} ${toCurrency.currencyCode}",
+                )
             }
 
             is Resource.Error -> _state.update {
