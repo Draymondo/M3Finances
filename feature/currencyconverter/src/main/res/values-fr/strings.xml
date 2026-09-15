@@ -4,7 +4,7 @@
     <string name="currency_converter_settings">Réglages</string>
     <string name="from_currency">De</string>
     <string name="to_currency">Vers</string>
-    <string name="select_currency_placeholder">Sélectionner une devise</string>
+    <string name="select_currency_placeholder">Choisir</string>
     <string name="swap">Inverser les devises</string>
     <string name="refresh">Actualiser</string>
     <string name="amount">Montant</string>
