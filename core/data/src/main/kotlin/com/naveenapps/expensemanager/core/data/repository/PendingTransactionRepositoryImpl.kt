@@ -14,7 +14,9 @@ class PendingTransactionRepositoryImpl(
 ) : PendingTransactionRepository {
 
     override fun getAllPendingTransactions(): Flow<List<PendingTransaction>> {
-        return pendingTransactionDao.getActionablePendingTransactions(System.currentTimeMillis()).map { entities ->
+        // Toutes les transactions prévues (à venir + déjà dues) — la distinction se fait à
+        // l'affichage (voir PendingTransactionListScreen), pas en filtrant côté requête.
+        return pendingTransactionDao.getAllPendingTransactions().map { entities ->
             entities.map { it.toDomainModel() }
         }
     }

@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.naveenapps.expensemanager.core.designsystem.ui.components.ExpenseManagerTopAppBar
 import com.naveenapps.expensemanager.core.model.PendingTransaction
@@ -93,11 +94,21 @@ fun PendingTransactionItem(
     onDelete: () -> Unit,
     onPostpone: (() -> Unit)? = null,
 ) {
+    val isUpcoming = transaction.source == TransactionSource.SCHEDULED &&
+        transaction.scheduledDate?.after(Date()) == true
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
             .clickable { onClick() },
+        colors = CardDefaults.cardColors(
+            containerColor = if (isUpcoming) {
+                MaterialTheme.colorScheme.surfaceVariant
+            } else {
+                MaterialTheme.colorScheme.surface
+            }
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -107,11 +118,26 @@ fun PendingTransactionItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = sourceLabel(transaction.source),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = sourceLabel(transaction.source),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    if (transaction.source == TransactionSource.SCHEDULED) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = if (isUpcoming) "🕒 À venir" else "✅ À confirmer",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isUpcoming) {
+                                MaterialTheme.colorScheme.tertiary
+                            } else {
+                                MaterialTheme.colorScheme.primary
+                            }
+                        )
+                    }
+                }
                 if (transaction.source == TransactionSource.SCHEDULED) {
                     Text(
                         text = "Prévue le : ${(transaction.scheduledDate ?: transaction.date).toCompleteDateWithDate()}",
