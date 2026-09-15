@@ -9,6 +9,12 @@ interface PendingTransactionRepository {
 
     fun getAllPendingTransactions(): Flow<List<PendingTransaction>>
 
+    /** Toutes les transactions prévues, à venir comme déjà dues — pour l'écran dédié
+     * "Transactions prévues" (Paramètres > Outils) uniquement. Ne pas utiliser pour le
+     * widget de notifications de l'accueil : [getAllPendingTransactions] reste la seule
+     * source "actionable maintenant" pour ça. */
+    fun getAllScheduledPendingTransactions(): Flow<List<PendingTransaction>>
+
     fun getPendingTransactionById(id: String): Flow<PendingTransaction?>
 
     suspend fun addPendingTransaction(transaction: PendingTransaction): Resource<Boolean>

@@ -2,7 +2,7 @@ package com.naveenapps.expensemanager.feature.transaction.pending
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.naveenapps.expensemanager.core.domain.usecase.transaction.GetPendingTransactionsUseCase
+import com.naveenapps.expensemanager.core.domain.usecase.transaction.GetScheduledPendingTransactionsUseCase
 import com.naveenapps.expensemanager.core.model.PendingTransaction
 import com.naveenapps.expensemanager.core.navigation.AppComposeNavigator
 import com.naveenapps.expensemanager.core.navigation.ExpenseManagerScreens
@@ -17,7 +17,7 @@ import com.naveenapps.expensemanager.core.model.ToolType
 import kotlinx.coroutines.launch
 
 class PendingTransactionListViewModel(
-    getPendingTransactionsUseCase: GetPendingTransactionsUseCase,
+    getScheduledPendingTransactionsUseCase: GetScheduledPendingTransactionsUseCase,
     private val pendingTransactionRepository: PendingTransactionRepository,
     private val trackToolUsageUseCase: TrackToolUsageUseCase,
     private val appComposeNavigator: AppComposeNavigator
@@ -30,7 +30,7 @@ class PendingTransactionListViewModel(
         viewModelScope.launch {
             trackToolUsageUseCase(ToolType.SCHEDULED_TRANSACTIONS)
         }
-        getPendingTransactionsUseCase.invoke()
+        getScheduledPendingTransactionsUseCase.invoke()
             .onEach { list ->
                 _pendingTransactions.update { list }
             }.launchIn(viewModelScope)

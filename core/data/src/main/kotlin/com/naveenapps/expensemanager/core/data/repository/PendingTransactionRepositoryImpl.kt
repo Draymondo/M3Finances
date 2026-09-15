@@ -14,8 +14,15 @@ class PendingTransactionRepositoryImpl(
 ) : PendingTransactionRepository {
 
     override fun getAllPendingTransactions(): Flow<List<PendingTransaction>> {
-        // Toutes les transactions prévues (à venir + déjà dues) — la distinction se fait à
-        // l'affichage (voir PendingTransactionListScreen), pas en filtrant côté requête.
+        // Uniquement les transactions "actionables maintenant" (SMS capturées, ou programmées
+        // déjà dues) — c'est cette liste qui alimente le compteur de notifications de l'accueil.
+        return pendingTransactionDao.getActionablePendingTransactions(System.currentTimeMillis()).map { entities ->
+            entities.map { it.toDomainModel() }
+        }
+    }
+
+    override fun getAllScheduledPendingTransactions(): Flow<List<PendingTransaction>> {
+        // Toutes les transactions prévues, à venir comme dues — pour l'écran dédié uniquement.
         return pendingTransactionDao.getAllPendingTransactions().map { entities ->
             entities.map { it.toDomainModel() }
         }

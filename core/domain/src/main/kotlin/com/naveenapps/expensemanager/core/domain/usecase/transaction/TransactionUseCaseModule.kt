@@ -73,5 +73,6 @@ val TransactionUseCaseModule = module {
     single { ScanReceiptUseCase(settingsRepository = get(), geminiRepository = get()) }
     single { com.naveenapps.expensemanager.core.domain.usecase.transaction.ParseWaveNotificationUseCase(settingsRepository = get(), geminiRepository = get()) }
     single { com.naveenapps.expensemanager.core.domain.usecase.transaction.GetPendingTransactionsUseCase(repository = get()) }
+    single { com.naveenapps.expensemanager.core.domain.usecase.transaction.GetScheduledPendingTransactionsUseCase(repository = get()) }
     single { SuggestCategoryUseCase(geminiRepository = get(), settingsRepository = get()) }
 }
