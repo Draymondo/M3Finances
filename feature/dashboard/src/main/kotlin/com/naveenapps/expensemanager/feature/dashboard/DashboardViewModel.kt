@@ -331,6 +331,7 @@ class DashboardViewModel(
             DashboardAction.OpenTransactionList -> openTransactionList()
             DashboardAction.OpenPendingTransactions -> openPendingTransactions()
             DashboardAction.OpenChat -> openChat()
+            DashboardAction.OpenCalendar -> openCalendar()
             DashboardAction.OnRequiredIncomeClick -> {
                 if (_state.value.isCurrentMonth && !_state.value.isRequiredIncomeAligned) {
                     _state.update { it.copy(showRequiredIncomeConfirmation = true) }
@@ -389,6 +390,10 @@ class DashboardViewModel(
 
     private fun openChat() {
         appComposeNavigator.navigate(ExpenseManagerScreens.Chat)
+    }
+
+    private fun openCalendar() {
+        appComposeNavigator.navigate(ExpenseManagerScreens.Calendar)
     }
 
     companion object {

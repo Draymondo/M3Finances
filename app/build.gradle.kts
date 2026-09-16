@@ -203,6 +203,7 @@ dependencies {
     implementation(project(":feature:shopping"))
     implementation(project(":feature:worktime"))
     implementation(project(":feature:currencyconverter"))
+    implementation(project(":feature:calendar"))
 
     implementation(libs.androidx.splash.screen)
 

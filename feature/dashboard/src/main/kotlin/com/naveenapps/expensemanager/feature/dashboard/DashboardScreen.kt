@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
@@ -147,6 +148,16 @@ private fun DashboardScaffoldContent(
                                 contentDescription = "Transactions en attente",
                             )
                         }
+                    }
+                    IconButton(
+                        onClick = {
+                            onAction.invoke(DashboardAction.OpenCalendar)
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.CalendarMonth,
+                            contentDescription = stringResource(id = R.string.calendar),
+                        )
                     }
                     IconButton(
                         onClick = {

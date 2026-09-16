@@ -53,6 +53,8 @@
     <string name="work_time_settings_subtitle">Convertit un prix en temps de travail nécessaire pour se le payer</string>
     <string name="currency_converter_settings_tool">Convertisseur de devises</string>
     <string name="currency_converter_settings_tool_subtitle">Convertit des montants avec des taux de change en temps réel</string>
+    <string name="calendar_settings">Calendrier financier</string>
+    <string name="calendar_settings_subtitle">Visualise tes revenus, dépenses et solde au jour le jour sur un calendrier</string>
 
     <string name="personalization">Personnalisation</string>
     <string name="notifications">Notifications</string>

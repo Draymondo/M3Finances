@@ -3,6 +3,7 @@ package com.naveenapps.expensemanager.feature.settings.tools
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.Autorenew
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.CurrencyExchange
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.Handshake
@@ -89,6 +90,13 @@ class ToolsViewModel(
                     icon = Icons.Outlined.CurrencyExchange,
                     usageCount = usageMap[ToolType.CURRENCY_CONVERTER] ?: 0,
                 ),
+                ToolItemUiModel(
+                    type = ToolType.CALENDAR,
+                    titleRes = R.string.calendar_settings,
+                    subtitleRes = R.string.calendar_settings_subtitle,
+                    icon = Icons.Outlined.CalendarMonth,
+                    usageCount = usageMap[ToolType.CALENDAR] ?: 0,
+                ),
             )
             val sorted = allTools.sortedByDescending { it.usageCount }
             _state.update { it.copy(tools = sorted) }
@@ -113,6 +121,7 @@ class ToolsViewModel(
             ToolType.ENVELOPES -> appComposeNavigator.navigate(ExpenseManagerScreens.EnvelopeList)
             ToolType.WORK_TIME -> appComposeNavigator.navigate(ExpenseManagerScreens.WorkTimeCalculator)
             ToolType.CURRENCY_CONVERTER -> appComposeNavigator.navigate(ExpenseManagerScreens.CurrencyConverter)
+            ToolType.CALENDAR -> appComposeNavigator.navigate(ExpenseManagerScreens.Calendar)
         }
     }
 }

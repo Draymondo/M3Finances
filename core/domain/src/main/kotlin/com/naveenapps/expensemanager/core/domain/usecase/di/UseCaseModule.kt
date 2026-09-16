@@ -15,6 +15,7 @@ import com.naveenapps.expensemanager.core.domain.usecase.settings.SettingsUseCas
 import com.naveenapps.expensemanager.core.domain.usecase.settings.filter.FilterUseCaseModule
 import com.naveenapps.expensemanager.core.domain.usecase.tools.ToolsUseCaseModule
 import com.naveenapps.expensemanager.core.domain.usecase.transaction.TransactionUseCaseModule
+import com.naveenapps.expensemanager.core.domain.usecase.calendar.CalendarUseCaseModule
 import com.naveenapps.expensemanager.core.domain.usecase.worktime.WorkTimeUseCaseModule
 import org.koin.dsl.module
 
@@ -36,6 +37,7 @@ val UseCaseModule = module {
         ToolsUseCaseModule,
         WorkTimeUseCaseModule,
         CurrencyConverterUseCaseModule,
+        CalendarUseCaseModule,
         com.naveenapps.expensemanager.core.domain.usecase.analysis.AnalysisUseCaseModule,
     )
 }

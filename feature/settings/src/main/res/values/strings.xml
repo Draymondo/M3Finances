@@ -53,6 +53,8 @@
     <string name="work_time_settings_subtitle">Convert a price into the work time needed to afford it</string>
     <string name="currency_converter_settings_tool">Currency Converter</string>
     <string name="currency_converter_settings_tool_subtitle">Convert amounts using live exchange rates</string>
+    <string name="calendar_settings">Financial Calendar</string>
+    <string name="calendar_settings_subtitle">View daily income, expenses and net balance on a calendar</string>
 
     <string name="personalization">Personalization</string>
     <string name="notifications">Notifications</string>

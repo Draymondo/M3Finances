@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="calendar_title">Calendrier</string>
+    <string name="calendar_view_day">Jour</string>
+    <string name="calendar_view_week">Semaine</string>
+    <string name="calendar_view_month">Mois</string>
+    <string name="calendar_view_year">Année</string>
+    <string name="calendar_income">Revenus</string>
+    <string name="calendar_expense">Dépenses</string>
+    <string name="calendar_net">Solde net</string>
+    <string name="calendar_today">Aujourd\'hui</string>
+    <string name="calendar_no_transactions">Aucune transaction ce jour</string>
+    <string name="calendar_transactions_count">%1$d transaction</string>
+    <string name="calendar_transactions_count_plural">%1$d transactions</string>
+    <string name="calendar_day_mon">LUN</string>
+    <string name="calendar_day_tue">MAR</string>
+    <string name="calendar_day_wed">MER</string>
+    <string name="calendar_day_thu">JEU</string>
+    <string name="calendar_day_fri">VEN</string>
+    <string name="calendar_day_sat">SAM</string>
+    <string name="calendar_day_sun">DIM</string>
+    <string name="calendar_add_transaction">Ajouter une transaction</string>
+</resources>
+

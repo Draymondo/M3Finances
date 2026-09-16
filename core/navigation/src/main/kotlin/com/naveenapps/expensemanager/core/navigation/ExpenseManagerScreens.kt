@@ -116,6 +116,9 @@ sealed class ExpenseManagerScreens {
 
     @Serializable
     data object CurrencyConverterSettings : ExpenseManagerScreens()
+
+    @Serializable
+    data object Calendar : ExpenseManagerScreens()
 }
 
 object ExpenseManagerArgsNames {
