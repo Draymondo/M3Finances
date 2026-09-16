@@ -9,6 +9,7 @@ sealed class CalendarAction {
     data object NextPeriod : CalendarAction()
     data object GoToToday : CalendarAction()
     data class SelectDay(val date: Date) : CalendarAction()
+    data class SelectMonth(val month: Int) : CalendarAction()
     data class OpenTransaction(val transactionId: String) : CalendarAction()
     data object AddTransaction : CalendarAction()
 }

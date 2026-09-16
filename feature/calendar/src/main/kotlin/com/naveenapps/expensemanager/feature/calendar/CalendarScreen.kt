@@ -37,10 +37,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.naveenapps.expensemanager.core.designsystem.ui.components.AppCardView
 import com.naveenapps.expensemanager.core.designsystem.ui.components.ExpenseManagerTopAppBar
 import com.naveenapps.expensemanager.feature.calendar.components.CalendarMonthGrid
+import com.naveenapps.expensemanager.feature.calendar.components.CalendarWeekRow
+import com.naveenapps.expensemanager.feature.calendar.components.CalendarYearGrid
 import com.naveenapps.expensemanager.feature.transaction.list.TransactionItem
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -135,7 +136,7 @@ private fun CalendarContent(
                 }
             }
 
-            // Bandeau de navigation du mois : < Juillet 2026 >
+            // Bandeau de navigation temporelle : < [Titre de période] >
             item {
                 Row(
                     modifier = Modifier
@@ -156,6 +157,7 @@ private fun CalendarContent(
                             fontWeight = FontWeight.Bold,
                         ),
                         color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center,
                     )
                     IconButton(onClick = { onAction(CalendarAction.NextPeriod) }) {
                         Icon(
@@ -166,7 +168,7 @@ private fun CalendarContent(
                 }
             }
 
-            // Barre de synthèse mensuelle (KPIs) : Revenus | Dépenses | Net
+            // Barre de synthèse (KPIs) : Revenus | Dépenses | Net
             item {
                 AppCardView(
                     modifier = Modifier
@@ -246,86 +248,257 @@ private fun CalendarContent(
                 }
             }
 
-            // Grille mensuelle du calendrier
-            item {
-                AppCardView(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
-                ) {
-                    CalendarMonthGrid(
-                        days = state.calendarDays,
-                        selectedDate = state.selectedDate,
-                        onDayClick = { onAction(CalendarAction.SelectDay(it)) },
-                        modifier = Modifier.padding(vertical = 8.dp),
-                    )
-                }
-            }
+            // Corps dynamique selon le mode actif
+            when (state.viewMode) {
+                CalendarViewMode.DAY -> {
+                    // En vue Jour, affichage direct des transactions
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = state.selectedDayFormatted,
+                                style = MaterialTheme.typography.titleSmall.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                ),
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                            val txCount = state.selectedDayTransactions.size
+                            val countText = if (txCount > 1) {
+                                stringResource(R.string.calendar_transactions_count_plural, txCount)
+                            } else {
+                                stringResource(R.string.calendar_transactions_count, txCount)
+                            }
+                            Text(
+                                text = countText,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
 
-            // En-tête du jour sélectionné
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = state.selectedDayFormatted,
-                        style = MaterialTheme.typography.titleSmall.copy(
-                            fontWeight = FontWeight.SemiBold,
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    val txCount = state.selectedDayTransactions.size
-                    val countText = if (txCount > 1) {
-                        stringResource(R.string.calendar_transactions_count_plural, txCount)
+                    if (state.selectedDayTransactions.isNotEmpty()) {
+                        items(state.selectedDayTransactions, key = { it.id }) { transaction ->
+                            Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 3.dp)) {
+                                TransactionItem(
+                                    categoryName = transaction.categoryName,
+                                    categoryColor = transaction.categoryIcon.backgroundColor,
+                                    categoryIcon = transaction.categoryIcon.name,
+                                    amount = transaction.amount,
+                                    date = transaction.date,
+                                    notes = transaction.notes,
+                                    transactionType = transaction.transactionType,
+                                    fromAccountName = transaction.fromAccountName,
+                                    fromAccountIcon = transaction.fromAccountIcon.name,
+                                    fromAccountColor = transaction.fromAccountIcon.backgroundColor,
+                                    toAccountName = transaction.toAccountName,
+                                    toAccountIcon = transaction.toAccountIcon?.name,
+                                    toAccountColor = transaction.toAccountIcon?.backgroundColor,
+                                    onClick = { onAction(CalendarAction.OpenTransaction(transaction.id)) },
+                                )
+                            }
+                        }
                     } else {
-                        stringResource(R.string.calendar_transactions_count, txCount)
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 32.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.calendar_no_transactions),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
                     }
-                    Text(
-                        text = countText,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
                 }
-            }
 
-            // Liste des transactions du jour sélectionné
-            if (state.selectedDayTransactions.isNotEmpty()) {
-                items(state.selectedDayTransactions, key = { it.id }) { transaction ->
-                    Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 3.dp)) {
-                        TransactionItem(
-                            categoryName = transaction.categoryName,
-                            categoryColor = transaction.categoryIcon.backgroundColor,
-                            categoryIcon = transaction.categoryIcon.name,
-                            amount = transaction.amount,
-                            date = transaction.date,
-                            notes = transaction.notes,
-                            transactionType = transaction.transactionType,
-                            fromAccountName = transaction.fromAccountName,
-                            fromAccountIcon = transaction.fromAccountIcon.name,
-                            fromAccountColor = transaction.fromAccountIcon.backgroundColor,
-                            toAccountName = transaction.toAccountName,
-                            toAccountIcon = transaction.toAccountIcon?.name,
-                            toAccountColor = transaction.toAccountIcon?.backgroundColor,
-                            onClick = { onAction(CalendarAction.OpenTransaction(transaction.id)) },
-                        )
+                CalendarViewMode.WEEK -> {
+                    // Ruban des 7 jours de la semaine
+                    item {
+                        AppCardView(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 6.dp),
+                        ) {
+                            CalendarWeekRow(
+                                days = state.weekDays,
+                                selectedDate = state.selectedDate,
+                                onDayClick = { onAction(CalendarAction.SelectDay(it)) },
+                                modifier = Modifier.padding(vertical = 8.dp),
+                            )
+                        }
+                    }
+
+                    // En-tête du jour sélectionné dans la semaine
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = state.selectedDayFormatted,
+                                style = MaterialTheme.typography.titleSmall.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                ),
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                            val txCount = state.selectedDayTransactions.size
+                            val countText = if (txCount > 1) {
+                                stringResource(R.string.calendar_transactions_count_plural, txCount)
+                            } else {
+                                stringResource(R.string.calendar_transactions_count, txCount)
+                            }
+                            Text(
+                                text = countText,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+
+                    if (state.selectedDayTransactions.isNotEmpty()) {
+                        items(state.selectedDayTransactions, key = { it.id }) { transaction ->
+                            Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 3.dp)) {
+                                TransactionItem(
+                                    categoryName = transaction.categoryName,
+                                    categoryColor = transaction.categoryIcon.backgroundColor,
+                                    categoryIcon = transaction.categoryIcon.name,
+                                    amount = transaction.amount,
+                                    date = transaction.date,
+                                    notes = transaction.notes,
+                                    transactionType = transaction.transactionType,
+                                    fromAccountName = transaction.fromAccountName,
+                                    fromAccountIcon = transaction.fromAccountIcon.name,
+                                    fromAccountColor = transaction.fromAccountIcon.backgroundColor,
+                                    toAccountName = transaction.toAccountName,
+                                    toAccountIcon = transaction.toAccountIcon?.name,
+                                    toAccountColor = transaction.toAccountIcon?.backgroundColor,
+                                    onClick = { onAction(CalendarAction.OpenTransaction(transaction.id)) },
+                                )
+                            }
+                        }
+                    } else {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 24.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.calendar_no_transactions),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
                     }
                 }
-            } else {
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 32.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = stringResource(R.string.calendar_no_transactions),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+
+                CalendarViewMode.MONTH -> {
+                    // Grille mensuelle complète
+                    item {
+                        AppCardView(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 6.dp),
+                        ) {
+                            CalendarMonthGrid(
+                                days = state.calendarDays,
+                                selectedDate = state.selectedDate,
+                                onDayClick = { onAction(CalendarAction.SelectDay(it)) },
+                                modifier = Modifier.padding(vertical = 8.dp),
+                            )
+                        }
+                    }
+
+                    // En-tête du jour sélectionné
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = state.selectedDayFormatted,
+                                style = MaterialTheme.typography.titleSmall.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                ),
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                            val txCount = state.selectedDayTransactions.size
+                            val countText = if (txCount > 1) {
+                                stringResource(R.string.calendar_transactions_count_plural, txCount)
+                            } else {
+                                stringResource(R.string.calendar_transactions_count, txCount)
+                            }
+                            Text(
+                                text = countText,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+
+                    if (state.selectedDayTransactions.isNotEmpty()) {
+                        items(state.selectedDayTransactions, key = { it.id }) { transaction ->
+                            Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 3.dp)) {
+                                TransactionItem(
+                                    categoryName = transaction.categoryName,
+                                    categoryColor = transaction.categoryIcon.backgroundColor,
+                                    categoryIcon = transaction.categoryIcon.name,
+                                    amount = transaction.amount,
+                                    date = transaction.date,
+                                    notes = transaction.notes,
+                                    transactionType = transaction.transactionType,
+                                    fromAccountName = transaction.fromAccountName,
+                                    fromAccountIcon = transaction.fromAccountIcon.name,
+                                    fromAccountColor = transaction.fromAccountIcon.backgroundColor,
+                                    toAccountName = transaction.toAccountName,
+                                    toAccountIcon = transaction.toAccountIcon?.name,
+                                    toAccountColor = transaction.toAccountIcon?.backgroundColor,
+                                    onClick = { onAction(CalendarAction.OpenTransaction(transaction.id)) },
+                                )
+                            }
+                        }
+                    } else {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 24.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.calendar_no_transactions),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    }
+                }
+
+                CalendarViewMode.YEAR -> {
+                    // Grille annuelle des 12 mois
+                    item {
+                        CalendarYearGrid(
+                            months = state.monthsData,
+                            onMonthClick = { month -> onAction(CalendarAction.SelectMonth(month)) },
+                            modifier = Modifier.padding(horizontal = 8.dp),
                         )
                     }
                 }

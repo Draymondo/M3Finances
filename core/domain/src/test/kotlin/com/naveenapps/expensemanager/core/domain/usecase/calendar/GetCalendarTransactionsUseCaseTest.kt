@@ -114,5 +114,49 @@ class GetCalendarTransactionsUseCaseTest : BaseCoroutineTest() {
         assertThat(day10.netAmount).isEqualTo(895.0)
         assertThat(day10.transactions.size).isEqualTo(2)
     }
+
+    @Test
+    fun `test buildCalendarWeekData calculations`() {
+        val txList = listOf(
+            createTransaction("1", 4800.0, TransactionType.INCOME, 2026, 7, 1), // Wednesday
+            createTransaction("2", 1350.0, TransactionType.EXPENSE, 2026, 7, 2), // Thursday
+        )
+        val wednesday = Calendar.getInstance().apply {
+            set(2026, Calendar.JULY, 1)
+        }.time
+
+        val weekData = useCase.buildCalendarWeekData(wednesday, txList)
+
+        assertThat(weekData.days.size).isEqualTo(7)
+        assertThat(weekData.totalIncome).isEqualTo(4800.0)
+        assertThat(weekData.totalExpense).isEqualTo(1350.0)
+        assertThat(weekData.netAmount).isEqualTo(3450.0)
+        // First day of week must be Monday June 29
+        assertThat(weekData.days[0].dayOfMonth).isEqualTo(29)
+    }
+
+    @Test
+    fun `test buildCalendarYearData calculations`() {
+        val txList = listOf(
+            createTransaction("1", 1000.0, TransactionType.INCOME, 2026, 1, 15), // Jan
+            createTransaction("2", 500.0, TransactionType.EXPENSE, 2026, 2, 20), // Feb
+            createTransaction("3", 2000.0, TransactionType.INCOME, 2026, 7, 10), // July
+        )
+
+        val yearData = useCase.buildCalendarYearData(2026, txList)
+
+        assertThat(yearData.year).isEqualTo(2026)
+        assertThat(yearData.months.size).isEqualTo(12)
+        assertThat(yearData.totalIncome).isEqualTo(3000.0)
+        assertThat(yearData.totalExpense).isEqualTo(500.0)
+        assertThat(yearData.netAmount).isEqualTo(2500.0)
+
+        // January
+        assertThat(yearData.months[0].totalIncome).isEqualTo(1000.0)
+        // February
+        assertThat(yearData.months[1].totalExpense).isEqualTo(500.0)
+        // July
+        assertThat(yearData.months[6].totalIncome).isEqualTo(2000.0)
+    }
 }
 

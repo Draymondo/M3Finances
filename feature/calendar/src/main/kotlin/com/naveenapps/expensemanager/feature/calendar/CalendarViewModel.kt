@@ -9,15 +9,17 @@ import com.naveenapps.expensemanager.core.domain.usecase.settings.currency.GetFo
 import com.naveenapps.expensemanager.core.domain.usecase.tools.TrackToolUsageUseCase
 import com.naveenapps.expensemanager.core.model.Amount
 import com.naveenapps.expensemanager.core.model.CalendarDayData
+import com.naveenapps.expensemanager.core.model.CalendarYearMonthData
 import com.naveenapps.expensemanager.core.model.ToolType
+import com.naveenapps.expensemanager.core.model.Transaction
+import com.naveenapps.expensemanager.core.model.isExpense
+import com.naveenapps.expensemanager.core.model.isIncome
 import com.naveenapps.expensemanager.core.model.toTransactionUIModel
 import com.naveenapps.expensemanager.core.navigation.AppComposeNavigator
 import com.naveenapps.expensemanager.core.navigation.ExpenseManagerScreens
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -36,7 +38,7 @@ class CalendarViewModel(
 
     private val initialCal = Calendar.getInstance()
     private val currentYear = MutableStateFlow(initialCal.get(Calendar.YEAR))
-    private val currentMonth = MutableStateFlow(initialCal.get(Calendar.MONTH) + 1) // 1-12
+    private val currentMonth = MutableStateFlow(initialCal.get(Calendar.MONTH) + 1) // 1 to 12
     private val selectedDateFlow = MutableStateFlow(initialCal.time)
     private val viewModeFlow = MutableStateFlow(CalendarViewMode.MONTH)
 
@@ -57,55 +59,163 @@ class CalendarViewModel(
         observeCalendarData()
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
+    private data class CalendarNavState(
+        val year: Int,
+        val month: Int,
+        val selectedDate: Date,
+        val viewMode: CalendarViewMode,
+    )
+
     private fun observeCalendarData() {
-        combine(
+        val navStateFlow = combine(
             currentYear,
             currentMonth,
+            selectedDateFlow,
+            viewModeFlow,
+        ) { year, month, selectedDate, viewMode ->
+            CalendarNavState(year, month, selectedDate, viewMode)
+        }
+
+        combine(
+            navStateFlow,
             getCurrencyUseCase(),
-        ) { year, month, currency ->
-            Triple(year, month, currency)
-        }.flatMapLatest { (year, month, currency) ->
-            combine(
-                getCalendarTransactionsUseCase(year, month),
-                selectedDateFlow,
-                viewModeFlow,
-            ) { monthData, selectedDate, viewMode ->
-                val monthFormat = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
-                val cal = Calendar.getInstance().apply {
-                    set(Calendar.YEAR, year)
-                    set(Calendar.MONTH, month - 1)
-                    set(Calendar.DAY_OF_MONTH, 1)
+            getCalendarTransactionsUseCase.getAllTransactions(),
+        ) { navState, currency, rawTransactions ->
+            val year = navState.year
+            val month = navState.month
+            val selectedDate = navState.selectedDate
+            val viewMode = navState.viewMode
+            val transactions = rawTransactions.orEmpty()
+            val dayFormat = SimpleDateFormat("EEEE d MMMM yyyy", Locale.getDefault())
+            val selectedDayFormatted = dayFormat.format(selectedDate).toCapitalize()
+
+            when (viewMode) {
+                CalendarViewMode.DAY -> {
+                    val dayCal = Calendar.getInstance().apply { time = selectedDate }
+                    val periodTitle = dayFormat.format(selectedDate).toCapitalize()
+
+                    val dayTx = transactions.filter { tx ->
+                        val txCal = Calendar.getInstance().apply { time = tx.createdOn }
+                        txCal.get(Calendar.YEAR) == dayCal.get(Calendar.YEAR) &&
+                            txCal.get(Calendar.DAY_OF_YEAR) == dayCal.get(Calendar.DAY_OF_YEAR)
+                    }
+
+                    val income = dayTx.filter { it.type.isIncome() }.sumOf { it.amount.amount }
+                    val expense = dayTx.filter { it.type.isExpense() }.sumOf { it.amount.amount }
+                    val net = income - expense
+
+                    val selectedDayTxUi = dayTx.map { tx ->
+                        tx.toTransactionUIModel(getFormattedAmountUseCase(tx.amount.amount, currency))
+                    }
+
+                    _state.update {
+                        it.copy(
+                            viewMode = viewMode,
+                            year = year,
+                            month = month,
+                            selectedDate = selectedDate,
+                            periodTitle = periodTitle,
+                            totalIncome = getFormattedAmountUseCase(income, currency),
+                            totalExpense = getFormattedAmountUseCase(expense, currency),
+                            netAmount = getFormattedAmountUseCase(net, currency),
+                            calendarDays = emptyList(),
+                            weekDays = emptyList(),
+                            monthsData = emptyList(),
+                            selectedDayTransactions = selectedDayTxUi,
+                            selectedDayFormatted = selectedDayFormatted,
+                            isLoading = false,
+                        )
+                    }
                 }
-                val periodTitle = monthFormat.format(cal.time).toCapitalize()
 
-                val formattedIncome = getFormattedAmountUseCase(monthData.totalIncome, currency)
-                val formattedExpense = getFormattedAmountUseCase(monthData.totalExpense, currency)
-                val formattedNet = getFormattedAmountUseCase(monthData.netAmount, currency)
+                CalendarViewMode.WEEK -> {
+                    val weekData = getCalendarTransactionsUseCase.buildCalendarWeekData(selectedDate, transactions)
+                    val shortDateFormat = SimpleDateFormat("d MMM", Locale.getDefault())
+                    val yearFormat = SimpleDateFormat("yyyy", Locale.getDefault())
+                    val periodTitle = "${shortDateFormat.format(weekData.startDate)} – ${shortDateFormat.format(weekData.endDate)} ${yearFormat.format(weekData.endDate)}"
 
-                val selectedDayData = findDayDataForDate(monthData.days, selectedDate)
-                val selectedDayTxUi = selectedDayData?.transactions?.map { tx ->
-                    tx.toTransactionUIModel(getFormattedAmountUseCase(tx.amount.amount, currency))
-                }.orEmpty()
+                    val selectedDayData = findDayDataForDate(weekData.days, selectedDate)
+                    val selectedDayTxUi = selectedDayData?.transactions?.map { tx ->
+                        tx.toTransactionUIModel(getFormattedAmountUseCase(tx.amount.amount, currency))
+                    }.orEmpty()
 
-                val dayFormat = SimpleDateFormat("EEEE d MMMM yyyy", Locale.getDefault())
-                val selectedDayFormatted = dayFormat.format(selectedDate).toCapitalize()
+                    _state.update {
+                        it.copy(
+                            viewMode = viewMode,
+                            year = year,
+                            month = month,
+                            selectedDate = selectedDate,
+                            periodTitle = periodTitle,
+                            totalIncome = getFormattedAmountUseCase(weekData.totalIncome, currency),
+                            totalExpense = getFormattedAmountUseCase(weekData.totalExpense, currency),
+                            netAmount = getFormattedAmountUseCase(weekData.netAmount, currency),
+                            calendarDays = emptyList(),
+                            weekDays = weekData.days,
+                            monthsData = emptyList(),
+                            selectedDayTransactions = selectedDayTxUi,
+                            selectedDayFormatted = selectedDayFormatted,
+                            isLoading = false,
+                        )
+                    }
+                }
 
-                _state.update {
-                    it.copy(
-                        viewMode = viewMode,
-                        year = year,
-                        month = month,
-                        selectedDate = selectedDate,
-                        periodTitle = periodTitle,
-                        totalIncome = formattedIncome,
-                        totalExpense = formattedExpense,
-                        netAmount = formattedNet,
-                        calendarDays = monthData.days,
-                        selectedDayTransactions = selectedDayTxUi,
-                        selectedDayFormatted = selectedDayFormatted,
-                        isLoading = false,
-                    )
+                CalendarViewMode.MONTH -> {
+                    val monthFormat = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
+                    val cal = Calendar.getInstance().apply {
+                        set(Calendar.YEAR, year)
+                        set(Calendar.MONTH, month - 1)
+                        set(Calendar.DAY_OF_MONTH, 1)
+                    }
+                    val periodTitle = monthFormat.format(cal.time).toCapitalize()
+
+                    val monthData = getCalendarTransactionsUseCase.buildCalendarMonthData(year, month, transactions)
+                    val selectedDayData = findDayDataForDate(monthData.days, selectedDate)
+                    val selectedDayTxUi = selectedDayData?.transactions?.map { tx ->
+                        tx.toTransactionUIModel(getFormattedAmountUseCase(tx.amount.amount, currency))
+                    }.orEmpty()
+
+                    _state.update {
+                        it.copy(
+                            viewMode = viewMode,
+                            year = year,
+                            month = month,
+                            selectedDate = selectedDate,
+                            periodTitle = periodTitle,
+                            totalIncome = getFormattedAmountUseCase(monthData.totalIncome, currency),
+                            totalExpense = getFormattedAmountUseCase(monthData.totalExpense, currency),
+                            netAmount = getFormattedAmountUseCase(monthData.netAmount, currency),
+                            calendarDays = monthData.days,
+                            weekDays = emptyList(),
+                            monthsData = emptyList(),
+                            selectedDayTransactions = selectedDayTxUi,
+                            selectedDayFormatted = selectedDayFormatted,
+                            isLoading = false,
+                        )
+                    }
+                }
+
+                CalendarViewMode.YEAR -> {
+                    val periodTitle = year.toString()
+                    val yearData = getCalendarTransactionsUseCase.buildCalendarYearData(year, transactions)
+
+                    _state.update {
+                        it.copy(
+                            viewMode = viewMode,
+                            year = year,
+                            month = month,
+                            selectedDate = selectedDate,
+                            periodTitle = periodTitle,
+                            totalIncome = getFormattedAmountUseCase(yearData.totalIncome, currency),
+                            totalExpense = getFormattedAmountUseCase(yearData.totalExpense, currency),
+                            netAmount = getFormattedAmountUseCase(yearData.netAmount, currency),
+                            calendarDays = emptyList(),
+                            weekDays = emptyList(),
+                            monthsData = yearData.months,
+                            selectedDayTransactions = emptyList(),
+                            selectedDayFormatted = selectedDayFormatted,
+                            isLoading = false,
+                        )
+                    }
                 }
             }
         }.launchIn(viewModelScope)
@@ -131,30 +241,81 @@ class CalendarViewModel(
             CalendarAction.NextPeriod -> nextPeriod()
             CalendarAction.GoToToday -> goToToday()
             is CalendarAction.SelectDay -> selectDay(action.date)
+            is CalendarAction.SelectMonth -> selectMonth(action.month)
             is CalendarAction.OpenTransaction -> openTransaction(action.transactionId)
             CalendarAction.AddTransaction -> addTransaction()
         }
     }
 
     private fun previousPeriod() {
-        val m = currentMonth.value
-        val y = currentYear.value
-        if (m == 1) {
-            currentMonth.value = 12
-            currentYear.value = y - 1
-        } else {
-            currentMonth.value = m - 1
+        when (viewModeFlow.value) {
+            CalendarViewMode.DAY -> {
+                val cal = Calendar.getInstance().apply {
+                    time = selectedDateFlow.value
+                    add(Calendar.DAY_OF_MONTH, -1)
+                }
+                selectedDateFlow.value = cal.time
+                currentYear.value = cal.get(Calendar.YEAR)
+                currentMonth.value = cal.get(Calendar.MONTH) + 1
+            }
+            CalendarViewMode.WEEK -> {
+                val cal = Calendar.getInstance().apply {
+                    time = selectedDateFlow.value
+                    add(Calendar.DAY_OF_MONTH, -7)
+                }
+                selectedDateFlow.value = cal.time
+                currentYear.value = cal.get(Calendar.YEAR)
+                currentMonth.value = cal.get(Calendar.MONTH) + 1
+            }
+            CalendarViewMode.MONTH -> {
+                val m = currentMonth.value
+                val y = currentYear.value
+                if (m == 1) {
+                    currentMonth.value = 12
+                    currentYear.value = y - 1
+                } else {
+                    currentMonth.value = m - 1
+                }
+            }
+            CalendarViewMode.YEAR -> {
+                currentYear.value = currentYear.value - 1
+            }
         }
     }
 
     private fun nextPeriod() {
-        val m = currentMonth.value
-        val y = currentYear.value
-        if (m == 12) {
-            currentMonth.value = 1
-            currentYear.value = y + 1
-        } else {
-            currentMonth.value = m + 1
+        when (viewModeFlow.value) {
+            CalendarViewMode.DAY -> {
+                val cal = Calendar.getInstance().apply {
+                    time = selectedDateFlow.value
+                    add(Calendar.DAY_OF_MONTH, 1)
+                }
+                selectedDateFlow.value = cal.time
+                currentYear.value = cal.get(Calendar.YEAR)
+                currentMonth.value = cal.get(Calendar.MONTH) + 1
+            }
+            CalendarViewMode.WEEK -> {
+                val cal = Calendar.getInstance().apply {
+                    time = selectedDateFlow.value
+                    add(Calendar.DAY_OF_MONTH, 7)
+                }
+                selectedDateFlow.value = cal.time
+                currentYear.value = cal.get(Calendar.YEAR)
+                currentMonth.value = cal.get(Calendar.MONTH) + 1
+            }
+            CalendarViewMode.MONTH -> {
+                val m = currentMonth.value
+                val y = currentYear.value
+                if (m == 12) {
+                    currentMonth.value = 1
+                    currentYear.value = y + 1
+                } else {
+                    currentMonth.value = m + 1
+                }
+            }
+            CalendarViewMode.YEAR -> {
+                currentYear.value = currentYear.value + 1
+            }
         }
     }
 
@@ -176,6 +337,17 @@ class CalendarViewModel(
         }
     }
 
+    private fun selectMonth(month: Int) {
+        currentMonth.value = month
+        val cal = Calendar.getInstance().apply {
+            set(Calendar.YEAR, currentYear.value)
+            set(Calendar.MONTH, month - 1)
+            set(Calendar.DAY_OF_MONTH, 1)
+        }
+        selectedDateFlow.value = cal.time
+        viewModeFlow.value = CalendarViewMode.MONTH
+    }
+
     private fun openTransaction(transactionId: String) {
         appComposeNavigator.navigate(ExpenseManagerScreens.TransactionCreate(transactionId))
     }
@@ -184,4 +356,3 @@ class CalendarViewModel(
         appComposeNavigator.navigate(ExpenseManagerScreens.TransactionCreate(null))
     }
 }
-

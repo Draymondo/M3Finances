@@ -1,14 +1,21 @@
 package com.naveenapps.expensemanager.core.domain.usecase.calendar
 
+import com.naveenapps.expensemanager.core.common.utils.toCapitalize
 import com.naveenapps.expensemanager.core.model.CalendarDayData
 import com.naveenapps.expensemanager.core.model.CalendarMonthData
+import com.naveenapps.expensemanager.core.model.CalendarWeekData
+import com.naveenapps.expensemanager.core.model.CalendarYearData
+import com.naveenapps.expensemanager.core.model.CalendarYearMonthData
 import com.naveenapps.expensemanager.core.model.Transaction
 import com.naveenapps.expensemanager.core.model.isExpense
 import com.naveenapps.expensemanager.core.model.isIncome
 import com.naveenapps.expensemanager.core.repository.TransactionRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 class GetCalendarTransactionsUseCase(
     private val transactionRepository: TransactionRepository,
@@ -17,6 +24,10 @@ class GetCalendarTransactionsUseCase(
         return transactionRepository.getAllTransaction().map { transactions ->
             buildCalendarMonthData(year, month, transactions.orEmpty())
         }
+    }
+
+    fun getAllTransactions(): Flow<List<Transaction>?> {
+        return transactionRepository.getAllTransaction()
     }
 
     fun buildCalendarMonthData(
@@ -157,5 +168,133 @@ class GetCalendarTransactionsUseCase(
             days = days,
         )
     }
-}
 
+    fun buildCalendarWeekData(
+        selectedDate: Date,
+        transactions: List<Transaction>,
+    ): CalendarWeekData {
+        val todayCal = Calendar.getInstance()
+        val cal = Calendar.getInstance().apply {
+            firstDayOfWeek = Calendar.MONDAY
+            time = selectedDate
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val dayOfWeek = cal.get(Calendar.DAY_OF_WEEK)
+        val leadingDays = (dayOfWeek - Calendar.MONDAY + 7) % 7
+        cal.add(Calendar.DAY_OF_MONTH, -leadingDays)
+        val weekStart = cal.time
+
+        val txByDayKey = HashMap<String, MutableList<Transaction>>()
+        val txCal = Calendar.getInstance()
+        for (tx in transactions) {
+            txCal.time = tx.createdOn
+            val key = "${txCal.get(Calendar.YEAR)}-${txCal.get(Calendar.MONTH)}-${txCal.get(Calendar.DAY_OF_MONTH)}"
+            txByDayKey.getOrPut(key) { mutableListOf() }.add(tx)
+        }
+
+        val days = mutableListOf<CalendarDayData>()
+        var weekTotalIncome = 0.0
+        var weekTotalExpense = 0.0
+
+        for (i in 0 until 7) {
+            val dDate = cal.time
+            val dYear = cal.get(Calendar.YEAR)
+            val dMonth = cal.get(Calendar.MONTH)
+            val dDay = cal.get(Calendar.DAY_OF_MONTH)
+            val key = "$dYear-$dMonth-$dDay"
+            val dayTx = txByDayKey[key].orEmpty()
+            val income = dayTx.filter { it.type.isIncome() }.sumOf { it.amount.amount }
+            val expense = dayTx.filter { it.type.isExpense() }.sumOf { it.amount.amount }
+            val isToday = dYear == todayCal.get(Calendar.YEAR) &&
+                dMonth == todayCal.get(Calendar.MONTH) &&
+                dDay == todayCal.get(Calendar.DAY_OF_MONTH)
+
+            weekTotalIncome += income
+            weekTotalExpense += expense
+
+            days.add(
+                CalendarDayData(
+                    date = dDate,
+                    dayOfMonth = dDay,
+                    isCurrentMonth = true,
+                    isToday = isToday,
+                    totalIncome = income,
+                    totalExpense = expense,
+                    transactions = dayTx,
+                ),
+            )
+            cal.add(Calendar.DAY_OF_MONTH, 1)
+        }
+        cal.add(Calendar.DAY_OF_MONTH, -1)
+        val weekEnd = cal.time
+        val weekNumber = cal.get(Calendar.WEEK_OF_YEAR)
+
+        return CalendarWeekData(
+            startDate = weekStart,
+            endDate = weekEnd,
+            weekNumber = weekNumber,
+            totalIncome = weekTotalIncome,
+            totalExpense = weekTotalExpense,
+            netAmount = weekTotalIncome - weekTotalExpense,
+            days = days,
+        )
+    }
+
+    fun buildCalendarYearData(
+        year: Int,
+        transactions: List<Transaction>,
+    ): CalendarYearData {
+        val monthFormat = SimpleDateFormat("MMMM", Locale.getDefault())
+        val cal = Calendar.getInstance().apply {
+            set(Calendar.YEAR, year)
+            set(Calendar.DAY_OF_MONTH, 1)
+        }
+
+        val txCal = Calendar.getInstance()
+        val txByMonth = HashMap<Int, MutableList<Transaction>>()
+        for (tx in transactions) {
+            txCal.time = tx.createdOn
+            if (txCal.get(Calendar.YEAR) == year) {
+                val m = txCal.get(Calendar.MONTH)
+                txByMonth.getOrPut(m) { mutableListOf() }.add(tx)
+            }
+        }
+
+        val months = mutableListOf<CalendarYearMonthData>()
+        var yearTotalIncome = 0.0
+        var yearTotalExpense = 0.0
+
+        for (m in 0 until 12) {
+            cal.set(Calendar.MONTH, m)
+            val monthName = monthFormat.format(cal.time).toCapitalize()
+            val mTx = txByMonth[m].orEmpty()
+            val income = mTx.filter { it.type.isIncome() }.sumOf { it.amount.amount }
+            val expense = mTx.filter { it.type.isExpense() }.sumOf { it.amount.amount }
+
+            yearTotalIncome += income
+            yearTotalExpense += expense
+
+            months.add(
+                CalendarYearMonthData(
+                    year = year,
+                    month = m + 1,
+                    monthName = monthName,
+                    totalIncome = income,
+                    totalExpense = expense,
+                    netAmount = income - expense,
+                ),
+            )
+        }
+
+        return CalendarYearData(
+            year = year,
+            totalIncome = yearTotalIncome,
+            totalExpense = yearTotalExpense,
+            netAmount = yearTotalIncome - yearTotalExpense,
+            months = months,
+        )
+    }
+}

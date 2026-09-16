@@ -24,3 +24,29 @@ data class CalendarMonthData(
     val days: List<CalendarDayData> = emptyList(),
 )
 
+data class CalendarYearMonthData(
+    val year: Int,
+    val month: Int, // 1 to 12
+    val monthName: String,
+    val totalIncome: Double = 0.0,
+    val totalExpense: Double = 0.0,
+    val netAmount: Double = 0.0,
+)
+
+data class CalendarYearData(
+    val year: Int,
+    val totalIncome: Double = 0.0,
+    val totalExpense: Double = 0.0,
+    val netAmount: Double = 0.0,
+    val months: List<CalendarYearMonthData> = emptyList(),
+)
+
+data class CalendarWeekData(
+    val startDate: Date,
+    val endDate: Date,
+    val weekNumber: Int,
+    val totalIncome: Double = 0.0,
+    val totalExpense: Double = 0.0,
+    val netAmount: Double = 0.0,
+    val days: List<CalendarDayData> = emptyList(),
+)

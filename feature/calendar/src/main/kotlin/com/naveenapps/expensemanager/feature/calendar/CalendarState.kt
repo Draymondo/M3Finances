@@ -3,6 +3,7 @@ package com.naveenapps.expensemanager.feature.calendar
 import androidx.compose.runtime.Stable
 import com.naveenapps.expensemanager.core.model.Amount
 import com.naveenapps.expensemanager.core.model.CalendarDayData
+import com.naveenapps.expensemanager.core.model.CalendarYearMonthData
 import com.naveenapps.expensemanager.core.model.TransactionUiItem
 import java.util.Date
 
@@ -24,8 +25,9 @@ data class CalendarState(
     val totalExpense: Amount = Amount(0.0),
     val netAmount: Amount = Amount(0.0),
     val calendarDays: List<CalendarDayData> = emptyList(),
+    val weekDays: List<CalendarDayData> = emptyList(),
+    val monthsData: List<CalendarYearMonthData> = emptyList(),
     val selectedDayTransactions: List<TransactionUiItem> = emptyList(),
     val selectedDayFormatted: String = "",
     val isLoading: Boolean = false,
 )
-
