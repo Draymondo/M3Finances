@@ -152,6 +152,10 @@ android {
     }
 
     testOptions {
+        // Les tests unitaires du module app (service de notifications, worker) tournent sans
+        // Robolectric : ce flag remplace les appels Android (Log.d/Log.e) par des no-op.
+        unitTests.isReturnDefaultValues = true
+
         managedDevices {
             devices {
                 maybeCreate<com.android.build.api.dsl.ManagedVirtualDevice>("pixel2api30").apply {

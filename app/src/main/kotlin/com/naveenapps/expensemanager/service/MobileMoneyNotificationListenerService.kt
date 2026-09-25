@@ -4,24 +4,7 @@ import android.app.Notification
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
-import com.naveenapps.expensemanager.core.domain.usecase.transaction.ParseWaveNotificationUseCase
-import com.naveenapps.expensemanager.core.model.Resource
 import com.naveenapps.expensemanager.core.model.TransactionSource
-import com.naveenapps.expensemanager.core.repository.PendingTransactionRepository
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
-import org.koin.android.ext.android.inject
-import androidx.work.BackoffPolicy
-import androidx.work.Constraints
-import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
-import androidx.work.WorkRequest
-import androidx.work.workDataOf
-import java.util.concurrent.TimeUnit
 
 class MobileMoneyNotificationListenerService : NotificationListenerService() {
 
@@ -37,23 +20,48 @@ class MobileMoneyNotificationListenerService : NotificationListenerService() {
         "com.samsung.android.messaging"
     )
 
+    private val workEnqueuer by lazy { NotificationWorkEnqueuer(applicationContext) }
+
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         super.onNotificationPosted(sbn)
         sbn ?: return
 
         val packageName = sbn.packageName
-        if (packageName in supportedPackageNames) {
-            val extras = sbn.notification.extras
-            val title = extras.getString(Notification.EXTRA_TITLE) ?: ""
-            val text = extras.getString(Notification.EXTRA_TEXT) ?: ""
-            val bigText = extras.getString(Notification.EXTRA_BIG_TEXT) ?: ""
+        if (packageName !in supportedPackageNames) {
+            return
+        }
 
-            val fullText = "$title\n$text\n$bigText".trim()
+        val extras = sbn.notification.extras
+        // getCharSequence (et non getString) : certains fournisseurs publient un CharSequence
+        // enrichi et l'ancien getString renvoyait alors null, faisant perdre la notification.
+        val title = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString().orEmpty()
+        val body = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString().orEmpty()
+        val bigText = extras.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString().orEmpty()
 
-            if (fullText.isNotBlank()) {
-                Log.d("MobileMoneyNotification", "Intercepted notification from: $packageName -> $fullText")
-                processNotification(fullText, resolveSource(packageName))
-            }
+        val fullText = NotificationProcessorWorker.assembleNotificationText(title, body, bigText)
+        if (fullText.isBlank()) {
+            return
+        }
+
+        Log.d(TAG, "Intercepted notification from: $packageName -> $fullText")
+
+        try {
+            // Chaque événement capturé reçoit sa propre identité de travail WorkManager (UUID) :
+            // deux notifications au texte identique sont donc bien deux travaux distincts.
+            val eventId = workEnqueuer.enqueue(
+                packageName = packageName,
+                source = resolveSource(packageName),
+                title = title,
+                body = body,
+                bigText = bigText,
+                postTime = sbn.postTime,
+                notificationKey = sbn.key,
+            )
+            Log.d(TAG, "Enqueued notification event $eventId from $packageName")
+        } catch (exception: Exception) {
+            // Ne jamais faire planter le listener : on trace au minimum pour ne pas perdre
+            // silencieusement la notification.
+            Log.e(TAG, "Failed to enqueue notification from $packageName", exception)
         }
     }
 
@@ -70,34 +78,8 @@ class MobileMoneyNotificationListenerService : NotificationListenerService() {
         }
     }
 
-    private fun processNotification(text: String, source: TransactionSource) {
-        val workData = workDataOf(
-            NotificationProcessorWorker.KEY_TEXT to text,
-            NotificationProcessorWorker.KEY_SOURCE to source.name
-        )
-
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
-
-        val workRequest = OneTimeWorkRequestBuilder<NotificationProcessorWorker>()
-            .setConstraints(constraints)
-            .setInputData(workData)
-            .setBackoffCriteria(
-                BackoffPolicy.EXPONENTIAL,
-                WorkRequest.MIN_BACKOFF_MILLIS,
-                TimeUnit.MILLISECONDS
-            )
-            .build()
-
-        // Create a unique name to prevent duplicate exact texts from piling up at the same millisecond
-        val uniqueWorkName = "Tx_${text.hashCode()}"
-
-        WorkManager.getInstance(applicationContext).enqueueUniqueWork(
-            uniqueWorkName,
-            ExistingWorkPolicy.KEEP,
-            workRequest
-        )
+    companion object {
+        private const val TAG = "MobileMoneyNotification"
     }
 }
 
