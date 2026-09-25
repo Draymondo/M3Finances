@@ -58,7 +58,11 @@ class MobileMoneyNotificationListenerService : NotificationListenerService() {
             return
         }
 
-        Log.d(TAG, "Intercepted notification from: $packageName -> $fullText")
+        // PRIV-001 : ne JAMAIS journaliser le contenu de la notification (montant, solde,
+        // numéro de téléphone, commerçant, référence de transaction...), même en DEBUG.
+        // Seuls le paquet source et la taille du texte assemblé sont tracés : suffisant
+        // pour le diagnostic, totalement non sensible.
+        Log.d(TAG, interceptedNotificationLogMessage(packageName, fullText))
 
         try {
             // Chaque événement capturé reçoit sa propre identité de travail WorkManager (UUID) :
@@ -96,6 +100,17 @@ class MobileMoneyNotificationListenerService : NotificationListenerService() {
 
     companion object {
         private const val TAG = "MobileMoneyNotification"
+
+        /**
+         * Construit le message de journalisation d'une notification interceptée (PRIV-001).
+         *
+         * Le texte brut de la notification peut contenir des données financières sensibles
+         * (montant, solde, numéro de téléphone, commerçant, référence de transaction) : il ne
+         * doit JAMAIS apparaître dans le message. Seuls le paquet source et la longueur du
+         * texte — métadonnée non sensible — y figurent.
+         */
+        internal fun interceptedNotificationLogMessage(packageName: String, fullText: String): String =
+            "Intercepted notification from $packageName (textLength=${fullText.length})"
     }
 }
 
