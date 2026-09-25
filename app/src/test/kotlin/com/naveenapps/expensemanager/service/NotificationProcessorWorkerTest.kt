@@ -6,12 +6,16 @@ import androidx.work.ListenableWorker.Result
 import androidx.work.WorkerParameters
 import com.google.common.truth.Truth.assertThat
 import com.naveenapps.expensemanager.core.domain.usecase.transaction.ParseWaveNotificationUseCase
+import com.naveenapps.expensemanager.core.model.NotificationProcessingException
 import com.naveenapps.expensemanager.core.model.PendingTransaction
+import com.naveenapps.expensemanager.core.model.ProcessingErrorType
 import com.naveenapps.expensemanager.core.model.Resource
 import com.naveenapps.expensemanager.core.model.TransactionChannel
 import com.naveenapps.expensemanager.core.model.TransactionSource
 import com.naveenapps.expensemanager.core.model.TransactionType
+import com.naveenapps.expensemanager.core.repository.PendingNotificationProcessingRepository
 import com.naveenapps.expensemanager.core.repository.PendingTransactionRepository
+import com.naveenapps.expensemanager.network.NetworkMonitor
 import java.util.Date
 import java.util.UUID
 import java.util.concurrent.Executor
@@ -43,17 +47,24 @@ class NotificationProcessorWorkerTest {
     private val context: Context = mock()
     private val parseWaveNotificationUseCase: ParseWaveNotificationUseCase = mock()
     private val pendingTransactionRepository: PendingTransactionRepository = mock()
+    private val pendingNotificationRepository: PendingNotificationProcessingRepository = mock()
+    private val networkMonitor: NetworkMonitor = mock()
 
     @Before
     fun setUp() {
         if (GlobalContext.getOrNull() != null) {
             stopKoin()
         }
+        // Par défaut : réseau disponible et aucune mise en file, afin que les tests existants
+        // (chantiers 3A à 3H-1) conservent exactement leur comportement attendu.
+        whenever(networkMonitor.isNetworkAvailable()).thenReturn(true)
         startKoin {
             modules(
                 module {
                     single { parseWaveNotificationUseCase }
                     single { pendingTransactionRepository }
+                    single { pendingNotificationRepository }
+                    single { networkMonitor }
                 }
             )
         }
@@ -83,7 +94,20 @@ class NotificationProcessorWorkerTest {
     }
 
     @Test
+    fun `idempotent persistence success is reported as success`() = runTest {
+        whenever(parseWaveNotificationUseCase.invoke(DEFAULT_TEXT, TransactionSource.WAVE))
+            .thenReturn(Resource.Success(pendingTransaction()))
+        whenever(pendingTransactionRepository.addPendingTransaction(any()))
+            .thenReturn(Resource.Success(false))
+
+        val result = worker().doWork()
+
+        assertThat(result).isEqualTo(Result.success())
+    }
+
+    @Test
     fun `two notifications with identical text are processed separately`() = runTest {
+
         whenever(parseWaveNotificationUseCase.invoke(DEFAULT_TEXT, TransactionSource.WAVE))
             .thenReturn(Resource.Success(pendingTransaction()))
         whenever(pendingTransactionRepository.addPendingTransaction(any()))
@@ -98,7 +122,18 @@ class NotificationProcessorWorkerTest {
     }
 
     @Test
+    fun `SMS provider title detection accepts case and provider variants`() {
+        assertThat(NotificationProcessorWorker.deduceProviderFromTitle("WAVE")).isEqualTo(TransactionSource.WAVE)
+        assertThat(NotificationProcessorWorker.deduceProviderFromTitle("Orange Money")).isEqualTo(TransactionSource.ORANGE_MONEY)
+        assertThat(NotificationProcessorWorker.deduceProviderFromTitle("MTN MoMo")).isEqualTo(TransactionSource.MTN_MOMO)
+        assertThat(NotificationProcessorWorker.deduceProviderFromTitle("moov")).isEqualTo(TransactionSource.MOOV_MONEY)
+        assertThat(NotificationProcessorWorker.deduceProviderFromTitle("Djamo mobile")).isEqualTo(TransactionSource.DJAMO)
+        assertThat(NotificationProcessorWorker.deduceProviderFromTitle("PAYPAL")).isEqualTo(TransactionSource.PAYPAL)
+    }
+
+    @Test
     fun `missing text fails immediately without parsing nor retry`() = runTest {
+
         val result = worker(text = null).doWork()
 
         assertThat(result).isEqualTo(Result.failure())
@@ -107,9 +142,27 @@ class NotificationProcessorWorkerTest {
     }
 
     @Test
-    fun `notification without extractable amount is a definitive failure`() = runTest {
-        whenever(parseWaveNotificationUseCase.invoke(DEFAULT_TEXT, TransactionSource.WAVE))
+    fun `notification without transaction information is a definitive failure`() = runTest {
+        val text = "Opération terminée : aucun détail"
+        whenever(parseWaveNotificationUseCase.invoke(text, TransactionSource.WAVE))
             .thenReturn(Resource.Error(Exception("Montant introuvable dans la notification")))
+
+        val result = worker(text = text).doWork()
+
+        assertThat(result).isEqualTo(Result.failure())
+        verifyNoInteractions(pendingTransactionRepository)
+    }
+
+    fun `invalid transaction type is a permanent parsing failure`() = runTest {
+        whenever(parseWaveNotificationUseCase.invoke(DEFAULT_TEXT, TransactionSource.WAVE))
+            .thenReturn(
+                Resource.Error(
+                    NotificationProcessingException(
+                        ProcessingErrorType.PERMANENT,
+                        "Type de transaction absent ou invalide",
+                    )
+                )
+            )
 
         val result = worker().doWork()
 
@@ -118,9 +171,34 @@ class NotificationProcessorWorkerTest {
     }
 
     @Test
-    fun `temporary parsing error is retried`() = runTest {
+    fun `invalid transaction date is a permanent parsing failure`() = runTest {
         whenever(parseWaveNotificationUseCase.invoke(DEFAULT_TEXT, TransactionSource.WAVE))
-            .thenReturn(Resource.Error(Exception("Délai dépassé lors de l'appel au service d'IA")))
+            .thenReturn(
+                Resource.Error(
+                    NotificationProcessingException(
+                        ProcessingErrorType.PERMANENT,
+                        "Date de transaction absente ou invalide",
+                    )
+                )
+            )
+
+        val result = worker().doWork()
+
+        assertThat(result).isEqualTo(Result.failure())
+        verifyNoInteractions(pendingTransactionRepository)
+    }
+
+    @Test
+    fun `temporary classified parsing error is retried`() = runTest {
+        whenever(parseWaveNotificationUseCase.invoke(DEFAULT_TEXT, TransactionSource.WAVE))
+            .thenReturn(
+                Resource.Error(
+                    NotificationProcessingException(
+                        ProcessingErrorType.TEMPORARY,
+                        "Délai dépassé lors de l'appel au service d'IA",
+                    )
+                )
+            )
 
         val result = worker(runAttemptCount = 0).doWork()
 
@@ -128,11 +206,30 @@ class NotificationProcessorWorkerTest {
     }
 
     @Test
-    fun `retries are bounded for temporary parsing errors`() = runTest {
+    fun `retries are bounded for unknown parsing errors`() = runTest {
         whenever(parseWaveNotificationUseCase.invoke(DEFAULT_TEXT, TransactionSource.WAVE))
             .thenReturn(Resource.Error(Exception("Délai dépassé lors de l'appel au service d'IA")))
 
         val result = worker(runAttemptCount = NotificationProcessorWorker.MAX_ATTEMPTS - 1).doWork()
+
+        assertThat(result).isEqualTo(Result.failure())
+    }
+
+    @Test
+    fun `permanent persistence error fails without retry`() = runTest {
+        whenever(parseWaveNotificationUseCase.invoke(DEFAULT_TEXT, TransactionSource.WAVE))
+            .thenReturn(Resource.Success(pendingTransaction()))
+        whenever(pendingTransactionRepository.addPendingTransaction(any()))
+            .thenReturn(
+                Resource.Error(
+                    NotificationProcessingException(
+                        ProcessingErrorType.PERMANENT,
+                        "Donnée impossible à persister",
+                    )
+                )
+            )
+
+        val result = worker(runAttemptCount = 0).doWork()
 
         assertThat(result).isEqualTo(Result.failure())
     }
@@ -152,7 +249,87 @@ class NotificationProcessorWorkerTest {
     }
 
     @Test
+    fun `repository exception is retried and never reported as success`() = runTest {
+        whenever(parseWaveNotificationUseCase.invoke(DEFAULT_TEXT, TransactionSource.WAVE))
+            .thenReturn(Resource.Success(pendingTransaction()))
+        whenever(pendingTransactionRepository.addPendingTransaction(any()))
+            .thenThrow(IllegalStateException("database closed"))
+
+        val result = worker(runAttemptCount = 0).doWork()
+
+        assertThat(result).isEqualTo(Result.retry())
+    }
+
+
+    // --- Chantier 3I : file offline -------------------------------------------------
+
+    @Test
+    fun `Gemini notification without network is stored in the offline queue`() = runTest {
+        whenever(networkMonitor.isNetworkAvailable()).thenReturn(false)
+        whenever(parseWaveNotificationUseCase.requiresGemini(DEFAULT_TEXT, TransactionSource.ORANGE_MONEY, null))
+            .thenReturn(true)
+        whenever(pendingNotificationRepository.enqueue(any()))
+            .thenReturn(Resource.Success(true))
+
+        val result = worker(text = DEFAULT_TEXT, source = TransactionSource.ORANGE_MONEY.name).doWork()
+
+        // La notification est en sécurité : ce n'est pas un échec, ni un retry trompeur.
+        assertThat(result).isEqualTo(Result.success())
+        verify(pendingNotificationRepository).enqueue(any())
+        verifyNoInteractions(pendingTransactionRepository)
+    }
+
+    @Test
+    fun `Gemini notification with network is processed immediately without queueing`() = runTest {
+        whenever(parseWaveNotificationUseCase.requiresGemini(DEFAULT_TEXT, TransactionSource.ORANGE_MONEY, null))
+            .thenReturn(true)
+        whenever(parseWaveNotificationUseCase.invoke(DEFAULT_TEXT, TransactionSource.ORANGE_MONEY, null))
+            .thenReturn(Resource.Success(pendingTransaction()))
+        whenever(pendingTransactionRepository.addPendingTransaction(any()))
+            .thenReturn(Resource.Success(true))
+
+        val result = worker(text = DEFAULT_TEXT, source = TransactionSource.ORANGE_MONEY.name).doWork()
+
+        assertThat(result).isEqualTo(Result.success())
+        verify(pendingTransactionRepository).addPendingTransaction(any())
+        verify(pendingNotificationRepository, times(0)).enqueue(any())
+    }
+
+    @Test
+    fun `locally recognized Wave notification is processed without network and without queue`() = runTest {
+        whenever(networkMonitor.isNetworkAvailable()).thenReturn(false)
+        whenever(parseWaveNotificationUseCase.requiresGemini(DEFAULT_TEXT, TransactionSource.WAVE, null))
+            .thenReturn(false)
+        whenever(parseWaveNotificationUseCase.invoke(DEFAULT_TEXT, TransactionSource.WAVE, null))
+            .thenReturn(Resource.Success(pendingTransaction()))
+        whenever(pendingTransactionRepository.addPendingTransaction(any()))
+            .thenReturn(Resource.Success(true))
+
+        val result = worker().doWork()
+
+        assertThat(result).isEqualTo(Result.success())
+        verify(pendingTransactionRepository).addPendingTransaction(any())
+        verify(pendingNotificationRepository, times(0)).enqueue(any())
+    }
+
+    @Test
+    fun `unknown Wave notification without network is queued instead of calling Gemini`() = runTest {
+        whenever(networkMonitor.isNetworkAvailable()).thenReturn(false)
+        whenever(parseWaveNotificationUseCase.requiresGemini(DEFAULT_TEXT, TransactionSource.WAVE, null))
+            .thenReturn(true)
+        whenever(pendingNotificationRepository.enqueue(any()))
+            .thenReturn(Resource.Success(true))
+
+        val result = worker().doWork()
+
+        assertThat(result).isEqualTo(Result.success())
+        verify(pendingNotificationRepository).enqueue(any())
+        verify(parseWaveNotificationUseCase, times(0)).invoke(any(), any(), any())
+    }
+
+    @Test
     fun `unexpected exception is never reported as success`() = runTest {
+
         whenever(parseWaveNotificationUseCase.invoke(DEFAULT_TEXT, TransactionSource.WAVE))
             .thenThrow(IllegalStateException("boom"))
 

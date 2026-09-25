@@ -22,6 +22,7 @@ import com.naveenapps.expensemanager.core.database.entity.CategoryEntity
 import com.naveenapps.expensemanager.core.database.entity.DebtEntity
 import com.naveenapps.expensemanager.core.database.entity.DebtReminderEntity
 import com.naveenapps.expensemanager.core.database.entity.EnvelopeEntity
+import com.naveenapps.expensemanager.core.database.entity.PendingNotificationProcessingEntity
 import com.naveenapps.expensemanager.core.database.entity.SavingsGoalEntity
 import com.naveenapps.expensemanager.core.database.entity.ShoppingListEntity
 import com.naveenapps.expensemanager.core.database.entity.ShoppingListItemEntity
@@ -65,8 +66,9 @@ const val DATABASE_FILE_NAME = "expense_manager_database.db"
         ShoppingListItemEntity::class,
         com.naveenapps.expensemanager.core.database.entity.PendingTransactionEntity::class,
         EnvelopeEntity::class,
+        PendingNotificationProcessingEntity::class,
     ],
-    version = 20,
+    version = 21,
     exportSchema = true,
 )
 @TypeConverters(
@@ -78,6 +80,7 @@ const val DATABASE_FILE_NAME = "expense_manager_database.db"
     DebtDirectionConverter::class,
     TransactionSourceConverter::class,
     com.naveenapps.expensemanager.core.database.utils.TransactionChannelConverter::class,
+    com.naveenapps.expensemanager.core.database.utils.PendingNotificationStatusConverter::class,
 )
 abstract class ExpenseManagerDatabase : RoomDatabase() {
 
@@ -104,4 +107,6 @@ abstract class ExpenseManagerDatabase : RoomDatabase() {
     abstract fun pendingTransactionDao(): com.naveenapps.expensemanager.core.database.dao.PendingTransactionDao
 
     abstract fun envelopeDao(): EnvelopeDao
+
+    abstract fun pendingNotificationProcessingDao(): com.naveenapps.expensemanager.core.database.dao.PendingNotificationProcessingDao
 }

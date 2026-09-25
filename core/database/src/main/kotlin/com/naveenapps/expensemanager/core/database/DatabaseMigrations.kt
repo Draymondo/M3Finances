@@ -348,3 +348,35 @@ internal val MIGRATION_19_20 = object : Migration(19, 20) {
     }
 }
 
+
+/**
+ * Creates the `pending_notification_processing` table: the persistent offline queue of
+ * notifications that could not be handed to Gemini at capture time (typically: no network).
+ *
+ * `event_id` is the primary key, so the table is deduplicated for free by the notification
+ * identity computed at capture time (chantier 3D) - no extra deduplication mechanism is added.
+ *
+ * Column affinities must match the exported schema exactly, otherwise Room's own validation
+ * rejects the migration. `TransactionSource` is persisted **by ordinal** across the whole
+ * database (see `TransactionSourceConverter`, and `pending_transaction.source` in v20), hence
+ * INTEGER here. `TransactionChannel` is persisted by name, hence TEXT.
+ */
+internal val MIGRATION_20_21 = object : Migration(20, 21) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `pending_notification_processing` (" +
+                "`event_id` TEXT NOT NULL, " +
+                "`package_name` TEXT NOT NULL, " +
+                "`source` INTEGER NOT NULL, " +
+                "`channel` TEXT NOT NULL, " +
+                "`title` TEXT NOT NULL, " +
+                "`full_text` TEXT NOT NULL, " +
+                "`post_time` INTEGER NOT NULL, " +
+                "`received_at` INTEGER NOT NULL, " +
+                "`status` TEXT NOT NULL, " +
+                "`attempt_count` INTEGER NOT NULL, " +
+                "`last_error` TEXT, " +
+                "PRIMARY KEY(`event_id`))"
+        )
+    }
+}

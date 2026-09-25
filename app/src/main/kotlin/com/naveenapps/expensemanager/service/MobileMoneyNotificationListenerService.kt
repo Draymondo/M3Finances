@@ -37,8 +37,23 @@ class MobileMoneyNotificationListenerService : NotificationListenerService() {
         val title = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString().orEmpty()
         val body = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString().orEmpty()
         val bigText = extras.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString().orEmpty()
+        val subText = extras.getCharSequence(Notification.EXTRA_SUB_TEXT)?.toString().orEmpty()
+        val textLines = extras.getCharSequenceArray(Notification.EXTRA_TEXT_LINES)
+            ?.mapNotNull { it?.toString() }
+            .orEmpty()
+        val messages = extras.getParcelableArray(Notification.EXTRA_MESSAGES)
+            ?.filterIsInstance<Notification.MessagingStyle.Message>()
+            ?.mapNotNull { it.text?.toString() }
+            .orEmpty()
 
-        val fullText = NotificationProcessorWorker.assembleNotificationText(title, body, bigText)
+        val fullText = NotificationProcessorWorker.assembleNotificationText(
+            title = title,
+            body = body,
+            bigText = bigText,
+            subText = subText,
+            textLines = textLines,
+            messages = messages,
+        )
         if (fullText.isBlank()) {
             return
         }
@@ -56,6 +71,7 @@ class MobileMoneyNotificationListenerService : NotificationListenerService() {
                 bigText = bigText,
                 postTime = sbn.postTime,
                 notificationKey = sbn.key,
+                fullText = fullText,
             )
             Log.d(TAG, "Enqueued notification event $eventId from $packageName")
         } catch (exception: Exception) {

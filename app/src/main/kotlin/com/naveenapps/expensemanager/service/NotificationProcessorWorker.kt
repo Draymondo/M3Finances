@@ -6,11 +6,11 @@ import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.WorkerParameters
 import com.naveenapps.expensemanager.core.domain.usecase.transaction.ParseWaveNotificationUseCase
-import com.naveenapps.expensemanager.core.model.PendingTransaction
-import com.naveenapps.expensemanager.core.model.Resource
 import com.naveenapps.expensemanager.core.model.TransactionChannel
 import com.naveenapps.expensemanager.core.model.TransactionSource
+import com.naveenapps.expensemanager.core.repository.PendingNotificationProcessingRepository
 import com.naveenapps.expensemanager.core.repository.PendingTransactionRepository
+import com.naveenapps.expensemanager.network.NetworkMonitor
 import kotlinx.coroutines.CancellationException
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -22,6 +22,17 @@ class NotificationProcessorWorker(
 
     private val parseWaveNotificationUseCase: ParseWaveNotificationUseCase by inject()
     private val pendingTransactionRepository: PendingTransactionRepository by inject()
+    private val pendingNotificationRepository: PendingNotificationProcessingRepository by inject()
+    private val networkMonitor: NetworkMonitor by inject()
+
+    private val processor: NotificationTransactionProcessor by lazy {
+        NotificationTransactionProcessor(
+            parseWaveNotificationUseCase = parseWaveNotificationUseCase,
+            pendingTransactionRepository = pendingTransactionRepository,
+            pendingNotificationRepository = pendingNotificationRepository,
+            networkMonitor = networkMonitor,
+        )
+    }
 
     override suspend fun doWork(): Result {
         val eventId = inputData.getString(KEY_EVENT_ID).orEmpty()
@@ -57,16 +68,37 @@ class NotificationProcessorWorker(
                 "(provider=$provider, channel=$channel, package=${inputData.getString(KEY_PACKAGE_NAME)}, tentative=$runAttemptCount)"
         )
 
+        val request = NotificationProcessingRequest(
+            eventId = eventId,
+            packageName = inputData.getString(KEY_PACKAGE_NAME).orEmpty(),
+            source = provider,
+            channel = channel,
+            title = title,
+            fullText = text,
+            postTime = inputData.getLong(KEY_POST_TIME, 0L),
+            receivedAt = inputData.getLong(KEY_RECEIVED_AT, 0L),
+            attemptCount = runAttemptCount,
+        )
+
         return try {
-            when (val parseResult = parseWaveNotificationUseCase.invoke(text, provider)) {
-                is Resource.Success -> {
-                    val transactionToSave = parseResult.data.copy(
-                        channel = channel,
-                        notificationEventId = eventId.takeIf { it.isNotBlank() },
-                    )
-                    savePendingTransaction(eventId, transactionToSave)
+            when (val outcome = processor.process(request)) {
+                is NotificationProcessingOutcome.Success -> Result.success()
+                is NotificationProcessingOutcome.Queued -> {
+                    // La notification est en sécurité dans la file persistante et WorkManager
+                    // reprendra le traitement dès le retour du réseau : ce n'est pas un échec.
+                    Log.i(TAG, "Notification $eventId ${outcome.reason} (traitement différé)")
+                    // La planification de la reprise ne doit jamais faire échouer un traitement
+                    // déjà réussi : si elle échoue, la notification reste en file et sera reprise
+                    // au prochain enfilage ou au prochain démarrage de l'application.
+                    runCatching { PendingNotificationWorkScheduler.enqueueResume(applicationContext) }
+                        .onFailure { Log.w(TAG, "Reprise non planifiée pour l'instant", it) }
+                    Result.success()
                 }
-                is Resource.Error -> handleParseError(eventId, parseResult.exception)
+                is NotificationProcessingOutcome.Retry -> retryOrFail(eventId, outcome.reason)
+                is NotificationProcessingOutcome.Failure -> {
+                    Log.e(TAG, "Abandon définitif de la notification $eventId (${outcome.reason})")
+                    Result.failure()
+                }
             }
         } catch (cancellation: CancellationException) {
             // Travail annulé (WorkManager / arrêt du processus) : ne pas transformer
@@ -77,39 +109,6 @@ class NotificationProcessorWorker(
             // on retente (dans la limite du budget) au lieu de perdre la notification.
             Log.e(TAG, "Erreur inattendue lors du traitement de la notification $eventId", exception)
             retryOrFail(eventId, "exception inattendue: ${exception.message}")
-        }
-    }
-
-    private suspend fun savePendingTransaction(
-        eventId: String,
-        pendingTransaction: PendingTransaction,
-    ): Result {
-        // Room ignore une notification déjà connue via sa référence fournisseur ou sa clé de
-        // déduplication : la première ligne, son horodatage et les choix de l'utilisateur sont
-        // ainsi conservés lorsqu'une notification est réémise.
-        return when (val addResult = pendingTransactionRepository.addPendingTransaction(pendingTransaction)) {
-            is Resource.Success -> {
-                Log.d(TAG, "Notification $eventId enregistrée (pendingTransaction=${pendingTransaction.id})")
-                Result.success()
-            }
-            is Resource.Error -> {
-                Log.e(TAG, "Échec d'enregistrement de la notification $eventId", addResult.exception)
-                retryOrFail(eventId, "échec d'enregistrement: ${addResult.exception.message}")
-            }
-        }
-    }
-
-    private fun handleParseError(eventId: String, exception: Exception): Result {
-        val message = exception.message.orEmpty()
-        Log.e(TAG, "Erreur de parsing de la notification $eventId : $message", exception)
-
-        // Ces erreurs sont définitives : la notification ne contient pas de transaction
-        // exploitable, réessayer ne changera rien.
-        val isPermanent = PERMANENT_ERROR_MARKERS.any { marker -> message.contains(marker) }
-        return if (isPermanent) {
-            Result.failure()
-        } else {
-            retryOrFail(eventId, "erreur de parsing: $message")
         }
     }
 
@@ -145,23 +144,34 @@ class NotificationProcessorWorker(
         const val KEY_POST_TIME = "notification_post_time"
         const val KEY_NOTIFICATION_KEY = "notification_key"
 
-        private val PERMANENT_ERROR_MARKERS = listOf("Montant introuvable", "Réponse vide")
-
         /**
          * Nom unique du travail WorkManager pour UN événement de notification.
          *
-         * Toujours dérivé de l'identifiant unique de l'événement (UUID généré à la réception),
-         * jamais du texte : deux notifications au contenu identique doivent pouvoir être
-         * traitées séparément.
+         * Dérivé de l'identité de livraison Android calculée par l'enqueueur, jamais du seul
+         * texte. Un même événement rejoué retrouve le même travail ; deux événements Android
+         * différents restent distincts.
          */
         fun uniqueWorkNameFor(eventId: String): String = "notification_tx_$eventId"
 
         /**
-         * Texte transmis au parsing. Reproduit exactement l'ancien format `"$title\n$text\n$bigText"`
-         * afin de ne rien changer au comportement des fournisseurs supportés.
+         * Texte transmis au parsing. Les extras Android commonly utilisés par les fournisseurs
+         * sont tous conservés afin qu'une notification enrichie ne soit pas rejetée avant Gemini.
          */
-        fun assembleNotificationText(title: String, body: String, bigText: String): String =
-            "$title\n$body\n$bigText".trim()
+        fun assembleNotificationText(
+            title: String,
+            body: String,
+            bigText: String,
+            subText: String = "",
+            textLines: List<String> = emptyList(),
+            messages: List<String> = emptyList(),
+        ): String = buildList {
+            add(title)
+            add(body)
+            add(bigText)
+            add(subText)
+            addAll(textLines)
+            addAll(messages)
+        }.joinToString("\n").trim()
 
         /**
          * Construit les données d'entrée du worker en conservant toutes les informations

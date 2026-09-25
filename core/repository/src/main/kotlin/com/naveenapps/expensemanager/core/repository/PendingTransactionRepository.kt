@@ -17,6 +17,13 @@ interface PendingTransactionRepository {
 
     fun getPendingTransactionById(id: String): Flow<PendingTransaction?>
 
+    /**
+     * Tente d'ajouter une transaction en attente.
+     *
+     * `Success(true)` signifie que l'opération a été acceptée : la ligne a été insérée ou
+     * une déduplication connue a été reconnue. `Success(false)` reste un résultat idempotent
+     * accepté par les appelants. `Error` signifie qu'aucune persistance n'a pu être confirmée.
+     */
     suspend fun addPendingTransaction(transaction: PendingTransaction): Resource<Boolean>
 
     suspend fun deletePendingTransaction(id: String): Resource<Boolean>

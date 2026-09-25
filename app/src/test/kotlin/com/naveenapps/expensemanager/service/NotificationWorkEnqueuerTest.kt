@@ -26,26 +26,97 @@ class NotificationWorkEnqueuerTest {
     private val workManager: WorkManager = mock()
 
     @Test
-    fun `two notifications with the exact same text are enqueued as two distinct work items`() {
+    fun `two identical notifications received at different times are enqueued separately`() {
         val enqueuer = NotificationWorkEnqueuer(context = context, workManager = workManager)
 
-        val firstEventId = enqueueWaveNotification(enqueuer, "Vous avez reçu 5000 FCFA de Raymond")
-        val secondEventId = enqueueWaveNotification(enqueuer, "Vous avez reçu 5000 FCFA de Raymond")
+        val firstEventId = enqueuer.enqueue(
+            packageName = WAVE_PACKAGE,
+            source = TransactionSource.WAVE,
+            title = "Wave",
+            body = "Vous avez reçu 5000 FCFA de Raymond",
+            bigText = DEFAULT_BIG_TEXT,
+            postTime = POST_TIME,
+            notificationKey = NOTIFICATION_KEY,
+        )
+        val secondEventId = enqueuer.enqueue(
+            packageName = WAVE_PACKAGE,
+            source = TransactionSource.WAVE,
+            title = "Wave",
+            body = "Vous avez reçu 5000 FCFA de Raymond",
+            bigText = DEFAULT_BIG_TEXT,
+            postTime = POST_TIME + 1_000L,
+            notificationKey = NOTIFICATION_KEY,
+        )
 
         assertThat(firstEventId).isNotEmpty()
         assertThat(secondEventId).isNotEmpty()
         assertThat(secondEventId).isNotEqualTo(firstEventId)
 
         val (uniqueNames, requests) = captureEnqueuedWork(expectedCount = 2)
-
-        // Deux identités de travail distinctes pour deux événements distincts…
         assertThat(uniqueNames.toSet()).hasSize(2)
-        // …et deux requêtes WorkManager réellement distinctes : aucune n'est écartée par le KEEP.
         assertThat(requests.map { it.id }.toSet()).hasSize(2)
     }
 
     @Test
+    fun `same Android notification replay gets the same work identity`() {
+        val enqueuer = NotificationWorkEnqueuer(context = context, workManager = workManager)
+
+        val firstEventId = enqueuer.enqueue(
+            packageName = WAVE_PACKAGE,
+            source = TransactionSource.WAVE,
+            title = "Wave",
+            body = "Vous avez reçu 5000 FCFA de Raymond",
+            bigText = DEFAULT_BIG_TEXT,
+            postTime = POST_TIME,
+            notificationKey = NOTIFICATION_KEY,
+        )
+        val replayEventId = enqueuer.enqueue(
+            packageName = WAVE_PACKAGE,
+            source = TransactionSource.WAVE,
+            title = "Wave",
+            body = "Vous avez reçu 5000 FCFA de Raymond",
+            bigText = DEFAULT_BIG_TEXT,
+            postTime = POST_TIME,
+            notificationKey = NOTIFICATION_KEY,
+        )
+
+        assertThat(replayEventId).isEqualTo(firstEventId)
+        val uniqueNames = captureEnqueuedWork(expectedCount = 2).first
+        assertThat(uniqueNames).containsExactly(
+            NotificationProcessorWorker.uniqueWorkNameFor(firstEventId),
+            NotificationProcessorWorker.uniqueWorkNameFor(replayEventId),
+        )
+    }
+
+    @Test
+    fun `changed content with same Android identity gets a different work identity`() {
+        val enqueuer = NotificationWorkEnqueuer(context = context, workManager = workManager)
+
+        val firstEventId = enqueuer.enqueue(
+            packageName = WAVE_PACKAGE,
+            source = TransactionSource.WAVE,
+            title = "Wave",
+            body = "Vous avez reçu 5000 FCFA de Raymond",
+            bigText = DEFAULT_BIG_TEXT,
+            postTime = POST_TIME,
+            notificationKey = NOTIFICATION_KEY,
+        )
+        val changedEventId = enqueuer.enqueue(
+            packageName = WAVE_PACKAGE,
+            source = TransactionSource.WAVE,
+            title = "Wave",
+            body = "Vous avez reçu 6000 FCFA de Raymond",
+            bigText = DEFAULT_BIG_TEXT,
+            postTime = POST_TIME,
+            notificationKey = NOTIFICATION_KEY,
+        )
+
+        assertThat(changedEventId).isNotEqualTo(firstEventId)
+    }
+
+    @Test
     fun `two different notifications are both enqueued`() {
+
         val enqueuer = NotificationWorkEnqueuer(context = context, workManager = workManager)
 
         enqueueWaveNotification(enqueuer, "Vous avez reçu 5000 FCFA de Raymond")
@@ -62,18 +133,17 @@ class NotificationWorkEnqueuerTest {
         val enqueuer = NotificationWorkEnqueuer(
             context = context,
             workManager = workManager,
-            eventIdProvider = { FIXED_EVENT_ID },
             clock = { RECEIVED_AT },
         )
 
         val eventId = enqueueWaveNotification(enqueuer, NOTIFICATION_BODY)
 
-        assertThat(eventId).isEqualTo(FIXED_EVENT_ID)
+        assertThat(eventId).isNotEmpty()
 
         val request = captureEnqueuedWork(expectedCount = 1).second.single()
         val input = request.workSpec.input
 
-        assertThat(input.getString(NotificationProcessorWorker.KEY_EVENT_ID)).isEqualTo(FIXED_EVENT_ID)
+        assertThat(input.getString(NotificationProcessorWorker.KEY_EVENT_ID)).isEqualTo(eventId)
         assertThat(input.getString(NotificationProcessorWorker.KEY_PACKAGE_NAME)).isEqualTo(WAVE_PACKAGE)
         assertThat(input.getString(NotificationProcessorWorker.KEY_SOURCE))
             .isEqualTo(TransactionSource.WAVE.name)
@@ -90,14 +160,80 @@ class NotificationWorkEnqueuerTest {
     }
 
     @Test
-    fun `network constraint, exponential backoff and tag are still applied`() {
+    fun `representative notification variants are forwarded to parsing`() {
+        val enqueuer = NotificationWorkEnqueuer(context = context, workManager = workManager)
+        val representativeTexts = listOf(
+            "Vous avez reçu 5000 FCFA de Raymond",
+            "Opération réussie : 5 000 F reçu de Awa",
+            "Paiement de 1 234,56 F accepté",
+            "Virement #A/B - 1 000 F effectué",
+            "vous avez reçu 7 000 f de Fatou",
+            "Vous avez reçu 5000 FCFA — référence WAVE-123",
+            "Opération terminée : aucun détail",
+        )
+
+        representativeTexts.forEach { text ->
+            enqueuer.enqueue(
+                packageName = WAVE_PACKAGE,
+                source = TransactionSource.WAVE,
+                title = "Wave",
+                body = text,
+                bigText = "",
+                postTime = POST_TIME,
+                notificationKey = NOTIFICATION_KEY,
+            )
+        }
+
+        val requests = captureEnqueuedWork(expectedCount = representativeTexts.size).second
+        assertThat(requests.map { it.workSpec.input.getString(NotificationProcessorWorker.KEY_TEXT) })
+            .containsExactlyElementsIn(
+                representativeTexts.map { "Wave\n$it" }
+            )
+    }
+
+    @Test
+    fun `enriched notification text is carried over unchanged`() {
+        val enqueuer = NotificationWorkEnqueuer(context = context, workManager = workManager)
+        val enrichedText = NotificationProcessorWorker.assembleNotificationText(
+            title = "Wave",
+            body = "",
+            bigText = "",
+            subText = "Opération réussie",
+            textLines = listOf("Vous avez reçu 2 500 F", "Référence: WAVE-123"),
+            messages = listOf("Wave • 12:34"),
+        )
+
+        enqueuer.enqueue(
+            packageName = WAVE_PACKAGE,
+            source = TransactionSource.WAVE,
+            title = "Wave",
+            body = "",
+            bigText = "",
+            postTime = POST_TIME,
+            notificationKey = NOTIFICATION_KEY,
+            fullText = enrichedText,
+        )
+
+        val input = captureEnqueuedWork(expectedCount = 1).second.single().workSpec.input
+        assertThat(input.getString(NotificationProcessorWorker.KEY_TEXT)).isEqualTo(enrichedText)
+        assertThat(input.getString(NotificationProcessorWorker.KEY_TEXT)).contains("Vous avez reçu 2 500 F")
+        assertThat(input.getString(NotificationProcessorWorker.KEY_TEXT)).contains("Référence: WAVE-123")
+    }
+
+    @Test
+    fun `initial work has no network constraint but keeps exponential backoff and tag`() {
+
         val enqueuer = NotificationWorkEnqueuer(context = context, workManager = workManager)
 
         enqueueWaveNotification(enqueuer, NOTIFICATION_BODY)
 
         val request = captureEnqueuedWork(expectedCount = 1).second.single()
 
-        assertThat(request.workSpec.constraints.requiredNetworkType).isEqualTo(NetworkType.CONNECTED)
+        // Chantier 3I : le travail de capture n'est plus bloqué par le réseau. Une notification
+        // Wave reconnue par le parser local (3H-1) est traitée immédiatement, même hors
+        // connexion ; si Gemini est nécessaire sans réseau, elle part dans la file persistante
+        // et la reprise est planifiée séparément, sous contrainte `NetworkType.CONNECTED`.
+        assertThat(request.workSpec.constraints.requiredNetworkType).isEqualTo(NetworkType.NOT_REQUIRED)
         assertThat(request.workSpec.backoffPolicy).isEqualTo(BackoffPolicy.EXPONENTIAL)
         assertThat(request.workSpec.backoffDelayDuration).isEqualTo(WorkRequest.MIN_BACKOFF_MILLIS)
         assertThat(request.tags).contains(NotificationWorkEnqueuer.TAG_NOTIFICATION_TRANSACTION)
@@ -129,7 +265,6 @@ class NotificationWorkEnqueuerTest {
 
     companion object {
         private const val WAVE_PACKAGE = "com.wave.personal"
-        private const val FIXED_EVENT_ID = "event-42"
         private const val NOTIFICATION_BODY = "Vous avez reçu 5000 FCFA de Raymond"
         private const val DEFAULT_BIG_TEXT = "Wave • Transfert reçu"
         private const val RECEIVED_AT = 1_700_000_000_000L

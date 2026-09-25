@@ -35,8 +35,8 @@ class PendingTransactionRepositoryImpl(
 
     override suspend fun addPendingTransaction(transaction: PendingTransaction): Resource<Boolean> {
         return try {
-            pendingTransactionDao.insertWithDeduplication(transaction.toEntityModel())
-            Resource.Success(true)
+            val wasAccepted = pendingTransactionDao.insertWithDeduplication(transaction.toEntityModel())
+            Resource.Success(wasAccepted)
         } catch (e: Exception) {
             Resource.Error(e)
         }

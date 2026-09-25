@@ -3,9 +3,20 @@ package com.naveenapps.expensemanager.core.data.repository
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import com.google.ai.client.generativeai.GenerativeModel
+import com.google.ai.client.generativeai.type.InvalidAPIKeyException
+import com.google.ai.client.generativeai.type.InvalidStateException
+import com.google.ai.client.generativeai.type.PromptBlockedException
+import com.google.ai.client.generativeai.type.QuotaExceededException
+import com.google.ai.client.generativeai.type.RequestTimeoutException
+import com.google.ai.client.generativeai.type.SerializationException
+import com.google.ai.client.generativeai.type.ServerException
+import com.google.ai.client.generativeai.type.UnsupportedUserLocationException
 import com.google.ai.client.generativeai.type.content
 import com.google.ai.client.generativeai.type.generationConfig
 import com.google.gson.Gson
+import com.google.gson.JsonParseException
+import com.naveenapps.expensemanager.core.model.NotificationProcessingException
+import com.naveenapps.expensemanager.core.model.ProcessingErrorType
 import com.google.gson.annotations.SerializedName
 import com.naveenapps.expensemanager.core.common.utils.AppCoroutineDispatchers
 import com.naveenapps.expensemanager.core.model.PendingTransaction
@@ -16,8 +27,11 @@ import com.naveenapps.expensemanager.core.model.TransactionSource
 import com.naveenapps.expensemanager.core.model.TransactionType
 import com.naveenapps.expensemanager.core.repository.GeminiRepository
 import kotlinx.coroutines.withContext
+import java.text.ParsePosition
 import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 import com.naveenapps.expensemanager.core.model.ReceiptItemData
 
@@ -139,6 +153,145 @@ class GeminiRepositoryImpl(
     }
 
     companion object {
+        private const val NOTIFICATION_DATE_FORMAT = "yyyy-MM-dd HH:mm"
+        private val NOTIFICATION_DATE_PATTERN = Regex("""\d{4}-\d{2}-\d{2} \d{2}:\d{2}""")
+
+        /** Placeholders usuels d'un modèle de langage, comparés en minuscules. */
+        private val PLACEHOLDER_TEXTS = setOf(
+            "n/a",
+            "na",
+            "null",
+            "nil",
+            "none",
+            "unknown",
+            "inconnu",
+            "inconnue",
+            "undefined",
+            "not specified",
+            "non spécifié",
+            "non specifie",
+            "-",
+            "?",
+        )
+
+        fun parseNotificationDate(
+            dateString: String?,
+            timeZone: TimeZone = TimeZone.getDefault(),
+        ): Date? {
+            if (dateString.isNullOrBlank() || !NOTIFICATION_DATE_PATTERN.matches(dateString)) return null
+
+            val formatter = SimpleDateFormat(NOTIFICATION_DATE_FORMAT, Locale.US).apply {
+                isLenient = false
+                this.timeZone = timeZone
+            }
+            val position = ParsePosition(0)
+            val parsedDate = formatter.parse(dateString, position) ?: return null
+            return parsedDate.takeIf { position.errorIndex == -1 && position.index == dateString.length }
+        }
+
+        /**
+         * Valide le montant renvoyé par Gemini (chantier 3J).
+         *
+         * Un montant absent, nul, négatif, infini ou `NaN` est refusé : la réponse est alors
+         * rejetée comme invalide, jamais convertie silencieusement en `0`.
+         */
+        fun parseAmount(amount: Double?): Double? =
+            amount?.takeIf { it.isFinite() && it > 0.0 }
+
+        /**
+         * Un frais absent est légitime (le fournisseur peut ne pas en fournir). Un frais présent
+         * doit être fini et positif ou nul : un frais négatif est une incohérence déterministe
+         * et invalide la réponse, au lieu d'être silencieusement converti en `null`.
+         */
+        fun isFeeValid(fee: Double?): Boolean = fee == null || (fee.isFinite() && fee >= 0.0)
+
+        /**
+         * Normalise un champ texte facultatif renvoyé par Gemini.
+         *
+         * `null`, une chaîne vide/blanche et les placeholders évidents générés par un modèle
+         * ("N/A", "null", "unknown"...) deviennent `null`. Le champ reste facultatif : aucune
+         * transaction n'est rejetée pour cette seule raison.
+         */
+        fun normalizeOptionalText(value: String?): String? {
+            val trimmed = value?.trim().orEmpty()
+            if (trimmed.isEmpty()) return null
+            return trimmed.takeUnless { it.lowercase(Locale.ROOT) in PLACEHOLDER_TEXTS }
+        }
+
+        fun parseTransactionType(type: String?): TransactionType? = when (type?.uppercase(Locale.ROOT)) {
+            "INCOME" -> TransactionType.INCOME
+            "EXPENSE" -> TransactionType.EXPENSE
+            "TRANSFER" -> TransactionType.TRANSFER
+            else -> null
+        }
+
+        /**
+         * Classifie uniquement les exceptions réellement exposées par le SDK Gemini.
+         * Les erreurs non reconnues restent UNKNOWN afin de conserver un retry borné,
+         * sans les présenter comme temporaires avec certitude.
+         */
+        fun classifyGeminiException(exception: Exception): NotificationProcessingException {
+            val type = when (exception) {
+                is RequestTimeoutException,
+                is ServerException,
+                is QuotaExceededException,
+                -> ProcessingErrorType.TEMPORARY
+
+                is InvalidAPIKeyException,
+                is UnsupportedUserLocationException,
+                is PromptBlockedException,
+                is SerializationException,
+                is InvalidStateException,
+                -> ProcessingErrorType.PERMANENT
+
+                else -> ProcessingErrorType.UNKNOWN
+            }
+            return NotificationProcessingException(
+                type = type,
+                message = exception.message ?: "Erreur Gemini inconnue",
+                cause = exception,
+            )
+        }
+
+        fun getProviderContext(source: TransactionSource): String = when (source) {
+            TransactionSource.WAVE -> "Wave (mobile money)"
+            TransactionSource.ORANGE_MONEY -> "Orange Money"
+            TransactionSource.MTN_MOMO -> "MTN MoMo"
+            TransactionSource.MOOV_MONEY -> "Moov Money"
+            TransactionSource.DJAMO -> "Djamo"
+            TransactionSource.PAYPAL -> "PayPal"
+            TransactionSource.SMS,
+            TransactionSource.UNKNOWN,
+            TransactionSource.SCHEDULED -> "financial or mobile money"
+        }
+
+        fun buildNotificationPrompt(
+            notificationText: String,
+            source: TransactionSource,
+        ): String {
+            val providerContext = getProviderContext(source)
+            return """
+                Parse this $providerContext notification in French: "$notificationText"
+
+                Important rules:
+                1. If the notification explicitly mentions a fee amount, use that exact fee value.
+                2. Otherwise, apply 1% only when the text clearly indicates a transfer sent by the user (for example: "vous avez envoyé", "transfert", "transfer", "envoyer").
+                3. Do not apply 1% to payments, purchases, or other non-transfer transactions.
+                4. If there is no fee and it is not a clear transfer, return "fee": null.
+
+                Return a JSON object with exactly these fields:
+                - "type": "EXPENSE", "INCOME", or "TRANSFER"
+                - "amount": the transaction amount as a number (double), excluding fees
+                - "fee": the fee amount as a number (double) or null if none
+                - "merchant": the name of the recipient, sender, or merchant
+                - "date": the date and time from the notification if present, in "yyyy-MM-dd HH:mm" format, or null if not found
+                - "category": suggest ONE global category (e.g., Food, Transportation, Shopping, Health, Entertainment, Utilities, Leisure, Clothing, Education, Salary, Gift, Coupons)
+                - "transaction_id": the unique transaction ID / reference provided in the notification as a string, or null if not found
+
+                Example response: {"type": "EXPENSE", "amount": 1000, "fee": 10, "merchant": "Pharmacie de la Paix", "date": "2023-10-27 14:30", "category": "Health", "transaction_id": "CI123456789"}
+            """.trimIndent()
+        }
+
         fun resolveWaveFee(
             notificationText: String,
             parsedType: String?,
@@ -197,7 +350,7 @@ class GeminiRepositoryImpl(
 
     override suspend fun parseWaveNotification(
         notificationText: String,
-        source: com.naveenapps.expensemanager.core.model.TransactionSource,
+        source: TransactionSource,
         apiKey: String,
     ): Resource<PendingTransaction> =
         withContext(dispatchers.io) {
@@ -210,63 +363,85 @@ class GeminiRepositoryImpl(
                     },
                 )
 
-                val prompt = """
-                    Parse this Wave (mobile money) notification in French: "$notificationText"
-                    
-                    Important rules:
-                    1. If the notification explicitly mentions a fee amount, use that exact fee value.
-                    2. Otherwise, apply 1% only when the text clearly indicates a transfer sent by the user (for example: "vous avez envoyé", "transfert", "transfer", "envoyer").
-                    3. Do not apply 1% to payments, purchases, or other non-transfer transactions.
-                    4. If there is no fee and it is not a clear transfer, return "fee": null.
-                    
-                    Return a JSON object with exactly these fields:
-                    - "type": "EXPENSE", "INCOME", or "TRANSFER"
-                    - "amount": the transaction amount as a number (double), excluding fees
-                    - "fee": the fee amount as a number (double) or null if none
-                    - "merchant": the name of the recipient, sender, or merchant
-                    - "date": the date and time from the notification if present, in "yyyy-MM-dd HH:mm" format, or null if not found
-                    - "category": suggest ONE global category (e.g., Food, Transportation, Shopping, Health, Entertainment, Utilities, Leisure, Clothing, Education, Salary, Gift, Coupons)
-                    - "transaction_id": the unique transaction ID / reference provided in the notification as a string, or null if not found
-                    
-                    Example response: {"type": "EXPENSE", "amount": 1000, "fee": 10, "merchant": "Pharmacie de la Paix", "date": "2023-10-27 14:30", "category": "Health", "transaction_id": "CI123456789"}
-                """.trimIndent()
+                val prompt = buildNotificationPrompt(notificationText, source)
 
                 val response = model.generateContent(prompt)
                 val responseText = response.text
-                    ?: return@withContext Resource.Error(Exception("Réponse vide de Gemini"))
+                    ?: return@withContext Resource.Error(
+                        NotificationProcessingException(
+                            ProcessingErrorType.PERMANENT,
+                            "Réponse vide de Gemini",
+                        )
+                    )
                     
                 val cleanJson = responseText.replace("```json", "").replace("```", "").trim()
-                val parsed = Gson().fromJson(cleanJson, GeminiWaveResponse::class.java)
+                val parsed = try {
+                    Gson().fromJson(cleanJson, GeminiWaveResponse::class.java)
+                } catch (exception: JsonParseException) {
+                    return@withContext Resource.Error(
+                        NotificationProcessingException(
+                            ProcessingErrorType.PERMANENT,
+                            "Réponse JSON Gemini invalide",
+                            exception,
+                        )
+                    )
+                } ?: return@withContext Resource.Error(
+                    NotificationProcessingException(
+                        ProcessingErrorType.PERMANENT,
+                        "Réponse JSON Gemini invalide",
+                    )
+                )
                 
-                if (parsed.amount == null) {
-                    return@withContext Resource.Error(Exception("Montant introuvable dans la notification"))
+                val amount = parseAmount(parsed.amount)
+                    ?: return@withContext Resource.Error(
+                        NotificationProcessingException(
+                            ProcessingErrorType.PERMANENT,
+                            "Montant invalide dans la réponse de l'IA",
+                        )
+                    )
+
+                if (!isFeeValid(parsed.fee)) {
+                    return@withContext Resource.Error(
+                        NotificationProcessingException(
+                            ProcessingErrorType.PERMANENT,
+                            "Frais invalides dans la réponse de l'IA",
+                        )
+                    )
                 }
 
                 val resolvedFee = resolveWaveFee(
                     notificationText = notificationText,
                     parsedType = parsed.type,
                     parsedFee = parsed.fee,
-                    amount = parsed.amount,
+                    amount = amount,
                 )
 
-                val transactionType = when (parsed.type?.uppercase()) {
-                    "INCOME" -> com.naveenapps.expensemanager.core.model.TransactionType.INCOME
-                    "TRANSFER" -> com.naveenapps.expensemanager.core.model.TransactionType.TRANSFER
-                    else -> com.naveenapps.expensemanager.core.model.TransactionType.EXPENSE
-                }
-                
-                val parsedDate = parsed.date?.let { dateStr ->
-                    try {
-                        SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).parse(dateStr)
-                    } catch (e: Exception) {
-                        null
-                    }
-                } ?: java.util.Date()
+                val transactionType = parseTransactionType(parsed.type)
+                    ?: return@withContext Resource.Error(
+                        NotificationProcessingException(
+                            ProcessingErrorType.PERMANENT,
+                            "Type de transaction absent ou invalide",
+                        )
+                    )
+
+                val parsedDate = parseNotificationDate(parsed.date)
+                    ?: return@withContext Resource.Error(
+                        NotificationProcessingException(
+                            ProcessingErrorType.PERMANENT,
+                            "Date de transaction absente ou invalide",
+                        )
+                    )
+
+                // Le merchant et la catégorie restent facultatifs dans le modèle métier, mais une
+                // valeur vide ou un placeholder généré par le modèle ("N/A", "null", ...) ne doit
+                // pas atteindre Room : elle polluerait notamment la clé de déduplication (3D).
+                val merchant = normalizeOptionalText(parsed.merchant)
+                val category = normalizeOptionalText(parsed.category)
 
                 val filledFieldCount = listOfNotNull(
-                    parsed.merchant?.takeIf { it.isNotBlank() },
+                    merchant,
                     parsed.date,
-                    parsed.category,
+                    category,
                 ).size
                 val confidence = (0.4f + filledFieldCount * 0.2f).coerceAtMost(1f)
 
@@ -276,8 +451,8 @@ class GeminiRepositoryImpl(
                 val deduplicationKey = PendingTransactionDeduplication.computeDeduplicationKey(
                     source = source,
                     type = transactionType,
-                    amount = parsed.amount,
-                    senderOrReceiver = parsed.merchant,
+                    amount = amount,
+                    senderOrReceiver = merchant,
                     fee = resolvedFee,
                 )
                 // L'identifiant de la ligne est technique et propre à cet événement. La référence
@@ -288,12 +463,12 @@ class GeminiRepositoryImpl(
                 Resource.Success(
                     com.naveenapps.expensemanager.core.model.PendingTransaction(
                         id = generatedId,
-                        amount = parsed.amount,
+                        amount = amount,
                         fee = resolvedFee,
-                        merchant = parsed.merchant,
+                        merchant = merchant,
                         date = parsedDate,
                         transactionType = transactionType,
-                        suggestedCategory = parsed.category,
+                        suggestedCategory = category,
                         rawNotification = notificationText,
                         source = source,
                         confidence = confidence,
@@ -302,7 +477,7 @@ class GeminiRepositoryImpl(
                     )
                 )
             } catch (e: Exception) {
-                Resource.Error(e)
+                Resource.Error(classifyGeminiException(e))
             }
         }
 

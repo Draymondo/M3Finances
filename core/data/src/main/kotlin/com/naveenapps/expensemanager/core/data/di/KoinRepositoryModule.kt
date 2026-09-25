@@ -296,6 +296,11 @@ val RepositoryModule = module {
             pendingTransactionDao = get()
         )
     }
+    single<com.naveenapps.expensemanager.core.repository.PendingNotificationProcessingRepository> {
+        com.naveenapps.expensemanager.core.data.repository.PendingNotificationProcessingRepositoryImpl(
+            dao = get(),
+        )
+    }
     single<com.naveenapps.expensemanager.core.repository.ToolUsageRepository> {
         com.naveenapps.expensemanager.core.data.repository.ToolUsageRepositoryImpl(
             toolUsageDataStore = get()

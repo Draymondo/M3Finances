@@ -33,7 +33,7 @@ interface PendingTransactionDao {
     fun getPendingTransactionById(id: String): Flow<PendingTransactionEntity?>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insert(transaction: PendingTransactionEntity)
+    suspend fun insert(transaction: PendingTransactionEntity): Long
 
     @Update
     suspend fun update(transaction: PendingTransactionEntity)
@@ -63,7 +63,7 @@ interface PendingTransactionDao {
         if (!eventId.isNullOrBlank()) {
             val byEvent = getPendingTransactionByEventId(eventId)
             if (byEvent != null) {
-                return true
+                return false
             }
         }
 
@@ -72,10 +72,9 @@ interface PendingTransactionDao {
         if (!providerRef.isNullOrBlank() && entity.source.isKnownProvider()) {
             val byRef = getPendingTransactionByProviderReference(entity.source, providerRef)
             if (byRef != null) {
-                return true
+                return false
             }
-            insert(entity)
-            return true
+            return insert(entity) != -1L
         }
 
         // 3. Sans référence : fusion uniquement entre canaux différents, fournisseur connu et identique
@@ -96,12 +95,11 @@ interface PendingTransactionDao {
                     kotlin.math.abs(existing.date - entity.date) < crossChannelWindowMs
             }
             if (crossChannelDuplicate != null) {
-                return true
+                return false
             }
         }
 
-        insert(entity)
-        return true
+        return insert(entity) != -1L
     }
 
     @Query("DELETE FROM pending_transaction WHERE id = :id")
