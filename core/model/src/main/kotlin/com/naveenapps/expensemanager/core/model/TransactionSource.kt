@@ -11,3 +11,9 @@ enum class TransactionSource {
     UNKNOWN,
     SCHEDULED
 }
+
+fun TransactionSource.isKnownProvider(): Boolean {
+    return this != TransactionSource.UNKNOWN &&
+        this != TransactionSource.SMS &&
+        this != TransactionSource.SCHEDULED
+}

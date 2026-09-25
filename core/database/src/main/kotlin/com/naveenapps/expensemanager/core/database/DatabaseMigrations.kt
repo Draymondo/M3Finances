@@ -321,3 +321,30 @@ internal val MIGRATION_18_19 = object : Migration(18, 19) {
         )
     }
 }
+
+/**
+ * Adds a source-scoped provider reference and a fallback deduplication key to
+ * `pending_transaction` for robust financial transaction identity.
+ */
+internal val MIGRATION_19_20 = object : Migration(19, 20) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `pending_transaction` ADD COLUMN `provider_reference` TEXT DEFAULT NULL")
+        db.execSQL("ALTER TABLE `pending_transaction` ADD COLUMN `deduplication_key` TEXT DEFAULT NULL")
+        db.execSQL("ALTER TABLE `pending_transaction` ADD COLUMN `channel` TEXT DEFAULT NULL")
+        db.execSQL("ALTER TABLE `pending_transaction` ADD COLUMN `notification_event_id` TEXT DEFAULT NULL")
+        db.execSQL(
+            "CREATE UNIQUE INDEX IF NOT EXISTS " +
+                "`index_pending_transaction_source_provider_reference` " +
+                "ON `pending_transaction` (`source`, `provider_reference`)",
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_pending_transaction_deduplication_key` " +
+                "ON `pending_transaction` (`deduplication_key`)",
+        )
+        db.execSQL(
+            "CREATE UNIQUE INDEX IF NOT EXISTS `index_pending_transaction_notification_event_id` " +
+                "ON `pending_transaction` (`notification_event_id`)",
+        )
+    }
+}
+

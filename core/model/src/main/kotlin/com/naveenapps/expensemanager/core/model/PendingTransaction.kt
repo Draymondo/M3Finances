@@ -16,5 +16,8 @@ data class PendingTransaction(
     val scheduledDate: Date? = null,
     val accountId: String? = null,
     val categoryId: String? = null,
+    val providerReference: String? = null,
+    val deduplicationKey: String? = null,
+    val channel: TransactionChannel? = null,
+    val notificationEventId: String? = null,
 )
-

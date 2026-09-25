@@ -8,6 +8,7 @@ import androidx.work.WorkerParameters
 import com.naveenapps.expensemanager.core.domain.usecase.transaction.ParseWaveNotificationUseCase
 import com.naveenapps.expensemanager.core.model.PendingTransaction
 import com.naveenapps.expensemanager.core.model.Resource
+import com.naveenapps.expensemanager.core.model.TransactionChannel
 import com.naveenapps.expensemanager.core.model.TransactionSource
 import com.naveenapps.expensemanager.core.repository.PendingTransactionRepository
 import kotlinx.coroutines.CancellationException
@@ -34,18 +35,37 @@ class NotificationProcessorWorker(
             return Result.failure()
         }
 
-        val source = runCatching { TransactionSource.valueOf(sourceName) }
+        val rawSource = runCatching { TransactionSource.valueOf(sourceName) }
             .getOrDefault(TransactionSource.UNKNOWN)
+
+        val channel = if (rawSource == TransactionSource.SMS) {
+            TransactionChannel.SMS
+        } else {
+            TransactionChannel.PUSH
+        }
+
+        val title = inputData.getString(KEY_TITLE).orEmpty()
+        val provider = if (rawSource == TransactionSource.SMS) {
+            deduceProviderFromTitle(title)
+        } else {
+            rawSource
+        }
 
         Log.d(
             TAG,
             "Traitement de la notification $eventId " +
-                "(source=$source, package=${inputData.getString(KEY_PACKAGE_NAME)}, tentative=$runAttemptCount)"
+                "(provider=$provider, channel=$channel, package=${inputData.getString(KEY_PACKAGE_NAME)}, tentative=$runAttemptCount)"
         )
 
         return try {
-            when (val parseResult = parseWaveNotificationUseCase.invoke(text, source)) {
-                is Resource.Success -> savePendingTransaction(eventId, parseResult.data)
+            when (val parseResult = parseWaveNotificationUseCase.invoke(text, provider)) {
+                is Resource.Success -> {
+                    val transactionToSave = parseResult.data.copy(
+                        channel = channel,
+                        notificationEventId = eventId.takeIf { it.isNotBlank() },
+                    )
+                    savePendingTransaction(eventId, transactionToSave)
+                }
                 is Resource.Error -> handleParseError(eventId, parseResult.exception)
             }
         } catch (cancellation: CancellationException) {
@@ -64,6 +84,9 @@ class NotificationProcessorWorker(
         eventId: String,
         pendingTransaction: PendingTransaction,
     ): Result {
+        // Room ignore une notification déjà connue via sa référence fournisseur ou sa clé de
+        // déduplication : la première ligne, son horodatage et les choix de l'utilisateur sont
+        // ainsi conservés lorsqu'une notification est réémise.
         return when (val addResult = pendingTransactionRepository.addPendingTransaction(pendingTransaction)) {
             is Resource.Success -> {
                 Log.d(TAG, "Notification $eventId enregistrée (pendingTransaction=${pendingTransaction.id})")
@@ -171,5 +194,23 @@ class NotificationProcessorWorker(
             }
             return builder.build()
         }
+
+        /**
+         * Déduit le fournisseur mobile money d'un SMS à partir du titre / expéditeur uniquement.
+         * Aucun parsing du contenu du message. Si inconnu, renvoie UNKNOWN.
+         */
+        fun deduceProviderFromTitle(title: String): TransactionSource {
+            val normalized = title.trim().lowercase(java.util.Locale.ROOT)
+            return when {
+                "wave" in normalized -> TransactionSource.WAVE
+                "orange" in normalized -> TransactionSource.ORANGE_MONEY
+                "mtn" in normalized || "momo" in normalized -> TransactionSource.MTN_MOMO
+                "moov" in normalized -> TransactionSource.MOOV_MONEY
+                "djamo" in normalized -> TransactionSource.DJAMO
+                "paypal" in normalized -> TransactionSource.PAYPAL
+                else -> TransactionSource.UNKNOWN
+            }
+        }
     }
 }
+

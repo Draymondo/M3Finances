@@ -224,6 +224,13 @@ fun PendingTransactionEntity.toFirestoreMap(): Map<String, Any?> = mapOf(
     "source" to source.name,
     "confidence" to confidence,
     "createdOn" to createdOn,
+    "scheduledDate" to scheduledDate,
+    "accountId" to accountId,
+    "categoryId" to categoryId,
+    "providerReference" to providerReference,
+    "deduplicationKey" to deduplicationKey,
+    "channel" to channel?.name,
+    "notificationEventId" to notificationEventId,
 )
 
 fun pendingTransactionEntityFromFirestoreMap(
@@ -242,6 +249,13 @@ fun pendingTransactionEntityFromFirestoreMap(
     source = (map["source"] as? String)?.let { TransactionSource.valueOf(it) } ?: TransactionSource.UNKNOWN,
     confidence = (map["confidence"] as? Number)?.toFloat(),
     createdOn = (map["createdOn"] as? Number)?.toLong() ?: 0L,
+    scheduledDate = (map["scheduledDate"] as? Number)?.toLong(),
+    accountId = map["accountId"] as? String,
+    categoryId = map["categoryId"] as? String,
+    providerReference = map["providerReference"] as? String,
+    deduplicationKey = map["deduplicationKey"] as? String,
+    channel = (map["channel"] as? String)?.let { runCatching { com.naveenapps.expensemanager.core.model.TransactionChannel.valueOf(it) }.getOrNull() },
+    notificationEventId = map["notificationEventId"] as? String,
 )
 
 fun SavingsGoalEntity.toFirestoreMap(): Map<String, Any?> = mapOf(

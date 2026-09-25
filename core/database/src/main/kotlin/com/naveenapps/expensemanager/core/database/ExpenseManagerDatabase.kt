@@ -66,7 +66,7 @@ const val DATABASE_FILE_NAME = "expense_manager_database.db"
         com.naveenapps.expensemanager.core.database.entity.PendingTransactionEntity::class,
         EnvelopeEntity::class,
     ],
-    version = 19,
+    version = 20,
     exportSchema = true,
 )
 @TypeConverters(
@@ -77,6 +77,7 @@ const val DATABASE_FILE_NAME = "expense_manager_database.db"
     RecurrenceFrequencyConverter::class,
     DebtDirectionConverter::class,
     TransactionSourceConverter::class,
+    com.naveenapps.expensemanager.core.database.utils.TransactionChannelConverter::class,
 )
 abstract class ExpenseManagerDatabase : RoomDatabase() {
 

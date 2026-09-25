@@ -8,8 +8,12 @@ import com.google.ai.client.generativeai.type.generationConfig
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import com.naveenapps.expensemanager.core.common.utils.AppCoroutineDispatchers
+import com.naveenapps.expensemanager.core.model.PendingTransaction
+import com.naveenapps.expensemanager.core.model.PendingTransactionDeduplication
 import com.naveenapps.expensemanager.core.model.ReceiptData
 import com.naveenapps.expensemanager.core.model.Resource
+import com.naveenapps.expensemanager.core.model.TransactionSource
+import com.naveenapps.expensemanager.core.model.TransactionType
 import com.naveenapps.expensemanager.core.repository.GeminiRepository
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
@@ -194,8 +198,8 @@ class GeminiRepositoryImpl(
     override suspend fun parseWaveNotification(
         notificationText: String,
         source: com.naveenapps.expensemanager.core.model.TransactionSource,
-        apiKey: String
-    ): Resource<com.naveenapps.expensemanager.core.model.PendingTransaction> =
+        apiKey: String,
+    ): Resource<PendingTransaction> =
         withContext(dispatchers.io) {
             try {
                 val model = GenerativeModel(
@@ -266,10 +270,20 @@ class GeminiRepositoryImpl(
                 ).size
                 val confidence = (0.4f + filledFieldCount * 0.2f).coerceAtMost(1f)
 
-                // Deduplication strategy: Use extracted transaction_id, or fallback to hash of key fields, or fallback to UUID
-                val generatedId = parsed.transactionId 
-                    ?: "${parsed.amount}_${parsed.merchant}_${parsed.date}".hashCode().toString().takeIf { parsed.merchant != null } 
-                    ?: java.util.UUID.randomUUID().toString()
+                val providerReference = parsed.transactionId
+                    ?.trim()
+                    ?.takeIf { it.isNotEmpty() }
+                val deduplicationKey = PendingTransactionDeduplication.computeDeduplicationKey(
+                    source = source,
+                    type = transactionType,
+                    amount = parsed.amount,
+                    senderOrReceiver = parsed.merchant,
+                    fee = resolvedFee,
+                )
+                // L'identifiant de la ligne est technique et propre à cet événement. La référence
+                // fournisseur et la clé canonique portent, elles, l'identité financière et
+                // permettent d'ignorer une notification rejouée sans écraser les choix utilisateur.
+                val generatedId = java.util.UUID.randomUUID().toString()
 
                 Resource.Success(
                     com.naveenapps.expensemanager.core.model.PendingTransaction(
@@ -282,7 +296,9 @@ class GeminiRepositoryImpl(
                         suggestedCategory = parsed.category,
                         rawNotification = notificationText,
                         source = source,
-                        confidence = confidence
+                        confidence = confidence,
+                        providerReference = providerReference,
+                        deduplicationKey = deduplicationKey,
                     )
                 )
             } catch (e: Exception) {

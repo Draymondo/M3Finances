@@ -3,6 +3,7 @@ package com.naveenapps.expensemanager.core.data.repository
 import com.naveenapps.expensemanager.core.database.dao.PendingTransactionDao
 import com.naveenapps.expensemanager.core.database.entity.PendingTransactionEntity
 import com.naveenapps.expensemanager.core.model.PendingTransaction
+import com.naveenapps.expensemanager.core.model.PendingTransactionDeduplication
 import com.naveenapps.expensemanager.core.model.Resource
 import com.naveenapps.expensemanager.core.repository.PendingTransactionRepository
 import kotlinx.coroutines.flow.Flow
@@ -34,7 +35,7 @@ class PendingTransactionRepositoryImpl(
 
     override suspend fun addPendingTransaction(transaction: PendingTransaction): Resource<Boolean> {
         return try {
-            pendingTransactionDao.insert(transaction.toEntityModel())
+            pendingTransactionDao.insertWithDeduplication(transaction.toEntityModel())
             Resource.Success(true)
         } catch (e: Exception) {
             Resource.Error(e)
@@ -91,6 +92,10 @@ class PendingTransactionRepositoryImpl(
             scheduledDate = scheduledDate?.let { Date(it) },
             accountId = accountId,
             categoryId = categoryId,
+            providerReference = providerReference,
+            deduplicationKey = deduplicationKey,
+            channel = channel,
+            notificationEventId = notificationEventId,
         )
     }
 
@@ -110,6 +115,10 @@ class PendingTransactionRepositoryImpl(
             scheduledDate = scheduledDate?.time,
             accountId = accountId,
             categoryId = categoryId,
+            providerReference = providerReference,
+            deduplicationKey = deduplicationKey,
+            channel = channel,
+            notificationEventId = notificationEventId,
         )
     }
 }

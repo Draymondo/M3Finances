@@ -8,6 +8,7 @@ import com.google.common.truth.Truth.assertThat
 import com.naveenapps.expensemanager.core.domain.usecase.transaction.ParseWaveNotificationUseCase
 import com.naveenapps.expensemanager.core.model.PendingTransaction
 import com.naveenapps.expensemanager.core.model.Resource
+import com.naveenapps.expensemanager.core.model.TransactionChannel
 import com.naveenapps.expensemanager.core.model.TransactionSource
 import com.naveenapps.expensemanager.core.model.TransactionType
 import com.naveenapps.expensemanager.core.repository.PendingTransactionRepository
@@ -66,15 +67,19 @@ class NotificationProcessorWorkerTest {
     @Test
     fun `successful parsing saves the pending transaction and returns success`() = runTest {
         val pendingTransaction = pendingTransaction()
+        val expectedSaved = pendingTransaction.copy(
+            channel = TransactionChannel.PUSH,
+            notificationEventId = "event-1",
+        )
         whenever(parseWaveNotificationUseCase.invoke(DEFAULT_TEXT, TransactionSource.WAVE))
             .thenReturn(Resource.Success(pendingTransaction))
-        whenever(pendingTransactionRepository.addPendingTransaction(pendingTransaction))
+        whenever(pendingTransactionRepository.addPendingTransaction(expectedSaved))
             .thenReturn(Resource.Success(true))
 
         val result = worker().doWork()
 
         assertThat(result).isEqualTo(Result.success())
-        verify(pendingTransactionRepository).addPendingTransaction(pendingTransaction)
+        verify(pendingTransactionRepository).addPendingTransaction(expectedSaved)
     }
 
     @Test
