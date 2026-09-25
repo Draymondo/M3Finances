@@ -12,4 +12,8 @@ android {
 dependencies {
     implementation(project(":feature:account"))
     implementation(project(":feature:filter"))
+
+    // Tests du chemin d'export (BUG-001) : Intent SAF et sélecteur de fichier simulés
+    // par Robolectric, comme dans :core:data.
+    testImplementation(libs.robolectric)
 }

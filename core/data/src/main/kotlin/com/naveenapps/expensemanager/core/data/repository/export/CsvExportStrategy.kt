@@ -20,7 +20,7 @@ class CsvExportStrategy(context: Context) : BaseExportStrategy(context) {
 
     override fun export(uri: String?, transactions: List<Transaction>): Resource<ExportData> {
         return kotlin.runCatching {
-            val fileUri = generateFile(getFileName(), uri) { output ->
+            val fileUri = generateFile(uri) { output ->
                 val writer = CSVWriter(output.writer())
                 val data = mutableListOf<Array<String>>()
 

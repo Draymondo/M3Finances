@@ -1,7 +1,5 @@
 package com.naveenapps.expensemanager.feature.export
 
-import android.net.Uri
-import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.naveenapps.expensemanager.core.designsystem.ui.utils.UiText
@@ -81,12 +79,12 @@ class ExportViewModel(
         }
     }
 
-    fun export(uri: Uri?) {
+    fun export(uri: String) {
         viewModelScope.launch {
 
             val response = exportFileUseCase.invoke(
                 _state.value.fileType,
-                uri?.toString(),
+                uri,
                 _state.value.selectedDateRange,
                 _state.value.selectedAccounts,
                 _state.value.isAllAccountSelected,
@@ -120,7 +118,9 @@ class ExportViewModel(
         when (action) {
             ExportAction.ClosePage -> closePage()
             is ExportAction.StartExport -> {
-                export(action.uri?.toUri())
+                // URI nulle = sélecteur de fichier annulé par l'utilisateur : ce n'est pas
+                // une erreur, on n'exporte rien (BUG-001).
+                action.uri?.let { uri -> export(uri) }
             }
 
             ExportAction.CloseAccountSelection -> {

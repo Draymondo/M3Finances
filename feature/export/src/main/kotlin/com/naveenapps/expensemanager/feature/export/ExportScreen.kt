@@ -1,10 +1,8 @@
 package com.naveenapps.expensemanager.feature.export
 
-import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResult
@@ -47,11 +45,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.PermissionState
-import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.rememberPermissionState
-import com.google.accompanist.permissions.shouldShowRationale
 import com.naveenapps.expensemanager.core.designsystem.components.SelectedItemView
 import com.naveenapps.expensemanager.core.designsystem.ui.components.ClickableTextField
 import com.naveenapps.expensemanager.core.designsystem.ui.components.ExpenseManagerTopAppBar
@@ -66,21 +59,24 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
-private fun getFileCreateIntent(fileType: ExportFileType): Intent? {
-    return if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S) {
-        val timestamp = System.currentTimeMillis()
-        Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-            addCategory(Intent.CATEGORY_OPENABLE)
-            if (fileType == ExportFileType.PDF) {
-                type = "application/pdf"
-                putExtra(Intent.EXTRA_TITLE, "expense_manager_$timestamp.pdf")
-            } else {
-                type = "application/csv"
-                putExtra(Intent.EXTRA_TITLE, "expense_manager_$timestamp.csv")
-            }
+/**
+ * Intent `ACTION_CREATE_DOCUMENT` (Storage Access Framework) pour créer le fichier d'export.
+ *
+ * BUG-001 : cet intent fonctionne sur toutes les versions d'Android prises en charge (SAF
+ * disponible depuis l'API 19) et ne nécessite **aucune permission de stockage** : plus de
+ * dépendance à `WRITE_EXTERNAL_STORAGE` sur Android 10+.
+ */
+internal fun getFileCreateIntent(fileType: ExportFileType): Intent {
+    val timestamp = System.currentTimeMillis()
+    return Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+        addCategory(Intent.CATEGORY_OPENABLE)
+        if (fileType == ExportFileType.PDF) {
+            type = "application/pdf"
+            putExtra(Intent.EXTRA_TITLE, "expense_manager_$timestamp.pdf")
+        } else {
+            type = "application/csv"
+            putExtra(Intent.EXTRA_TITLE, "expense_manager_$timestamp.csv")
         }
-    } else {
-        null
     }
 }
 
@@ -108,26 +104,12 @@ fun ExportScreen(
     )
 }
 
-@OptIn(ExperimentalPermissionsApi::class)
 private fun createFileEvent(
     fileCreatorIntent: ManagedActivityResultLauncher<Intent, ActivityResult>,
-    writePermission: PermissionState,
-    onAction: (ExportAction) -> Unit,
 ) {
-    getFileCreateIntent(ExportFileType.CSV)?.let { intent ->
-        fileCreatorIntent.launch(intent)
-    } ?: run {
-        val permissionResult = writePermission.status
-        if (permissionResult.isGranted) {
-            onAction(ExportAction.StartExport(null))
-        } else {
-            if (permissionResult.shouldShowRationale) {
-                // TODO Show Alert to Grant Permission
-            } else {
-                writePermission.launchPermissionRequest()
-            }
-        }
-    }
+    // BUG-001 : plus de demande de WRITE_EXTERNAL_STORAGE — le sélecteur SAF suffit sur
+    // toutes les versions d'Android.
+    fileCreatorIntent.launch(getFileCreateIntent(ExportFileType.CSV))
 }
 
 private fun fileExportedProcess(
@@ -160,7 +142,7 @@ private fun fileExportedProcess(
     }
 }
 
-@OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ExportScreenContent(
     state: ExportState,
@@ -171,19 +153,18 @@ private fun ExportScreenContent(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
-    val writePermission = rememberPermissionState(Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
     val fileCreatorIntent = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult(),
-    ) {
-        it.data?.data?.also { uri ->
-            onAction(ExportAction.StartExport(uri.toString()))
-        }
+    ) { result ->
+        // Annulation du sélecteur (résultat sans URI) : StartExport(null) est ignoré par le
+        // ViewModel — ce n'est pas une erreur (BUG-001).
+        onAction(ExportAction.StartExport(result.data?.data?.toString()))
     }
 
     ObserveAsEvents(eventFlow) { event ->
         when (event) {
-            ExportEvent.CreateFile -> createFileEvent(fileCreatorIntent, writePermission, onAction)
+            ExportEvent.CreateFile -> createFileEvent(fileCreatorIntent)
             is ExportEvent.FileExported -> fileExportedProcess(coroutineScope, snackbarHostState, event, context, shareWithUri)
             is ExportEvent.Error -> coroutineScope.launch {
                 snackbarHostState.showSnackbar(message = event.message.asString(context))
@@ -227,9 +208,9 @@ private fun ExportScreenContent(
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = {
-                    getFileCreateIntent(fileType = state.fileType)?.let {
-                        fileCreatorIntent.launch(it)
-                    } ?: onAction(ExportAction.StartExport(null))
+                    // BUG-001 : toujours le sélecteur SAF, quelle que soit la version
+                    // d'Android — plus de branche de secours WRITE_EXTERNAL_STORAGE.
+                    fileCreatorIntent.launch(getFileCreateIntent(fileType = state.fileType))
                 },
             ) {
                 Row {
