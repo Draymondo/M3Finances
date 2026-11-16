@@ -93,21 +93,21 @@ class WaveNotificationParserTest {
 
     @Test
     fun `headings without exclamation mark are recognized`() {
-        val result = recognized("Paiement réussi\n\nVous avez payé 1.000F à Boutique le 29 Aug 16h03.\nSolde Wave: 27.744F")
+        val result = recognized("Paiement réussi\n\nVous avez payé 1.000F à Boutique le 29 Aug 10h03.\nSolde Wave: 27.744F")
         assertThat(result.amount).isEqualTo(1000.0)
         assertThat(result.transactionType).isEqualTo(TransactionType.EXPENSE)
     }
 
     @Test
     fun `amounts with no-break space thousands separator and F CFA suffix are recognized`() {
-        val result = recognized("Paiement réussi!\n\nVous avez payé 1\u00A0000\u00A0F\u00A0CFA à Boutique le 29 Aug 16h03.\nSolde Wave: 27\u00A0744\u00A0F\u00A0CFA")
+        val result = recognized("Paiement réussi!\n\nVous avez payé 1\u00A0000\u00A0F\u00A0CFA à Boutique le 29 Aug 10h03.\nSolde Wave: 27\u00A0744\u00A0F\u00A0CFA")
         assertThat(result.amount).isEqualTo(1000.0)
         assertThat(result.balance).isEqualTo(27744.0)
     }
 
     @Test
     fun `amounts with narrow no-break space thousands separator are recognized`() {
-        val result = recognized("Paiement réussi!\n\nVous avez payé 1\u202F000\u202FF à Boutique le 29 Aug 16h03.\nSolde Wave: 27\u202F744\u202FF")
+        val result = recognized("Paiement réussi!\n\nVous avez payé 1\u202F000\u202FF à Boutique le 29 Aug 10h03.\nSolde Wave: 27\u202F744\u202FF")
         assertThat(result.amount).isEqualTo(1000.0)
         assertThat(result.balance).isEqualTo(27744.0)
     }
@@ -134,13 +134,13 @@ class WaveNotificationParserTest {
 
     @Test
     fun `decimal amounts are parsed with french convention`() {
-        val result = recognized("Paiement réussi!\n\nVous avez payé 1.000,50F à Boutique le 29 Aug 16h03.\nSolde Wave: 27.744F")
+        val result = recognized("Paiement réussi!\n\nVous avez payé 1.000,50F à Boutique le 29 Aug 10h03.\nSolde Wave: 27.744F")
         assertThat(result.amount).isEqualTo(1000.5)
     }
 
     @Test
     fun `single dot with one or two fraction digits is a decimal`() {
-        val result = recognized("Paiement réussi!\n\nVous avez payé 1.50F à Boutique le 29 Aug 16h03.\nSolde Wave: 27.744F")
+        val result = recognized("Paiement réussi!\n\nVous avez payé 1.50F à Boutique le 29 Aug 10h03.\nSolde Wave: 27.744F")
         assertThat(result.amount).isEqualTo(1.5)
     }
 
