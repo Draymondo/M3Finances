@@ -8,6 +8,7 @@ import com.naveenapps.expensemanager.core.database.dao.BudgetDao
 import com.naveenapps.expensemanager.core.database.dao.CategoryDao
 import com.naveenapps.expensemanager.core.database.dao.DebtDao
 import com.naveenapps.expensemanager.core.database.dao.DebtReminderDao
+import com.naveenapps.expensemanager.core.database.dao.InstallmentPlanDao
 import com.naveenapps.expensemanager.core.database.dao.EnvelopeDao
 import com.naveenapps.expensemanager.core.database.dao.SavingsGoalDao
 import com.naveenapps.expensemanager.core.database.dao.ShoppingListDao
@@ -22,6 +23,7 @@ import com.naveenapps.expensemanager.core.database.entity.CategoryEntity
 import com.naveenapps.expensemanager.core.database.entity.DebtEntity
 import com.naveenapps.expensemanager.core.database.entity.DebtReminderEntity
 import com.naveenapps.expensemanager.core.database.entity.EnvelopeEntity
+import com.naveenapps.expensemanager.core.database.entity.InstallmentPlanEntity
 import com.naveenapps.expensemanager.core.database.entity.PendingNotificationProcessingEntity
 import com.naveenapps.expensemanager.core.database.entity.SavingsGoalEntity
 import com.naveenapps.expensemanager.core.database.entity.ShoppingListEntity
@@ -67,8 +69,9 @@ const val DATABASE_FILE_NAME = "expense_manager_database.db"
         com.naveenapps.expensemanager.core.database.entity.PendingTransactionEntity::class,
         EnvelopeEntity::class,
         PendingNotificationProcessingEntity::class,
+        InstallmentPlanEntity::class,
     ],
-    version = 21,
+    version = 22,
     exportSchema = true,
 )
 @TypeConverters(
@@ -99,6 +102,8 @@ abstract class ExpenseManagerDatabase : RoomDatabase() {
     abstract fun debtReminderDao(): DebtReminderDao
 
     abstract fun savingsGoalDao(): SavingsGoalDao
+
+    abstract fun installmentPlanDao(): InstallmentPlanDao
 
     abstract fun shoppingListDao(): ShoppingListDao
 

@@ -9,6 +9,7 @@ import com.naveenapps.expensemanager.core.database.entity.DebtEntity
 import com.naveenapps.expensemanager.core.database.entity.DebtReminderEntity
 import com.naveenapps.expensemanager.core.database.entity.PendingTransactionEntity
 import com.naveenapps.expensemanager.core.database.entity.RecurringTransactionEntity
+import com.naveenapps.expensemanager.core.database.entity.InstallmentPlanEntity
 import com.naveenapps.expensemanager.core.database.entity.SavingsGoalEntity
 import com.naveenapps.expensemanager.core.database.entity.ShoppingListEntity
 import com.naveenapps.expensemanager.core.database.entity.ShoppingListItemEntity
@@ -356,4 +357,27 @@ fun shoppingListItemEntityFromFirestoreMap(
     name = map["name"] as? String ?: "",
     price = (map["price"] as? Number)?.toDouble() ?: 0.0,
     createdOn = Date((map["createdOn"] as? Number)?.toLong() ?: 0L),
+)
+
+fun InstallmentPlanEntity.toFirestoreMap(): Map<String, Any?> = mapOf(
+    "accountId" to accountId,
+    "name" to name,
+    "targetAmount" to targetAmount,
+    "deadline" to deadline?.time,
+    "notes" to notes,
+    "isCompleted" to isCompleted,
+    "createdOn" to createdOn.time,
+    "updatedOn" to updatedOn.time,
+)
+
+fun installmentPlanEntityFromFirestoreMap(id: String, map: Map<String, Any?>): InstallmentPlanEntity = InstallmentPlanEntity(
+    id = id,
+    accountId = map["accountId"] as? String ?: "",
+    name = map["name"] as? String ?: "",
+    targetAmount = (map["targetAmount"] as? Number)?.toDouble() ?: 0.0,
+    deadline = (map["deadline"] as? Number)?.toLong()?.let { Date(it) },
+    notes = map["notes"] as? String ?: "",
+    isCompleted = map["isCompleted"] as? Boolean ?: false,
+    createdOn = Date((map["createdOn"] as? Number)?.toLong() ?: 0L),
+    updatedOn = Date((map["updatedOn"] as? Number)?.toLong() ?: 0L),
 )

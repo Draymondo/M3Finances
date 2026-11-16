@@ -35,6 +35,7 @@ class DatabaseChangeCloudBackupTrigger(
         "debt",
         "debt_reminder",
         "savings_goal",
+        "installment_plan",
         "recurring_transaction",
         "shopping_list",
         "shopping_list_item",

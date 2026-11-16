@@ -11,6 +11,7 @@ import com.naveenapps.expensemanager.core.database.dao.DebtDao
 import com.naveenapps.expensemanager.core.database.dao.DebtReminderDao
 import com.naveenapps.expensemanager.core.database.dao.PendingTransactionDao
 import com.naveenapps.expensemanager.core.database.dao.RecurringTransactionDao
+import com.naveenapps.expensemanager.core.database.dao.InstallmentPlanDao
 import com.naveenapps.expensemanager.core.database.dao.SavingsGoalDao
 import com.naveenapps.expensemanager.core.database.dao.ShoppingListDao
 import com.naveenapps.expensemanager.core.database.dao.ShoppingListItemDao
@@ -67,6 +68,7 @@ class CloudBackupRepositoryImpl(
     private val debtDao: DebtDao,
     private val debtReminderDao: DebtReminderDao,
     private val savingsGoalDao: SavingsGoalDao,
+    private val installmentPlanDao: InstallmentPlanDao,
     private val recurringTransactionDao: RecurringTransactionDao,
     private val cloudBackupScheduler: CloudBackupScheduler,
     private val shoppingListDao: ShoppingListDao,
@@ -242,6 +244,12 @@ class CloudBackupRepositoryImpl(
                 toMap = { it.toFirestoreMap() },
             )
             syncCollection(
+                collectionRef = userRoot.collection(INSTALLMENT_PLANS),
+                localRows = installmentPlanDao.getAllInstallmentPlanEntities(),
+                idOf = { it.id },
+                toMap = { it.toFirestoreMap() },
+            )
+            syncCollection(
                 collectionRef = userRoot.collection(RECURRING_TRANSACTIONS),
                 localRows = recurringTransactionDao.getAllRecurringTransactionEntities(),
                 idOf = { it.id },
@@ -378,6 +386,9 @@ class CloudBackupRepositoryImpl(
         val savingsGoals = root.collection(SAVINGS_GOALS).get().await().documents.map { doc ->
             savingsGoalEntityFromFirestoreMap(doc.id, doc.data.orEmpty())
         }
+        val installmentPlans = root.collection(INSTALLMENT_PLANS).get().await().documents.map { doc ->
+            installmentPlanEntityFromFirestoreMap(doc.id, doc.data.orEmpty())
+        }
         val recurringTransactions = root.collection(RECURRING_TRANSACTIONS).get().await().documents.map { doc ->
             recurringTransactionEntityFromFirestoreMap(doc.id, doc.data.orEmpty())
         }
@@ -401,6 +412,7 @@ class CloudBackupRepositoryImpl(
             budgetDao.deleteAllBudgets()
             debtDao.deleteAll()
             savingsGoalDao.deleteAll()
+            installmentPlanDao.deleteAll()
             recurringTransactionDao.deleteAll()
             shoppingListItemDao.deleteAll()
             shoppingListDao.deleteAll()
@@ -418,6 +430,7 @@ class CloudBackupRepositoryImpl(
             debts.forEach { debtDao.insert(it) }
             debtReminders.forEach { debtReminderDao.insert(it) }
             savingsGoals.forEach { savingsGoalDao.insert(it) }
+            installmentPlans.forEach { installmentPlanDao.insert(it) }
             recurringTransactions.forEach { recurringTransactionDao.insert(it) }
             shoppingLists.forEach { shoppingListDao.insert(it) }
             shoppingListItems.forEach { shoppingListItemDao.insert(it) }
@@ -451,6 +464,10 @@ class CloudBackupRepositoryImpl(
             copyCollection(userRoot.collection(DEBTS), snapshotRoot.collection(DEBTS))
             copyCollection(userRoot.collection(DEBT_REMINDERS), snapshotRoot.collection(DEBT_REMINDERS))
             copyCollection(userRoot.collection(SAVINGS_GOALS), snapshotRoot.collection(SAVINGS_GOALS))
+            copyCollection(
+                userRoot.collection(INSTALLMENT_PLANS),
+                snapshotRoot.collection(INSTALLMENT_PLANS),
+            )
             copyCollection(
                 userRoot.collection(RECURRING_TRANSACTIONS),
                 snapshotRoot.collection(RECURRING_TRANSACTIONS),
@@ -534,7 +551,7 @@ class CloudBackupRepositoryImpl(
     private suspend fun deleteSnapshot(snapshotRef: com.google.firebase.firestore.DocumentReference) {
         val subcollections = listOf(
             ACCOUNTS, CATEGORIES, TRANSACTIONS, TRANSACTION_SPLIT_ITEMS, BUDGETS,
-            DEBTS, DEBT_REMINDERS, SAVINGS_GOALS, RECURRING_TRANSACTIONS,
+            DEBTS, DEBT_REMINDERS, SAVINGS_GOALS, INSTALLMENT_PLANS, RECURRING_TRANSACTIONS,
             SHOPPING_LISTS, SHOPPING_LIST_ITEMS, PENDING_TRANSACTIONS, SETTINGS, META,
         )
         subcollections.forEach { name ->
@@ -571,6 +588,7 @@ class CloudBackupRepositoryImpl(
         private const val DEBTS = "debts"
         private const val DEBT_REMINDERS = "debt_reminders"
         private const val SAVINGS_GOALS = "savings_goals"
+        private const val INSTALLMENT_PLANS = "installment_plans"
         private const val RECURRING_TRANSACTIONS = "recurring_transactions"
         private const val SHOPPING_LISTS = "shopping_lists"
         private const val SHOPPING_LIST_ITEMS = "shopping_list_items"

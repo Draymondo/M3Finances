@@ -6,6 +6,7 @@ import androidx.compose.material.icons.outlined.Autorenew
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.CurrencyExchange
 import androidx.compose.material.icons.outlined.DateRange
+import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material.icons.outlined.Handshake
 import androidx.compose.material.icons.outlined.Savings
 import androidx.compose.material.icons.outlined.Schedule
@@ -91,6 +92,13 @@ class ToolsViewModel(
                     usageCount = usageMap[ToolType.CURRENCY_CONVERTER] ?: 0,
                 ),
                 ToolItemUiModel(
+                    type = ToolType.INSTALLMENT_PLANS,
+                    titleRes = R.string.installment_plans_settings,
+                    subtitleRes = R.string.installment_plans_settings_subtitle,
+                    icon = Icons.Outlined.Payments,
+                    usageCount = usageMap[ToolType.INSTALLMENT_PLANS] ?: 0,
+                ),
+                ToolItemUiModel(
                     type = ToolType.CALENDAR,
                     titleRes = R.string.calendar_settings,
                     subtitleRes = R.string.calendar_settings_subtitle,
@@ -122,6 +130,7 @@ class ToolsViewModel(
             ToolType.WORK_TIME -> appComposeNavigator.navigate(ExpenseManagerScreens.WorkTimeCalculator)
             ToolType.CURRENCY_CONVERTER -> appComposeNavigator.navigate(ExpenseManagerScreens.CurrencyConverter)
             ToolType.CALENDAR -> appComposeNavigator.navigate(ExpenseManagerScreens.Calendar)
+            ToolType.INSTALLMENT_PLANS -> appComposeNavigator.navigate(ExpenseManagerScreens.InstallmentPlanList)
         }
     }
 }

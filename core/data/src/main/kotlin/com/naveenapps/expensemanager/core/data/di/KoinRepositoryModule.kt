@@ -14,6 +14,7 @@ import com.naveenapps.expensemanager.core.data.repository.RecurringTransactionRe
 import com.naveenapps.expensemanager.core.data.repository.DebtRepositoryImpl
 import com.naveenapps.expensemanager.core.data.repository.DebtReminderRepositoryImpl
 import com.naveenapps.expensemanager.core.data.repository.EnvelopeRepositoryImpl
+import com.naveenapps.expensemanager.core.data.repository.InstallmentPlanRepositoryImpl
 import com.naveenapps.expensemanager.core.data.repository.SavingsGoalRepositoryImpl
 import com.naveenapps.expensemanager.core.data.repository.ShoppingListRepositoryImpl
 import com.naveenapps.expensemanager.core.data.repository.ShoppingListItemRepositoryImpl
@@ -61,6 +62,7 @@ import com.naveenapps.expensemanager.core.repository.RecurringTransactionReposit
 import com.naveenapps.expensemanager.core.repository.DebtRepository
 import com.naveenapps.expensemanager.core.repository.DebtReminderRepository
 import com.naveenapps.expensemanager.core.repository.EnvelopeRepository
+import com.naveenapps.expensemanager.core.repository.InstallmentPlanRepository
 import com.naveenapps.expensemanager.core.repository.SavingsGoalRepository
 import com.naveenapps.expensemanager.core.repository.ShoppingListRepository
 import com.naveenapps.expensemanager.core.repository.ShoppingListItemRepository
@@ -205,6 +207,13 @@ val RepositoryModule = module {
             dispatchers = get(),
         )
     }
+    single<InstallmentPlanRepository> {
+        InstallmentPlanRepositoryImpl(
+            installmentPlanDao = get(),
+            accountDao = get(),
+            dispatchers = get(),
+        )
+    }
     single<EnvelopeRepository> {
         EnvelopeRepositoryImpl(
             envelopeDao = get(),
@@ -246,6 +255,7 @@ val RepositoryModule = module {
             debtDao = get(),
             debtReminderDao = get(),
             savingsGoalDao = get(),
+            installmentPlanDao = get(),
             recurringTransactionDao = get(),
             cloudBackupScheduler = get(),
             shoppingListDao = get(),

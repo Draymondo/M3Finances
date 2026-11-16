@@ -30,7 +30,16 @@ enum class AccountType {
     /**
      * Account type for "Coffre" (Vault/Safe)
      */
-    VAULT
+    VAULT,
+
+    /**
+     * Hidden account created automatically for each installment plan ("Paiements échelonnés"
+     * feature) — accumulates the payments transferred in from a real account, same
+     * "hidden counterparty" shape as [DEBT] and [SAVINGS_GOAL] (see `InstallmentPlan` for the
+     * full design). Never shown in the normal account list, the transaction account picker, or
+     * the dashboard's net balance; only reachable through the installment plan feature itself.
+     */
+    INSTALLMENT,
 }
 
 fun AccountType.isRegular() = this == AccountType.REGULAR
@@ -44,3 +53,5 @@ fun AccountType.isDebt() = this == AccountType.DEBT
 fun AccountType.isSavingsGoal() = this == AccountType.SAVINGS_GOAL
 
 fun AccountType.isVault() = this == AccountType.VAULT
+
+fun AccountType.isInstallment() = this == AccountType.INSTALLMENT

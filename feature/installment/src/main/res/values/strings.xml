@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="installment_plans">Installment payments</string>
+    <string name="no_installment_plans_available">No installment plan yet\nTap + to add one</string>
+    <string name="deadline_on">Deadline: %1$s</string>
+    <string name="no_deadline">No deadline</string>
+    <string name="days_left">%1$d days left</string>
+    <string name="overdue_by">%1$d days overdue</string>
+    <string name="of_target">of %1$s</string>
+    <string name="left_to_pay">Left to pay</string>
+
+    <string name="create_installment_plan">New installment plan</string>
+    <string name="edit_installment_plan">Edit installment plan</string>
+    <string name="delete_installment_plan">Delete installment plan</string>
+    <string name="save">Save</string>
+    <string name="paid_amount">Amount paid</string>
+    <string name="paid_so_far">Paid so far</string>
+    <string name="details">Details</string>
+    <string name="plan_name">What are you paying for?</string>
+    <string name="plan_name_error">Name shouldn\'t be blank</string>
+    <string name="target_price">Final price</string>
+    <string name="amount_error">Amount should be greater than 0</string>
+    <string name="notes">Notes</string>
+    <string name="record_payment">Record a payment</string>
+    <string name="payment">Payment</string>
+    <string name="refund">Refund</string>
+    <string name="payment_amount">Amount</string>
+    <string name="deadline">Deadline</string>
+    <string name="clear">Clear</string>
+    <string name="completed">Completed</string>
+    <string name="completed_message">Manually close this plan even if the amount paid isn\'t exactly at the final price</string>
+    <string name="payment_history">Payment history</string>
+    <string name="no_payments_yet">No payment recorded yet</string>
+    <string name="refund_badge">Refund</string>
+</resources>
