@@ -91,6 +91,59 @@ class WaveNotificationParserTest {
         assertThat(large.amount).isEqualTo(1234567.0)
     }
 
+    @Test
+    fun `headings without exclamation mark are recognized`() {
+        val result = recognized("Paiement réussi\n\nVous avez payé 1.000F à Boutique le 29 Aug 16h03.\nSolde Wave: 27.744F")
+        assertThat(result.amount).isEqualTo(1000.0)
+        assertThat(result.transactionType).isEqualTo(TransactionType.EXPENSE)
+    }
+
+    @Test
+    fun `amounts with no-break space thousands separator and F CFA suffix are recognized`() {
+        val result = recognized("Paiement réussi!\n\nVous avez payé 1\u00A0000\u00A0F\u00A0CFA à Boutique le 29 Aug 16h03.\nSolde Wave: 27\u00A0744\u00A0F\u00A0CFA")
+        assertThat(result.amount).isEqualTo(1000.0)
+        assertThat(result.balance).isEqualTo(27744.0)
+    }
+
+    @Test
+    fun `amounts with narrow no-break space thousands separator are recognized`() {
+        val result = recognized("Paiement réussi!\n\nVous avez payé 1\u202F000\u202FF à Boutique le 29 Aug 16h03.\nSolde Wave: 27\u202F744\u202FF")
+        assertThat(result.amount).isEqualTo(1000.0)
+        assertThat(result.balance).isEqualTo(27744.0)
+    }
+
+    @Test
+    fun `transfer with international phone prefix is recognized`() {
+        val result = recognized("Transfert reçu!\n\nVous avez reçu 10F De Raymond (+225 05 02 96 30 98)\n29/08/2026 à 00h46\nNouveau solde: 49F")
+        assertThat(result.partyPhone).isEqualTo("2250502963098")
+        assertThat(result.transactionType).isEqualTo(TransactionType.INCOME)
+    }
+
+    @Test
+    fun `generic solde label and dash numeric date are recognized`() {
+        val result = recognized("Dépôt réussi!\n\nVous avez déposé 3.000F chez KAR SERVICES le 29-08-2026 à 15h56.\nSolde: 28.744F")
+        assertThat(result.amount).isEqualTo(3000.0)
+        assertThat(result.balance).isEqualTo(28744.0)
+    }
+
+    @Test
+    fun `nouveau solde wave label is recognized`() {
+        val result = recognized("Retrait réussi!\n\nVous avez retiré 5.000F chez Agent le 29/08/2026 à 15h43.\nNouveau solde Wave: 20.000F")
+        assertThat(result.balance).isEqualTo(20000.0)
+    }
+
+    @Test
+    fun `decimal amounts are parsed with french convention`() {
+        val result = recognized("Paiement réussi!\n\nVous avez payé 1.000,50F à Boutique le 29 Aug 16h03.\nSolde Wave: 27.744F")
+        assertThat(result.amount).isEqualTo(1000.5)
+    }
+
+    @Test
+    fun `single dot with one or two fraction digits is a decimal`() {
+        val result = recognized("Paiement réussi!\n\nVous avez payé 1.50F à Boutique le 29 Aug 16h03.\nSolde Wave: 27.744F")
+        assertThat(result.amount).isEqualTo(1.5)
+    }
+
     private fun recognized(text: String, postTime: Long? = postTime(2026, Calendar.AUGUST, 29, 15, 0)): ParsedWaveTransaction {
         val result = parser.parse(text, postTime, zone)
         assertThat(result).isInstanceOf(WaveParseResult.Recognized::class.java)

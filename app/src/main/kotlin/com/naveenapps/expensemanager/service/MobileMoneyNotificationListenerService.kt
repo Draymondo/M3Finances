@@ -55,6 +55,9 @@ class MobileMoneyNotificationListenerService : NotificationListenerService() {
             messages = messages,
         )
         if (fullText.isBlank()) {
+            // Cause fréquente de « notification non lue » : notification récapitulative de groupe
+            // ou notification vide (mise à jour). Tracée sans contenu pour le diagnostic.
+            Log.d(TAG, "Notification ignorée (texte vide) depuis $packageName")
             return
         }
 
