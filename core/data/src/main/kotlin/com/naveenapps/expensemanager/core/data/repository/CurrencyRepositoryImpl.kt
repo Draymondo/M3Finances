@@ -74,11 +74,11 @@ class CurrencyRepositoryImpl(
 
         return when (currency.position) {
             CurrencyPosition.PREFIX -> {
-                "${currency.symbol}${currencyFormatted}"
+                "${currency.symbol}\u00A0${currencyFormatted}"
             }
 
             CurrencyPosition.SUFFIX -> {
-                "${currencyFormatted}${currency.symbol}"
+                "${currencyFormatted}\u00A0${currency.symbol}"
             }
         }
     }

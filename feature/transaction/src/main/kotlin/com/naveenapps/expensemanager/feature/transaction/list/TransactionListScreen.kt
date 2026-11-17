@@ -280,6 +280,7 @@ private fun TransactionGroupCard(
                     categoryIcon = item.categoryIcon.name,
                     amount = item.amount,
                     date = item.date,
+                    showDate = false,
                     notes = item.notes,
                     transactionType = item.transactionType,
                     isSplit = item.isSplit,

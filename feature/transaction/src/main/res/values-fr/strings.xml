@@ -36,8 +36,8 @@
     <string name="optional_details">Détails facultatifs</string>
     <string name="select_account">Sélectionner un compte</string>
     <string name="select_category">Sélectionner une catégorie</string>
-    <string name="select_date">Sélectionner une date</string>
-    <string name="select_time">Sélectionner une heure</string>
+    <string name="select_date">Date</string>
+    <string name="select_time">Heure</string>
 
     <string name="transaction">Transaction</string>
     <string name="clear">Effacer</string>

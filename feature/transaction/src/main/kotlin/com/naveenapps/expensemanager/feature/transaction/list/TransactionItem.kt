@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.naveenapps.designsystem.theme.NaveenAppsPreviewTheme
 import com.naveenapps.designsystem.utils.AppPreviewsLightAndDarkMode
+import com.naveenapps.expensemanager.core.designsystem.components.AmountText
 import com.naveenapps.expensemanager.core.designsystem.ui.components.AppCardView
 import com.naveenapps.expensemanager.core.designsystem.ui.extensions.getDrawable
 import com.naveenapps.expensemanager.core.designsystem.ui.utils.getColorValue
@@ -82,6 +83,7 @@ fun TransactionItem(
     isSplit: Boolean = false,
     splitLabel: String? = null,
     isSelected: Boolean = false,
+    showDate: Boolean = true,
     onEdit: (() -> Unit)? = null,
     onDelete: (() -> Unit)? = null,
     onClick: (() -> Unit)? = null,
@@ -236,7 +238,7 @@ fun TransactionItem(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             style = MaterialTheme.typography.bodySmall.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
                                 fontSize = 12.sp,
                             ),
                             modifier = Modifier.fillMaxWidth(),
@@ -264,25 +266,28 @@ fun TransactionItem(
                     else -> "" to Color.Unspecified
                 }
 
-                Text(
+                AmountText(
                     text = "$prefix${amount.amountString ?: ""}",
-                    style = MaterialTheme.typography.titleMedium.copy(
+                    numberStyle = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 15.sp,
                         letterSpacing = (-0.3).sp,
                     ),
                     color = amountColor,
+                    unitSizeFactor = 0.55f,
                 )
 
-                Spacer(Modifier.height(2.dp))
+                if (showDate) {
+                    Spacer(Modifier.height(2.dp))
 
-                Text(
-                    text = date,
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                        fontSize = 11.sp,
-                    ),
-                )
+                    Text(
+                        text = date,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                            fontSize = 11.sp,
+                        ),
+                    )
+                }
             }
         }
     }
@@ -360,6 +365,37 @@ private fun AccountSubtitle(
             ),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
+        )
+        if (accountName.trim().equals("wave", ignoreCase = true)) {
+            Spacer(Modifier.width(6.dp))
+            WaveBadge()
+        }
+    }
+}
+
+/**
+ * Small brand chip shown next to a Wave account — blue-tinted, hairline border,
+ * translucent background. Wave brand cyan (#1DC4EF) chosen for legibility on
+ * the dark OLED surface.
+ */
+@Composable
+private fun WaveBadge(modifier: Modifier = Modifier) {
+    val waveBlue = Color(0xFF1DC4EF)
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(4.dp))
+            .background(waveBlue.copy(alpha = 0.14f))
+            .border(1.dp, waveBlue.copy(alpha = 0.38f), RoundedCornerShape(4.dp))
+            .padding(horizontal = 5.dp, vertical = 1.dp),
+    ) {
+        Text(
+            text = "WAVE",
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontSize = 8.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.8.sp,
+            ),
+            color = waveBlue,
         )
     }
 }

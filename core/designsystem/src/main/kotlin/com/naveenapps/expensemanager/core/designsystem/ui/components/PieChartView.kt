@@ -67,11 +67,10 @@ fun PieChartView(
                     setDrawSlicesUnderHole(false)
 
                     // ── Centre text ─────────────────────────────────
-                    // Bold typeface + slightly smaller size for a cleaner
-                    // look than the default regular-weight text.
+                    // Bold typeface — same size whether labels are shown or not.
                     setDrawCenterText(true)
                     setCenterTextColor(onBackgroundColor)
-                    setCenterTextSize(if (hideValues) 12f else 15f)
+                    setCenterTextSize(15f)
                     setCenterTextTypeface(android.graphics.Typeface.DEFAULT_BOLD)
                     centerText = totalAmountText
 

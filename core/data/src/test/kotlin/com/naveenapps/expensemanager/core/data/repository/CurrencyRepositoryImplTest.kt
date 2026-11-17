@@ -108,7 +108,7 @@ class CurrencyRepositoryImplTest : BaseCoroutineTest() {
         val formattedAmount = repository.getFormattedCurrency(amount)
         Truth.assertThat(formattedAmount).isNotNull()
         Truth.assertThat(formattedAmount.amount).isEqualTo(amount.amount)
-        Truth.assertThat(formattedAmount.amountString).isEqualTo("100.0$")
+        Truth.assertThat(formattedAmount.amountString).isEqualTo("100.0\u00A0$")
     }
 
     @Test
@@ -117,7 +117,7 @@ class CurrencyRepositoryImplTest : BaseCoroutineTest() {
         val formattedAmount = repository.getFormattedCurrency(passedAmount)
         Truth.assertThat(formattedAmount).isNotNull()
         Truth.assertThat(formattedAmount.amount).isEqualTo(passedAmount.amount)
-        Truth.assertThat(formattedAmount.amountString).isEqualTo("120.0€")
+        Truth.assertThat(formattedAmount.amountString).isEqualTo("120.0\u00A0€")
     }
 
     @Test
@@ -132,7 +132,7 @@ class CurrencyRepositoryImplTest : BaseCoroutineTest() {
         val formattedAmount = repository.getFormattedCurrency(passedAmount)
         Truth.assertThat(formattedAmount).isNotNull()
         Truth.assertThat(formattedAmount.amount).isEqualTo(passedAmount.amount)
-        Truth.assertThat(formattedAmount.amountString).isEqualTo("€120.0")
+        Truth.assertThat(formattedAmount.amountString).isEqualTo("€\u00A0120.0")
     }
 
     @Test
@@ -151,7 +151,7 @@ class CurrencyRepositoryImplTest : BaseCoroutineTest() {
         val formattedAmount = repository.getFormattedCurrency(passedAmount)
         Truth.assertThat(formattedAmount).isNotNull()
         Truth.assertThat(formattedAmount.amount).isEqualTo(passedAmount.amount)
-        Truth.assertThat(formattedAmount.amountString).isEqualTo("€1,200")
+        Truth.assertThat(formattedAmount.amountString).isEqualTo("€\u00A01,200")
     }
 
     @Test
@@ -170,7 +170,7 @@ class CurrencyRepositoryImplTest : BaseCoroutineTest() {
         val formattedAmount = repository.getFormattedCurrency(passedAmount)
         Truth.assertThat(formattedAmount).isNotNull()
         Truth.assertThat(formattedAmount.amount).isEqualTo(passedAmount.amount)
-        Truth.assertThat(formattedAmount.amountString).isEqualTo("-€1,200")
+        Truth.assertThat(formattedAmount.amountString).isEqualTo("-€\u00A01,200")
     }
 
     @Test
@@ -189,7 +189,7 @@ class CurrencyRepositoryImplTest : BaseCoroutineTest() {
         val formattedAmount = repository.getFormattedCurrency(passedAmount)
         Truth.assertThat(formattedAmount).isNotNull()
         Truth.assertThat(formattedAmount.amount).isEqualTo(passedAmount.amount)
-        Truth.assertThat(formattedAmount.amountString).isEqualTo("-€1,200,000,000")
+        Truth.assertThat(formattedAmount.amountString).isEqualTo("-€\u00A01,200,000,000")
     }
 
     @Test
@@ -208,6 +208,6 @@ class CurrencyRepositoryImplTest : BaseCoroutineTest() {
         val formattedAmount = repository.getFormattedCurrency(passedAmount)
         Truth.assertThat(formattedAmount).isNotNull()
         Truth.assertThat(formattedAmount.amount).isEqualTo(passedAmount.amount)
-        Truth.assertThat(formattedAmount.amountString).isEqualTo("-1,200,000,000.4€")
+        Truth.assertThat(formattedAmount.amountString).isEqualTo("-1,200,000,000.4\u00A0€")
     }
 }

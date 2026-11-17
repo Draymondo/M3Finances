@@ -15,6 +15,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalTextStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
@@ -39,6 +41,7 @@ fun AutoSelectTextField(
     leadingIcon: @Composable (() -> Unit)? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
     enabled: Boolean = true,
+    textStyle: TextStyle? = null,
 ) {
     var textFieldValue by remember {
         mutableStateOf(
@@ -91,6 +94,7 @@ fun AutoSelectTextField(
         minLines = minLines,
         keyboardOptions = keyboardOptions,
         enabled = enabled,
+        textStyle = textStyle,
     )
 }
 
@@ -111,6 +115,7 @@ fun AppTextField(
     leadingIcon: @Composable (() -> Unit)? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
     enabled: Boolean = true,
+    textStyle: TextStyle? = null,
 ) {
     OutlinedTextField(
         value = value,
@@ -125,6 +130,7 @@ fun AppTextField(
         shape = RoundedCornerShape(8.dp),
         isError = isError,
         enabled = enabled,
+        textStyle = textStyle ?: LocalTextStyle.current,
         supportingText = if (isError) {
             errorMessage.let {
                 { Text(it) }

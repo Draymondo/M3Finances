@@ -80,4 +80,10 @@
 
     <string name="app_lock">App Lock</string>
     <string name="app_lock_message">Require biometric or device credentials when opening the app</string>
+    <string name="tools_group_tracking">TRACK &amp; PLAN</string>
+    <string name="tools_group_money">MONEY &amp; GOALS</string>
+    <string name="tools_group_practice">PRACTICAL</string>
+    <string name="tool_new_badge">NEW</string>
+    <string name="tools_search_placeholder">Search tools…</string>
+    <string name="tools_empty">No tool matches your search</string>
 </resources>

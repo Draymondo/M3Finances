@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -31,8 +32,10 @@ import androidx.compose.material.icons.outlined.Calculate
 import androidx.compose.material.icons.outlined.EditCalendar
 import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -60,6 +63,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.naveenapps.designsystem.theme.NaveenAppsPreviewTheme
 import com.naveenapps.designsystem.utils.AppPreviewsLightAndDarkMode
 import com.naveenapps.expensemanager.core.common.utils.toCompleteDateWithDate
@@ -216,24 +220,39 @@ private fun TransactionCreateScreenContent(
                 },
             )
         },
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = { onAction.invoke(TransactionCreateAction.Save) },
-                icon = {
+        bottomBar = {
+            Surface(
+                color = MaterialTheme.colorScheme.background,
+            ) {
+                Button(
+                    onClick = { onAction.invoke(TransactionCreateAction.Save) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 16.dp, top = 8.dp)
+                        .height(52.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = androidx.compose.ui.graphics.Color(0xFF15803D),
+                        contentColor = androidx.compose.ui.graphics.Color.White,
+                    ),
+                ) {
                     Icon(
                         imageVector = if (state.isFutureDate && !state.showDeleteButton) Icons.Default.DateRange else Icons.Default.Done,
                         contentDescription = null,
                     )
-                },
-                text = {
+                    Spacer(Modifier.width(8.dp))
                     Text(
                         text = if (state.isFutureDate && !state.showDeleteButton)
                             stringResource(R.string.schedule)
                         else
-                            stringResource(R.string.save)
+                            stringResource(R.string.save),
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                        ),
                     )
-                },
-            )
+                }
+            }
         },
     ) { innerPadding ->
         TransactionCreateScreen(
@@ -390,6 +409,12 @@ private fun TransactionCreateContent(
                         onValueChange = state.amount.onValueChange,
                         label = R.string.amount,
                         errorMessage = stringResource(id = R.string.amount_error_message),
+                        textStyle = MaterialTheme.typography.headlineSmall.copy(
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Black,
+                            fontSize = 26.sp,
+                            letterSpacing = (-0.5).sp,
+                            fontFeatureSettings = "tnum",
+                        ),
                         trailingIcon = {
                             IconButton(
                                 onClick = { onAction.invoke(TransactionCreateAction.ShowNumberPad) },

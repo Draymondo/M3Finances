@@ -12,7 +12,7 @@
     <string name="budget_amount">Montant du budget</string>
     <string name="budget_amount_error">Le montant du budget ne doit pas être vide ou nul</string>
 
-    <string name="select_date">Sélectionner une date</string>
+    <string name="select_date">Date</string>
     <string name="select_account">Sélectionner un compte</string>
     <string name="clear_all">Tout effacer</string>
     <string name="select">Sélectionner</string>

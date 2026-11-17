@@ -41,6 +41,7 @@ class ToolsViewModel(
                     subtitleRes = R.string.recurring_transactions_settings_subtitle,
                     icon = Icons.Outlined.Autorenew,
                     usageCount = usageMap[ToolType.RECURRING_TRANSACTIONS] ?: 0,
+                    group = ToolGroup.TRACKING,
                 ),
                 ToolItemUiModel(
                     type = ToolType.DEBTS,
@@ -48,6 +49,7 @@ class ToolsViewModel(
                     subtitleRes = R.string.debts_settings_subtitle,
                     icon = Icons.Outlined.Handshake,
                     usageCount = usageMap[ToolType.DEBTS] ?: 0,
+                    group = ToolGroup.MONEY,
                 ),
                 ToolItemUiModel(
                     type = ToolType.SAVINGS_GOALS,
@@ -55,6 +57,7 @@ class ToolsViewModel(
                     subtitleRes = R.string.savings_goals_settings_subtitle,
                     icon = Icons.Outlined.Savings,
                     usageCount = usageMap[ToolType.SAVINGS_GOALS] ?: 0,
+                    group = ToolGroup.MONEY,
                 ),
                 ToolItemUiModel(
                     type = ToolType.SHOPPING_LISTS,
@@ -62,6 +65,7 @@ class ToolsViewModel(
                     subtitleRes = R.string.shopping_lists_settings_subtitle,
                     icon = Icons.Outlined.ShoppingCart,
                     usageCount = usageMap[ToolType.SHOPPING_LISTS] ?: 0,
+                    group = ToolGroup.TRACKING,
                 ),
                 ToolItemUiModel(
                     type = ToolType.SCHEDULED_TRANSACTIONS,
@@ -69,6 +73,7 @@ class ToolsViewModel(
                     subtitleRes = R.string.scheduled_transactions_settings_subtitle,
                     icon = Icons.Outlined.DateRange,
                     usageCount = usageMap[ToolType.SCHEDULED_TRANSACTIONS] ?: 0,
+                    group = ToolGroup.TRACKING,
                 ),
                 ToolItemUiModel(
                     type = ToolType.ENVELOPES,
@@ -76,6 +81,7 @@ class ToolsViewModel(
                     subtitleRes = R.string.envelopes_settings_subtitle,
                     icon = Icons.Outlined.AccountBalanceWallet,
                     usageCount = usageMap[ToolType.ENVELOPES] ?: 0,
+                    group = ToolGroup.MONEY,
                 ),
                 ToolItemUiModel(
                     type = ToolType.WORK_TIME,
@@ -83,6 +89,7 @@ class ToolsViewModel(
                     subtitleRes = R.string.work_time_settings_subtitle,
                     icon = Icons.Outlined.Schedule,
                     usageCount = usageMap[ToolType.WORK_TIME] ?: 0,
+                    group = ToolGroup.PRACTICE,
                 ),
                 ToolItemUiModel(
                     type = ToolType.CURRENCY_CONVERTER,
@@ -90,6 +97,7 @@ class ToolsViewModel(
                     subtitleRes = R.string.currency_converter_settings_tool_subtitle,
                     icon = Icons.Outlined.CurrencyExchange,
                     usageCount = usageMap[ToolType.CURRENCY_CONVERTER] ?: 0,
+                    group = ToolGroup.PRACTICE,
                 ),
                 ToolItemUiModel(
                     type = ToolType.INSTALLMENT_PLANS,
@@ -97,6 +105,8 @@ class ToolsViewModel(
                     subtitleRes = R.string.installment_plans_settings_subtitle,
                     icon = Icons.Outlined.Payments,
                     usageCount = usageMap[ToolType.INSTALLMENT_PLANS] ?: 0,
+                    group = ToolGroup.MONEY,
+                    isNew = true,
                 ),
                 ToolItemUiModel(
                     type = ToolType.CALENDAR,
@@ -104,6 +114,7 @@ class ToolsViewModel(
                     subtitleRes = R.string.calendar_settings_subtitle,
                     icon = Icons.Outlined.CalendarMonth,
                     usageCount = usageMap[ToolType.CALENDAR] ?: 0,
+                    group = ToolGroup.TRACKING,
                 ),
             )
             val sorted = allTools.sortedByDescending { it.usageCount }

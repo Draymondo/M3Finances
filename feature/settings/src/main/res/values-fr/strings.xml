@@ -80,4 +80,10 @@
 
     <string name="app_lock">Verrouillage de l\'application</string>
     <string name="app_lock_message">Exiger une authentification biométrique ou les identifiants de l\'appareil à l\'ouverture de l\'application</string>
+    <string name="tools_group_tracking">SUIVI &amp; PLANIFICATION</string>
+    <string name="tools_group_money">ARGENT &amp; OBJECTIFS</string>
+    <string name="tools_group_practice">PRATIQUE</string>
+    <string name="tool_new_badge">NOUVEAU</string>
+    <string name="tools_search_placeholder">Rechercher un outil…</string>
+    <string name="tools_empty">Aucun outil ne correspond à votre recherche</string>
 </resources>

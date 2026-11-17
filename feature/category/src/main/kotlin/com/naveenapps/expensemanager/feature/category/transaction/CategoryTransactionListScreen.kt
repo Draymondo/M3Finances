@@ -210,7 +210,8 @@ private fun CategoryTransactionListScreenContent(
                                     )
                                 },
                                 chartHeight = 600,
-                                hideValues = state.data.hideValues,
+                                // Donut without surrounding labels — amounts live in the list below
+                                hideValues = true,
                                 modifier = Modifier
                                     .padding(vertical = 12.dp)
                                     .clickable(indicationSource, null) {
