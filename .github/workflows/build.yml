@@ -52,9 +52,12 @@ jobs:
         if: failure()
         run: |
           if [ -f gradle-build.log ]; then
-            grep -E "^e: |^w: .*error|error:|Execution failed for task|What went wrong|Caused by:" gradle-build.log \
-              | head -n 40 \
-              | sed -e 's/%/%25/g' -e 's/\r//g' \
+            {
+              grep -E "^e: " gradle-build.log | head -n 25
+              awk '/What went wrong/{flag=1; n=0} flag && n<25 {print; n++}' gradle-build.log | head -n 25
+              grep -E "Caused by:" gradle-build.log | head -n 10
+              grep -E "FAILED$" gradle-build.log | head -n 10
+            } | sed -e 's/%/%25/g' -e 's/\r//g' \
               | while IFS= read -r line; do
                   echo "::error::$line"
                 done
@@ -98,15 +101,18 @@ jobs:
       - name: Run Unit Tests
         run: |
           set -o pipefail
-          ./gradlew testDebugUnitTest 2>&1 | tee gradle-test.log
+          ./gradlew --no-configuration-cache --stacktrace testDebugUnitTest 2>&1 | tee gradle-test.log
 
       - name: Publish test errors as annotations
         if: failure()
         run: |
           if [ -f gradle-test.log ]; then
-            grep -E "^e: |error:|FAILED|Execution failed for task|What went wrong|Caused by:" gradle-test.log \
-              | head -n 40 \
-              | sed -e 's/%/%25/g' -e 's/\r//g' \
+            {
+              grep -E "^e: " gradle-test.log | head -n 25
+              awk '/What went wrong/{flag=1; n=0} flag && n<25 {print; n++}' gradle-test.log | head -n 25
+              grep -E "Caused by:" gradle-test.log | head -n 10
+              grep -E "FAILED$|failing tests|There were failing" gradle-test.log | head -n 10
+            } | sed -e 's/%/%25/g' -e 's/\r//g' \
               | while IFS= read -r line; do
                   echo "::error::$line"
                 done
