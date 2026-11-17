@@ -107,6 +107,9 @@ class ToolsViewModel(
         when (action) {
             ToolsAction.ClosePage -> appComposeNavigator.popBackStack()
             is ToolsAction.OpenTool -> openTool(action.type)
+            is ToolsAction.UpdateSearchQuery -> _state.update { current ->
+                current.copy(searchQuery = action.query)
+            }
         }
     }
 

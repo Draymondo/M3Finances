@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
@@ -39,6 +41,7 @@ fun AutoSelectTextField(
     leadingIcon: @Composable (() -> Unit)? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
     enabled: Boolean = true,
+    textStyle: TextStyle? = null,
 ) {
     var textFieldValue by remember {
         mutableStateOf(
@@ -91,6 +94,7 @@ fun AutoSelectTextField(
         minLines = minLines,
         keyboardOptions = keyboardOptions,
         enabled = enabled,
+        textStyle = textStyle,
     )
 }
 
@@ -111,6 +115,7 @@ fun AppTextField(
     leadingIcon: @Composable (() -> Unit)? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
     enabled: Boolean = true,
+    textStyle: TextStyle? = null,
 ) {
     OutlinedTextField(
         value = value,
@@ -140,6 +145,7 @@ fun AppTextField(
         minLines = minLines,
         maxLines = maxLines,
         keyboardOptions = keyboardOptions,
+        textStyle = textStyle ?: LocalTextStyle.current,
     )
 }
 

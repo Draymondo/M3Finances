@@ -56,6 +56,13 @@
     <string name="calendar_settings">Calendrier financier</string>
     <string name="calendar_settings_subtitle">Visualise tes revenus, dépenses et solde au jour le jour sur un calendrier</string>
 
+    <!-- Écran Outils : recherche + groupes sémantiques (sans badge « NOUVEAU ») -->
+    <string name="search_tools_hint">Rechercher un outil…</string>
+    <string name="tools_group_planning">Suivi &amp; planification</string>
+    <string name="tools_group_money">Argent &amp; objectifs</string>
+    <string name="tools_group_utility">Pratique</string>
+    <string name="no_tool_matches">Aucun outil ne correspond à « %1$s »</string>
+
     <string name="personalization">Personnalisation</string>
     <string name="notifications">Notifications</string>
     <string name="data_and_backup"><![CDATA[Données & sauvegarde]]></string>

@@ -200,8 +200,10 @@ private fun CategoryTransactionListScreenContent(
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
                             PieChartView(
-                                totalAmountText = (if (isExpense) stringResource(id = R.string.expense)
-                                else stringResource(id = R.string.income)) + "\n" + state.data.totalAmount.amountString,
+                                // Le centre du donut ne porte plus que le total :
+                                // le titre « Dépenses / Revenus » est déjà donné
+                                // par l'en-tête de section juste en dessous.
+                                totalAmountText = state.data.totalAmount.amountString ?: "",
                                 chartData = state.data.pieChartData.map {
                                     PieChartUiData(
                                         it.titleResId?.let { resId -> stringResource(resId) } ?: it.name,
@@ -210,7 +212,8 @@ private fun CategoryTransactionListScreenContent(
                                     )
                                 },
                                 chartHeight = 600,
-                                hideValues = state.data.hideValues,
+                                hideValues = true,
+                                centerTextSize = 15f,
                                 modifier = Modifier
                                     .padding(vertical = 12.dp)
                                     .clickable(indicationSource, null) {
@@ -274,6 +277,10 @@ private fun CategoryTransactionListScreenContent(
                 } else {
 
                     // ── Category list — single grouped card ────────
+                    // La plus grosse catégorie cale sa barre sur 100 % et les
+                    // autres suivent en proportion directe : la hiérarchie se
+                    // lit d'un coup d'œil, sans barres toutes courtes.
+                    val maxPercent = categoryTransactions.maxOfOrNull { it.percent } ?: 0f
                     item(key = "category_list") {
                         Column(
                             modifier = Modifier
@@ -305,6 +312,11 @@ private fun CategoryTransactionListScreenContent(
                                         iconBackgroundColor = categoryTransaction.category.storedIcon.backgroundColor,
                                         amount = categoryTransaction.amount.amountString ?: "",
                                         percentage = categoryTransaction.percent,
+                                        barFraction = if (maxPercent > 0f) {
+                                            categoryTransaction.percent / maxPercent
+                                        } else {
+                                            0f
+                                        },
                                     )
                                 }
                             }

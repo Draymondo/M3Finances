@@ -7,10 +7,10 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -46,7 +46,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import com.naveenapps.expensemanager.feature.transaction.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
@@ -54,11 +53,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.naveenapps.designsystem.theme.NaveenAppsPreviewTheme
 import com.naveenapps.designsystem.utils.AppPreviewsLightAndDarkMode
+import com.naveenapps.expensemanager.core.designsystem.ui.components.AmountText
 import com.naveenapps.expensemanager.core.designsystem.ui.components.AppCardView
 import com.naveenapps.expensemanager.core.designsystem.ui.extensions.getDrawable
 import com.naveenapps.expensemanager.core.designsystem.ui.utils.getColorValue
 import com.naveenapps.expensemanager.core.model.Amount
 import com.naveenapps.expensemanager.core.model.TransactionType
+import com.naveenapps.expensemanager.feature.transaction.R
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -79,6 +80,7 @@ fun TransactionItem(
     toAccountIcon: String? = null,
     toAccountColor: String? = null,
     transactionType: TransactionType = TransactionType.EXPENSE,
+    showDate: Boolean = true,
     isSplit: Boolean = false,
     splitLabel: String? = null,
     isSelected: Boolean = false,
@@ -247,7 +249,7 @@ fun TransactionItem(
 
             Spacer(Modifier.width(12.dp))
 
-            // ── Amount + date ──────────────────────────────────────
+            // ── Amount (+ date only where the row is the only context) ─
             Column(
                 modifier = Modifier
                     .wrapContentSize()
@@ -264,8 +266,8 @@ fun TransactionItem(
                     else -> "" to Color.Unspecified
                 }
 
-                Text(
-                    text = "$prefix${amount.amountString ?: ""}",
+                AmountText(
+                    amount = "$prefix${amount.amountString ?: ""}",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 15.sp,
@@ -274,15 +276,20 @@ fun TransactionItem(
                     color = amountColor,
                 )
 
-                Spacer(Modifier.height(2.dp))
+                // La date est portée par l'en-tête de section (liste des
+                // transactions, accueil). On ne la répète sur chaque ligne que
+                // là où aucun en-tête ne la donne (calendrier, détails…).
+                if (showDate) {
+                    Spacer(Modifier.height(2.dp))
 
-                Text(
-                    text = date,
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                        fontSize = 11.sp,
-                    ),
-                )
+                    Text(
+                        text = date,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                            fontSize = 11.sp,
+                        ),
+                    )
+                }
             }
         }
     }

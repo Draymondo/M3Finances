@@ -56,6 +56,13 @@
     <string name="calendar_settings">Financial Calendar</string>
     <string name="calendar_settings_subtitle">View daily income, expenses and net balance on a calendar</string>
 
+    <!-- Tools screen: search + semantic groups (no "NEW" badge) -->
+    <string name="search_tools_hint">Search a tool…</string>
+    <string name="tools_group_planning">Planning &amp; tracking</string>
+    <string name="tools_group_money">Money &amp; goals</string>
+    <string name="tools_group_utility">Practical</string>
+    <string name="no_tool_matches">No tool matches “%1$s”</string>
+
     <string name="personalization">Personalization</string>
     <string name="notifications">Notifications</string>
     <string name="data_and_backup"><![CDATA[Data & Backup]]></string>

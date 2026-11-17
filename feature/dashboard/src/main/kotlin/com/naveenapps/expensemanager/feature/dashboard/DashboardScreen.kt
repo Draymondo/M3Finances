@@ -523,6 +523,7 @@ private fun DashboardScreenContent(
                         date = transaction.date,
                         notes = transaction.notes,
                         transactionType = transaction.transactionType,
+                        showDate = false,
                         fromAccountName = transaction.fromAccountName,
                         fromAccountIcon = transaction.fromAccountIcon.name,
                         fromAccountColor = transaction.fromAccountIcon.backgroundColor,

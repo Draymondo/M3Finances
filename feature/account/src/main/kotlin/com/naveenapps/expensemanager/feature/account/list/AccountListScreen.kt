@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.naveenapps.designsystem.theme.NaveenAppsPreviewTheme
 import com.naveenapps.expensemanager.core.designsystem.components.EmptyItem
+import com.naveenapps.expensemanager.core.designsystem.ui.components.AmountText
 import com.naveenapps.expensemanager.core.designsystem.ui.components.AppCardView
 import com.naveenapps.expensemanager.core.designsystem.ui.components.AppCardViewDefaults
 import com.naveenapps.expensemanager.core.designsystem.ui.components.ExpenseManagerTopAppBar
@@ -285,15 +286,13 @@ fun DashBoardAccountItem(
             Spacer(Modifier.height(12.dp))
 
             // ── Amount ─────────────────────────────────────────────
-            Text(
-                text = amount,
+            AmountText(
+                amount = amount,
                 color = amountTextColor,
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
                     letterSpacing = (-0.3).sp,
                 ),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
             )
 
             Spacer(Modifier.height(4.dp))

@@ -13,4 +13,5 @@ data class ToolItemUiModel(
 
 data class ToolsState(
     val tools: List<ToolItemUiModel> = emptyList(),
+    val searchQuery: String = "",
 )

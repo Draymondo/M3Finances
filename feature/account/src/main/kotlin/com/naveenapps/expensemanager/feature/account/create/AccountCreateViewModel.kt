@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.naveenapps.expensemanager.core.common.R
+import com.naveenapps.expensemanager.core.common.utils.getAmountTextColor
 import com.naveenapps.expensemanager.core.domain.usecase.account.AddAccountUseCase
 import com.naveenapps.expensemanager.core.domain.usecase.account.DeleteAccountUseCase
 import com.naveenapps.expensemanager.core.domain.usecase.account.FindAccountByIdUseCase
@@ -148,12 +149,10 @@ class AccountCreateViewModel(
         }
     }
 
+    // Même règle que partout ailleurs : négatif = rouge, positif = vert,
+    // zéro = gris muet (ne pas mettre en avant un solde inexistant).
     private fun getBalanceBackgroundColor(totalAmount: Double): Int {
-        return if (totalAmount < 0) {
-            R.color.red_500
-        } else {
-            R.color.green_500
-        }
+        return totalAmount.getAmountTextColor()
     }
 
     private fun readAccountInfo(accountId: String?) {
