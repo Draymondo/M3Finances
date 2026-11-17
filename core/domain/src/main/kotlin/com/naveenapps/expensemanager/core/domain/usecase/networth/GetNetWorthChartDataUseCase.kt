@@ -15,6 +15,7 @@ import com.naveenapps.expensemanager.core.model.GroupType
 import com.naveenapps.expensemanager.core.model.Transaction
 import com.naveenapps.expensemanager.core.model.isDebt
 import com.naveenapps.expensemanager.core.model.isIncome
+import com.naveenapps.expensemanager.core.model.isInstallment
 import com.naveenapps.expensemanager.core.model.isSavingsGoal
 import com.naveenapps.expensemanager.core.model.isTransfer
 import com.naveenapps.expensemanager.core.repository.AccountRepository
@@ -44,8 +45,9 @@ import kotlin.time.ExperimentalTime
  * ever happened). Walking chronologically forward and accumulating that sum bucket by bucket
  * avoids recomputing it from scratch at each point.
  *
- * "Visible" mirrors `GetAllAccountsUseCase`: the hidden [com.naveenapps.expensemanager.core.model.AccountType.DEBT]
- * and [com.naveenapps.expensemanager.core.model.AccountType.SAVINGS_GOAL] counterparty accounts are excluded, so
+ * "Visible" mirrors `GetAllAccountsUseCase`: the hidden [com.naveenapps.expensemanager.core.model.AccountType.DEBT],
+ * [com.naveenapps.expensemanager.core.model.AccountType.SAVINGS_GOAL] and
+ * [com.naveenapps.expensemanager.core.model.AccountType.INSTALLMENT] counterparty accounts are excluded, so
  * (consistent with how those already affect the dashboard's current total) contributing to a
  * goal or lending money shows up here as the visible dip it already causes today — this chart
  * just shows that dip's history instead of only its latest value.
@@ -76,7 +78,7 @@ class GetNetWorthChartDataUseCase(
             }
 
             val visibleAccountIds = accounts
-                .filterNot { it.type.isDebt() || it.type.isSavingsGoal() }
+                .filterNot { it.type.isDebt() || it.type.isSavingsGoal() || it.type.isInstallment() }
                 .map { it.id }
                 .toSet()
 
@@ -157,7 +159,7 @@ class GetNetWorthChartDataUseCase(
     }
 
     /** This transaction's net effect on the combined balance of every *visible* account (i.e.
-     * excluding [com.naveenapps.expensemanager.core.model.AccountType.DEBT]/[com.naveenapps.expensemanager.core.model.AccountType.SAVINGS_GOAL]
+     * excluding [com.naveenapps.expensemanager.core.model.AccountType.DEBT]/[com.naveenapps.expensemanager.core.model.AccountType.SAVINGS_GOAL]/[com.naveenapps.expensemanager.core.model.AccountType.INSTALLMENT]
      * hidden accounts) — mirrors the sign conventions `TransactionRepositoryImpl`/`TransactionDao`
      * use to actually apply a transaction to account balances, just without touching the
      * database. A transfer between two visible accounts nets to zero here, same as it does on

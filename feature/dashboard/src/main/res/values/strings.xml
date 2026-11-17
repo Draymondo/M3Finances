@@ -17,6 +17,7 @@
     <string name="ok">OK</string>
     <string name="no_budget_for_month">No %1$s</string>
     <string name="tap_to_set_spending_limit">Tap to set a spending limit</string>
+    <string name="tap_to_set_spending_limit_for_category">Tap to set a spending limit for the “%1$s” category</string>
     <string name="income_goal_dialog_title">Income Goal</string>
     <string name="update_income_goal_message">Update your income goal from %1$s to %2$s?</string>
     <string name="create_income_goal_message">Create an income goal of %1$s for this month?</string>

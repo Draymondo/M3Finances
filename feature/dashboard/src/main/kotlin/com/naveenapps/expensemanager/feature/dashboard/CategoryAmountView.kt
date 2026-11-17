@@ -18,6 +18,7 @@ import com.naveenapps.designsystem.utils.AppPreviewsLightAndDarkMode
 import com.naveenapps.expensemanager.core.designsystem.ui.components.PieChartUiData
 import com.naveenapps.expensemanager.core.designsystem.ui.components.PieChartView
 import com.naveenapps.expensemanager.core.model.CategoryTransactionState
+import com.naveenapps.expensemanager.core.model.isExpense
 import com.naveenapps.expensemanager.feature.category.transaction.CategoryTransactionSmallItem
 import com.naveenapps.expensemanager.feature.category.transaction.getRandomCategoryTransactionData
 
@@ -33,6 +34,11 @@ fun CategoryAmountView(
     ) {
         PieChartView(
             totalAmountText = categoryTransactionState.totalAmount.amountString ?: "",
+            centerTopText = (if (categoryTransactionState.categoryType.isExpense()) {
+                stringResource(com.naveenapps.expensemanager.core.designsystem.R.string.expense)
+            } else {
+                stringResource(com.naveenapps.expensemanager.core.designsystem.R.string.income)
+            }).uppercase(),
             chartData = categoryTransactionState.pieChartData.map {
                 PieChartUiData(
                     it.titleResId?.let { resId -> stringResource(resId) } ?: it.name,

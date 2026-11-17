@@ -3,7 +3,7 @@ package com.naveenapps.expensemanager.core.common.utils
 import java.util.Locale
 
 fun Float.toPercentString(): String {
-    return String.format("%.2f %%", this)
+    return String.format(Locale.getDefault(), "%.2f %%", this)
 }
 
 fun String.toCapitalize() = this.replaceFirstChar { char ->

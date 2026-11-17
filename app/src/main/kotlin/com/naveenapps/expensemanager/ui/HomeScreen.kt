@@ -100,6 +100,8 @@ import com.naveenapps.expensemanager.feature.currencyconverter.settings.Currency
 import com.naveenapps.expensemanager.feature.calendar.CalendarScreen
 import com.naveenapps.expensemanager.feature.worktime.calculator.WorkTimeCalculatorScreen
 import com.naveenapps.expensemanager.feature.worktime.settings.WorkTimeSettingsScreen
+import com.naveenapps.expensemanager.feature.installmentplan.create.InstallmentPlanCreateScreen
+import com.naveenapps.expensemanager.feature.installmentplan.list.InstallmentPlanListScreen
 import com.naveenapps.expensemanager.feature.savingsgoal.create.SavingsGoalCreateScreen
 import com.naveenapps.expensemanager.feature.savingsgoal.list.SavingsGoalListScreen
 import com.naveenapps.expensemanager.feature.shoppinglist.create.ShoppingListCreateScreen
@@ -221,6 +223,12 @@ fun NavGraphBuilder.expenseManagerNavigation(
     }
     composable<ExpenseManagerScreens.SavingsGoalCreate> {
         SavingsGoalCreateScreen()
+    }
+    composable<ExpenseManagerScreens.InstallmentPlanList> {
+        InstallmentPlanListScreen()
+    }
+    composable<ExpenseManagerScreens.InstallmentPlanCreate> {
+        InstallmentPlanCreateScreen()
     }
     composable<ExpenseManagerScreens.EnvelopeList> {
         EnvelopeListScreen()

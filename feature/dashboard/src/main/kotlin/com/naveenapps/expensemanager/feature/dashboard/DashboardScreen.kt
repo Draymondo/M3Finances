@@ -356,6 +356,7 @@ private fun DashboardScreenContent(
                                 availableCreditLimit = it.availableCreditLimit?.amountString
                                     ?: "",
                                 amountTextColor = colorResource(id = it.amountTextColor),
+                                isMuted = kotlin.math.abs(it.amount.amount) < 0.005,
                                 onItemClick = {
                                     onAction.invoke(DashboardAction.OpenAccountEdit(it))
                                 }
@@ -430,7 +431,7 @@ private fun DashboardScreenContent(
                             .padding(horizontal = 16.dp),
                         border = BorderStroke(
                             width = 1.dp,
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.65f),
                         ),
                         onClick = { onAction.invoke(DashboardAction.OpenBudgetCreate) },
                     ) {
@@ -466,11 +467,26 @@ private fun DashboardScreenContent(
                                     ),
                                     color = MaterialTheme.colorScheme.onSurface,
                                 )
+                                val topSpendingCategory = state.categoryTransactionState
+                                    .categoryTransactions
+                                    .firstOrNull()
+                                    ?.category
+                                    ?.let {
+                                        it.titleResId?.let { resId -> stringResource(resId) }
+                                            ?: it.name
+                                    }
                                 Text(
-                                    text = stringResource(id = R.string.tap_to_set_spending_limit),
+                                    text = if (topSpendingCategory != null) {
+                                        stringResource(
+                                            id = R.string.tap_to_set_spending_limit_for_category,
+                                            topSpendingCategory,
+                                        )
+                                    } else {
+                                        stringResource(id = R.string.tap_to_set_spending_limit)
+                                    },
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        .copy(alpha = 0.7f),
+                                        .copy(alpha = 0.85f),
                                 )
                             }
                         }

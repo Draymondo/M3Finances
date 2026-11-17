@@ -20,6 +20,7 @@ import com.naveenapps.expensemanager.feature.envelope.di.EnvelopeViewModelModule
 import com.naveenapps.expensemanager.feature.currencyconverter.di.CurrencyConverterViewModelModule
 import com.naveenapps.expensemanager.feature.calendar.di.CalendarViewModelModule
 import com.naveenapps.expensemanager.feature.worktime.di.WorkTimeViewModelModule
+import com.naveenapps.expensemanager.feature.installmentplan.di.InstallmentPlanViewModelModule
 import com.naveenapps.expensemanager.feature.savingsgoal.di.SavingsGoalViewModelModule
 import com.naveenapps.expensemanager.feature.shoppinglist.di.ShoppingListViewModelModule
 import com.naveenapps.expensemanager.feature.settings.di.SettingsViewModelModule
@@ -68,6 +69,7 @@ val ViewModelModule = module {
         RecurringViewModelModule,
         DebtViewModelModule,
         SavingsGoalViewModelModule,
+        InstallmentPlanViewModelModule,
         EnvelopeViewModelModule,
         WorkTimeViewModelModule,
         CurrencyConverterViewModelModule,

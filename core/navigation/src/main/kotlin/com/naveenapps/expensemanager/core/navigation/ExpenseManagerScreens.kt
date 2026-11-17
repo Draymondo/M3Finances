@@ -91,6 +91,12 @@ sealed class ExpenseManagerScreens {
     data class SavingsGoalCreate(val id: String?) : ExpenseManagerScreens()
 
     @Serializable
+    data object InstallmentPlanList : ExpenseManagerScreens()
+
+    @Serializable
+    data class InstallmentPlanCreate(val id: String?) : ExpenseManagerScreens()
+
+    @Serializable
     data object ShoppingListList : ExpenseManagerScreens()
 
     @Serializable

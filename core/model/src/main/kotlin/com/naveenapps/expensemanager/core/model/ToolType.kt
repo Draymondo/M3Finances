@@ -9,7 +9,8 @@ enum class ToolType(val key: String) {
     ENVELOPES("envelopes"),
     WORK_TIME("work_time"),
     CURRENCY_CONVERTER("currency_converter"),
-    CALENDAR("calendar");
+    CALENDAR("calendar"),
+    INSTALLMENT_PLANS("installment_plans");
 
     companion object {
         fun fromKey(key: String): ToolType? = entries.find { it.key == key }

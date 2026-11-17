@@ -58,11 +58,11 @@ class WaveNotificationParser {
         val lower = text.lowercase(Locale.ROOT)
         return when {
             "vous avez payé" in lower || "vous avez paye" in lower -> Regex(
-                """vous\s+avez\s+pay[ée]\s+(?<amount>$AMOUNT)\s+[àa]\s+(?<merchant>.+?)\s+le\s+(?<date>\d{1,2}(?:\s+[A-Za-zÀ-ÿ.]{2,9}|/\d{1,2}/\d{4}))\s*(?:[àa]\s*)?(?<time>\d{1,2}h\d{2})""",
+                """vous\s+avez\s+pay[ée]\s+(?<amount>$AMOUNT)\s+[àa]\s+(?<merchant>.+?)\s+le\s+(?<date>\d{1,2}(?:\s+[A-Za-zÀ-ÿ.]{2,9}|$DATE_NUM))\s*(?:[àa]\s*)?(?<time>$TIME)""",
                 RegexOption.IGNORE_CASE,
             )
             "vous avez déposé" in lower || "vous avez depose" in lower || "vous avez retiré" in lower || "vous avoir retire" in lower -> Regex(
-                """vous\s+avez\s+(?<verb>d[ée]pos[ée]|retir[ée])\s+(?<amount>$AMOUNT)\s+chez\s+(?<merchant>.+?)\s+le\s+(?<date>\d{1,2}/\d{1,2}/\d{4})\s+[àa]\s+(?<time>\d{1,2}h\d{2})""",
+                """vous\s+avez\s+(?<verb>d[ée]pos[ée]|retir[ée])\s+(?<amount>$AMOUNT)\s+chez\s+(?<merchant>.+?)\s+le\s+(?<date>$DATE_NUM)\s+[àa]\s+(?<time>$TIME)""",
                 RegexOption.IGNORE_CASE,
             )
             else -> null
@@ -72,15 +72,54 @@ class WaveNotificationParser {
     private fun transferRegex(text: String): Regex {
         val received = "reçu" in text.lowercase(Locale.ROOT) || "recu" in text.lowercase(Locale.ROOT)
         return Regex(
-            if (received) """vous\s+avez\s+re[çc]u\s+(?<amount>$AMOUNT)\s+de\s+(?<party>.+?)\s*\((?<phone>\d[\d .-]{5,})\)\s*(?:\r?\n|,)?\s*(?<date>\d{1,2}/\d{1,2}/\d{4})\s+[àa]\s+(?<time>\d{1,2}h\d{2})"""
-            else """vous\s+avez\s+envoy[ée]\s+(?<amount>$AMOUNT)\s+[àa]\s+(?<party>.+?)\s*\((?<phone>\d[\d .-]{5,})\)\s*(?:\r?\n|,)?\s*(?<date>\d{1,2}/\d{1,2}/\d{4})\s+[àa]\s+(?<time>\d{1,2}h\d{2})""",
+            if (received) """vous\s+avez\s+re[çc]u\s+(?<amount>$AMOUNT)\s+de\s+(?<party>.+?)\s*\((?<phone>\+?[\d .-]{5,19})\)\s*(?:\r?\n|,)?\s*(?<date>$DATE_NUM)\s+[àa]\s+(?<time>$TIME)"""
+            else """vous\s+avez\s+envoy[ée]\s+(?<amount>$AMOUNT)\s+[àa]\s+(?<party>.+?)\s*\((?<phone>\+?[\d .-]{5,19})\)\s*(?:\r?\n|,)?\s*(?<date>$DATE_NUM)\s+[àa]\s+(?<time>$TIME)""",
             RegexOption.IGNORE_CASE,
         )
     }
 
 
-    private fun amount(raw: String?): Double? = raw.orEmpty().filter(Char::isDigit)
-        .toDoubleOrNull()?.takeIf { it.isFinite() && it > 0.0 }
+    private fun amount(raw: String?): Double? {
+        // On ne conserve que chiffres, séparateurs et virgule, puis on normalise selon la
+        // convention française (point/espace = milliers, virgule = décimale).
+        val cleaned = raw.orEmpty()
+            .replace('\u00A0', ' ')
+            .replace('\u202F', ' ')
+            .replace('\'', ' ')
+            .filter { it.isDigit() || it == '.' || it == ',' || it == ' ' }
+            .trim()
+        if (cleaned.isEmpty()) return null
+        val lastComma = cleaned.lastIndexOf(',')
+        val lastDot = cleaned.lastIndexOf('.')
+        val normalized = when {
+            lastComma >= 0 && lastDot >= 0 ->
+                if (lastComma > lastDot) {
+                    cleaned.replace(".", "").replace(" ", "").replace(',', '.')
+                } else {
+                    cleaned.replace(",", "").replace(" ", "")
+                }
+            lastComma >= 0 -> {
+                val singleComma = cleaned.count { it == ',' } == 1
+                val decimals = cleaned.length - lastComma - 1
+                if (singleComma && decimals in 1..2) {
+                    cleaned.replace(" ", "").replace(',', '.')
+                } else {
+                    cleaned.replace(",", "").replace(" ", "")
+                }
+            }
+            lastDot >= 0 -> {
+                val dots = cleaned.count { it == '.' }
+                val decimals = cleaned.length - lastDot - 1
+                if (dots == 1 && decimals in 1..2) {
+                    cleaned.replace(" ", "")
+                } else {
+                    cleaned.replace(".", "").replace(" ", "")
+                }
+            }
+            else -> cleaned.replace(" ", "")
+        }
+        return normalized.toDoubleOrNull()?.takeIf { it.isFinite() && it > 0.0 }
+    }
 
     private fun date(raw: String?, time: String?, postTime: Long?, zone: TimeZone): Date? {
         val date = raw?.trim().orEmpty()
@@ -139,16 +178,20 @@ class WaveNotificationParser {
     }
 
     private fun heading(text: String, subject: String, status: String): Boolean =
-        Regex("""\b$subject\s+$status\s*!""", RegexOption.IGNORE_CASE).containsMatchIn(text)
+        // Le point d'exclamation final est facultatif : Wave ne le met pas toujours.
+        Regex("""\b$subject\s+$status\b\s*!?""", RegexOption.IGNORE_CASE).containsMatchIn(text)
 
     private companion object {
-        const val AMOUNT = """(?:\d{1,3}(?:\.\d{3})+|\d+)\s*F(?:CFA)?\b"""
+        // Montant : milliers séparés par point, espace (insécable ou fine), apostrophe ou
+        // espace classique ; décimale facultative ; monnaie « F », « F CFA », « FCFA », « CFA ».
+        const val AMOUNT = """(?:\d{1,3}(?:[\u00A0\u202F' .]\d{3})+|\d+)(?:[.,]\d{1,2})?[\u00A0\u202F ]*(?:F(?:[\u00A0\u202F ]?CFA)?|FCFA|CFA)\b"""
+        const val DATE_NUM = """\d{1,2}[/.-]\d{1,2}[/.-]\d{4}"""
         const val FUTURE_WINDOW = 5 * 60 * 1000L
         const val PAST_WINDOW = 2 * 24 * 60 * 60 * 1000L
         val TIME = Regex("""\d{1,2}h\d{2}""")
-        val NUMERIC = Regex("""(\d{1,2})/(\d{1,2})/(\d{4})""")
+        val NUMERIC = Regex("""(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})""")
         val DAY_MONTH = Regex("""(\d{1,2})\s+([A-Za-zÀ-ÿ.]{2,9})""")
-        val BALANCE = Regex("""(?:^|\s)(?:solde\s+wave|nouveau\s+solde)\s*:\s*(?<balance>$AMOUNT)""", RegexOption.IGNORE_CASE)
+        val BALANCE = Regex("""(?:^|\s)(?:nouveau\s+solde(?:\s+wave)?|solde(?:\s+wave|\s+disponible|\s+actuel)?)\s*:\s*(?<balance>$AMOUNT)""", RegexOption.IGNORE_CASE)
         val FEE_MARKER = Regex("""\bfrais\s*:""", RegexOption.IGNORE_CASE)
         val FEE = Regex("""\bfrais\s*:\s*(?<fee>$AMOUNT)""", RegexOption.IGNORE_CASE)
         val REFERENCE = Regex("""\bavec\s+uba\s+(?<reference>[A-Z0-9]{6,})\b""", RegexOption.IGNORE_CASE)

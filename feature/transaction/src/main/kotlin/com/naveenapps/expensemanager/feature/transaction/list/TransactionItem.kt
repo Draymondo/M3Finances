@@ -7,10 +7,10 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -46,6 +46,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import com.naveenapps.expensemanager.feature.transaction.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
@@ -53,13 +54,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.naveenapps.designsystem.theme.NaveenAppsPreviewTheme
 import com.naveenapps.designsystem.utils.AppPreviewsLightAndDarkMode
-import com.naveenapps.expensemanager.core.designsystem.ui.components.AmountText
+import com.naveenapps.expensemanager.core.designsystem.components.AmountText
 import com.naveenapps.expensemanager.core.designsystem.ui.components.AppCardView
 import com.naveenapps.expensemanager.core.designsystem.ui.extensions.getDrawable
 import com.naveenapps.expensemanager.core.designsystem.ui.utils.getColorValue
 import com.naveenapps.expensemanager.core.model.Amount
 import com.naveenapps.expensemanager.core.model.TransactionType
-import com.naveenapps.expensemanager.feature.transaction.R
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -80,10 +80,10 @@ fun TransactionItem(
     toAccountIcon: String? = null,
     toAccountColor: String? = null,
     transactionType: TransactionType = TransactionType.EXPENSE,
-    showDate: Boolean = true,
     isSplit: Boolean = false,
     splitLabel: String? = null,
     isSelected: Boolean = false,
+    showDate: Boolean = true,
     onEdit: (() -> Unit)? = null,
     onDelete: (() -> Unit)? = null,
     onClick: (() -> Unit)? = null,
@@ -201,9 +201,11 @@ fun TransactionItem(
                         toName = toAccountName,
                     )
                 } else {
-                    // ── Title ──
+                    val hasMerchant = !notes.isNullOrBlank()
+                    // ── Title — merchant when present ("qu'est-ce que j'ai
+                    //    payé ?"), category otherwise ─────────────────
                     Text(
-                        text = categoryName,
+                        text = if (hasMerchant) notes!!.trim() else categoryName,
                         style = MaterialTheme.typography.bodyLarge.copy(
                             fontWeight = FontWeight.Medium,
                             fontSize = 15.sp,
@@ -223,33 +225,46 @@ fun TransactionItem(
 
                     Spacer(Modifier.height(3.dp))
 
-                    // ── Subtitle: account with dot separator ──
-                    AccountSubtitle(
-                        accountIcon = fromAccountIcon,
-                        accountColor = fromAccountColor,
-                        accountName = fromAccountName,
-                    )
-
-                    // ── Notes (if any) ──
-                    if (!notes.isNullOrBlank()) {
-                        Spacer(Modifier.height(2.dp))
-                        Text(
-                            text = notes,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
-                                fontSize = 12.sp,
-                            ),
-                            modifier = Modifier.fillMaxWidth(),
+                    // ── Subtitle: account (with WAVE chip) + category
+                    //    tucked behind when the merchant holds the title ──
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        AccountSubtitle(
+                            accountIcon = fromAccountIcon,
+                            accountColor = fromAccountColor,
+                            accountName = fromAccountName,
                         )
+                        if (hasMerchant) {
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = "·",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    fontSize = 11.sp,
+                                ),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    .copy(alpha = 0.4f),
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = categoryName,
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        .copy(alpha = 0.55f),
+                                ),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
                     }
                 }
             }
 
             Spacer(Modifier.width(12.dp))
 
-            // ── Amount (+ date only where the row is the only context) ─
+            // ── Amount + date ──────────────────────────────────────
             Column(
                 modifier = Modifier
                     .wrapContentSize()
@@ -267,18 +282,16 @@ fun TransactionItem(
                 }
 
                 AmountText(
-                    amount = "$prefix${amount.amountString ?: ""}",
-                    style = MaterialTheme.typography.titleMedium.copy(
+                    text = "$prefix${amount.amountString ?: ""}",
+                    numberStyle = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 15.sp,
                         letterSpacing = (-0.3).sp,
                     ),
                     color = amountColor,
+                    unitSizeFactor = 0.55f,
                 )
 
-                // La date est portée par l'en-tête de section (liste des
-                // transactions, accueil). On ne la répète sur chaque ligne que
-                // là où aucun en-tête ne la donne (calendrier, détails…).
                 if (showDate) {
                     Spacer(Modifier.height(2.dp))
 
@@ -367,6 +380,37 @@ private fun AccountSubtitle(
             ),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
+        )
+        if (accountName.trim().equals("wave", ignoreCase = true)) {
+            Spacer(Modifier.width(6.dp))
+            WaveBadge()
+        }
+    }
+}
+
+/**
+ * Small brand chip shown next to a Wave account — blue-tinted, hairline border,
+ * translucent background. Wave brand cyan (#1DC4EF) chosen for legibility on
+ * the dark OLED surface.
+ */
+@Composable
+private fun WaveBadge(modifier: Modifier = Modifier) {
+    val waveBlue = Color(0xFF1DC4EF)
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(4.dp))
+            .background(waveBlue.copy(alpha = 0.14f))
+            .border(1.dp, waveBlue.copy(alpha = 0.38f), RoundedCornerShape(4.dp))
+            .padding(horizontal = 5.dp, vertical = 1.dp),
+    ) {
+        Text(
+            text = "WAVE",
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontSize = 8.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.8.sp,
+            ),
+            color = waveBlue,
         )
     }
 }

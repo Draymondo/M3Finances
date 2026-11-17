@@ -48,8 +48,11 @@ private val MonthFormat by lazy {
     SimpleDateFormat("MM", Locale.US)
 }
 
+// Short localized month — used by the hero label ("Nov. 2026"), the monthly
+// bucket labels of the analysis charts and the budget period subtitle.
+// One-way display only; round-tripped keys use MonthAndYearKeyFormat below.
 private val MonthAndYearFormat by lazy {
-    SimpleDateFormat("MMMM yyyy", Locale.getDefault())
+    SimpleDateFormat("MMM yyyy", Locale.getDefault())
 }
 
 /**

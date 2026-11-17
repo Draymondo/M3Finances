@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.sp
 import com.naveenapps.designsystem.theme.NaveenAppsPreviewTheme
 import com.naveenapps.designsystem.utils.AppPreviewsLightAndDarkMode
 import com.naveenapps.expensemanager.core.common.utils.toPercentString
-import com.naveenapps.expensemanager.core.designsystem.ui.components.AmountText
+import com.naveenapps.expensemanager.core.designsystem.components.AmountText
 import com.naveenapps.expensemanager.core.designsystem.ui.components.IconAndBackgroundView
 import com.naveenapps.expensemanager.core.designsystem.ui.components.SmallIconAndBackgroundView
 import com.naveenapps.expensemanager.core.designsystem.ui.extensions.toColor
@@ -37,7 +37,7 @@ fun CategoryTransactionItem(
     iconBackgroundColor: String,
     amount: String,
     percentage: Float,
-    barFraction: Float = (percentage / 100f).coerceIn(0f, 1f),
+    barPercent: Float = percentage,
 ) {
     val categoryColor = iconBackgroundColor.toColor()
 
@@ -77,12 +77,13 @@ fun CategoryTransactionItem(
                 Spacer(Modifier.width(12.dp))
 
                 AmountText(
-                    amount = amount,
-                    style = MaterialTheme.typography.titleMedium.copy(
+                    text = amount,
+                    numberStyle = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.SemiBold,
                         letterSpacing = (-0.3).sp,
                     ),
                     color = MaterialTheme.colorScheme.onSurface,
+                    unitSizeFactor = 0.55f,
                 )
             }
 
@@ -92,7 +93,7 @@ fun CategoryTransactionItem(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 LinearProgressIndicator(
-                    progress = { barFraction.coerceIn(0f, 1f) },
+                    progress = { (barPercent / 100f).coerceIn(0f, 1f) },
                     modifier = Modifier
                         .weight(1f)
                         .height(6.dp)
@@ -146,21 +147,20 @@ fun CategoryTransactionSmallItem(
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurface,
             ),
-            // Deux lignes autorisées : « Alimentation » ne devient plus
-            // « Alimentatio… » dans la légende du donut.
-            maxLines = 2,
+            maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
 
         Spacer(Modifier.width(10.dp))
 
         AmountText(
-            amount = amount,
-            style = MaterialTheme.typography.labelMedium.copy(
+            text = amount,
+            numberStyle = MaterialTheme.typography.labelMedium.copy(
                 fontWeight = FontWeight.Medium,
                 letterSpacing = (-0.2).sp,
             ),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            unitSizeFactor = 0.60f,
         )
     }
 }

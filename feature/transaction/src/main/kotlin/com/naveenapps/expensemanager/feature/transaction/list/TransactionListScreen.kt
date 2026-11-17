@@ -15,8 +15,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -43,8 +43,8 @@ import com.naveenapps.expensemanager.core.common.utils.toCompleteDateWithDate
 import com.naveenapps.expensemanager.core.common.utils.toDate
 import com.naveenapps.expensemanager.core.common.utils.toDay
 import com.naveenapps.expensemanager.core.common.utils.toMonthYear
+import com.naveenapps.expensemanager.core.designsystem.components.AmountText
 import com.naveenapps.expensemanager.core.designsystem.components.EmptyItem
-import com.naveenapps.expensemanager.core.designsystem.ui.components.AmountText
 import com.naveenapps.expensemanager.core.designsystem.ui.components.AppCardView
 import com.naveenapps.expensemanager.core.designsystem.ui.components.ExpenseManagerTopAppBar
 import com.naveenapps.expensemanager.core.model.Amount
@@ -281,9 +281,9 @@ private fun TransactionGroupCard(
                     categoryIcon = item.categoryIcon.name,
                     amount = item.amount,
                     date = item.date,
+                    showDate = false,
                     notes = item.notes,
                     transactionType = item.transactionType,
-                    showDate = false,
                     isSplit = item.isSplit,
                     splitLabel = stringResource(R.string.split_badge),
                     fromAccountName = item.fromAccountName,
@@ -362,12 +362,14 @@ fun TransactionHeaderItem(
             }
 
             AmountText(
-                amount = totalAmount,
-                style = MaterialTheme.typography.titleMedium.copy(
+                text = totalAmount,
+                numberStyle = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.SemiBold,
                     letterSpacing = (-0.3).sp,
                 ),
                 color = colorResource(id = textColor),
+                unitSizeFactor = 0.55f,
+                horizontalArrangement = Arrangement.End,
             )
         }
     }

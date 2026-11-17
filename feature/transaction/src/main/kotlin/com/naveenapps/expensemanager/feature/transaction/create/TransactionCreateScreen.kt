@@ -1,7 +1,5 @@
 package com.naveenapps.expensemanager.feature.transaction.create
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -16,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,20 +22,20 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Notes
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.Calculate
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.EditCalendar
 import androidx.compose.material.icons.outlined.PhotoCamera
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -48,6 +45,8 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -56,14 +55,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.naveenapps.designsystem.theme.NaveenAppsPreviewTheme
@@ -74,7 +75,7 @@ import com.naveenapps.expensemanager.core.designsystem.components.DeleteDialogIt
 import com.naveenapps.expensemanager.core.designsystem.ui.components.AppCardView
 import com.naveenapps.expensemanager.core.designsystem.ui.components.AppDatePickerDialog
 import com.naveenapps.expensemanager.core.designsystem.ui.components.AppTimePickerDialog
-import com.naveenapps.expensemanager.core.designsystem.ui.components.ClickableValueField
+import com.naveenapps.expensemanager.core.designsystem.ui.components.ClickableTextField
 import com.naveenapps.expensemanager.core.designsystem.ui.components.DecimalTextField
 import com.naveenapps.expensemanager.core.designsystem.ui.components.ExpenseManagerTopAppBar
 import com.naveenapps.expensemanager.core.designsystem.ui.components.SafeModalBottomSheet
@@ -222,6 +223,40 @@ private fun TransactionCreateScreenContent(
                 },
             )
         },
+        bottomBar = {
+            Surface(
+                color = MaterialTheme.colorScheme.background,
+            ) {
+                Button(
+                    onClick = { onAction.invoke(TransactionCreateAction.Save) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 16.dp, top = 8.dp)
+                        .height(52.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = androidx.compose.ui.graphics.Color(0xFF15803D),
+                        contentColor = androidx.compose.ui.graphics.Color.White,
+                    ),
+                ) {
+                    Icon(
+                        imageVector = if (state.isFutureDate && !state.showDeleteButton) Icons.Default.DateRange else Icons.Default.Done,
+                        contentDescription = null,
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = if (state.isFutureDate && !state.showDeleteButton)
+                            stringResource(R.string.schedule)
+                        else
+                            stringResource(R.string.save),
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                        ),
+                    )
+                }
+            }
+        },
     ) { innerPadding ->
         TransactionCreateScreen(
             modifier = Modifier
@@ -338,7 +373,6 @@ private fun TransactionCreateContent(
     onAction: (TransactionCreateAction) -> Unit
 ) {
     val focusManager = LocalFocusManager.current
-    val haptic = LocalHapticFeedback.current
 
     Column(
         modifier = modifier.padding(horizontal = 16.dp),
@@ -371,8 +405,6 @@ private fun TransactionCreateContent(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    // LE champ de cet écran : grand, tabulaire, il domine la
-                    // carte « Détails » au lieu de partager la hauteur avec la date.
                     DecimalTextField(
                         modifier = Modifier.fillMaxWidth(),
                         value = state.amount.value,
@@ -380,9 +412,10 @@ private fun TransactionCreateContent(
                         onValueChange = state.amount.onValueChange,
                         label = R.string.amount,
                         errorMessage = stringResource(id = R.string.amount_error_message),
-                        textStyle = MaterialTheme.typography.headlineMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = (-0.8).sp,
+                        textStyle = MaterialTheme.typography.headlineSmall.copy(
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Black,
+                            fontSize = 26.sp,
+                            letterSpacing = (-0.5).sp,
                             fontFeatureSettings = "tnum",
                         ),
                         trailingIcon = {
@@ -397,28 +430,43 @@ private fun TransactionCreateContent(
                         },
                     )
 
-                    // Date et heure : champs pleine largeur, label au-dessus de
-                    // la valeur (pas de label flottant) → la date n'est plus
-                    // rognée quand elle partage la ligne avec l'heure.
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        ClickableValueField(
-                            modifier = Modifier.weight(1f),
+                        // Date & time fields carry an emerald accent (mock):
+                        // green border + green label, always on.
+                        val fieldAccent = if (isSystemInDarkTheme()) {
+                            Color(0xFF34D399)
+                        } else {
+                            Color(0xFF15803D)
+                        }
+                        val accentFieldColors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = fieldAccent,
+                            unfocusedBorderColor = fieldAccent,
+                            focusedLabelColor = fieldAccent,
+                            unfocusedLabelColor = fieldAccent,
+                            cursorColor = fieldAccent,
+                            focusedLeadingIconColor = fieldAccent,
+                            unfocusedLeadingIconColor = fieldAccent,
+                        )
+                        ClickableTextField(
+                            modifier = Modifier.weight(1.3f),
                             value = state.dateTime.toCompleteDateWithDate(),
                             label = R.string.select_date,
                             leadingIcon = Icons.Outlined.EditCalendar,
+                            colors = accentFieldColors,
                             onClick = {
                                 focusManager.clearFocus(force = true)
                                 onAction.invoke(TransactionCreateAction.ShowDateSelection)
                             },
                         )
-                        ClickableValueField(
+                        ClickableTextField(
                             modifier = Modifier.weight(1f),
                             value = state.dateTime.toTimeAndMinutes(),
                             label = R.string.select_time,
                             leadingIcon = Icons.Outlined.AccessTime,
+                            colors = accentFieldColors,
                             onClick = {
                                 onAction.invoke(TransactionCreateAction.ShowTimeSelection)
                             },
@@ -748,41 +796,7 @@ private fun TransactionCreateContent(
             }
         }
 
-        // CTA pleine largeur (52 dp) : atteignable au pouce, dans le flux du
-        // formulaire. Le FAB flottant qui chevauchait le contenu disparaît.
-        Button(
-            onClick = {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                onAction.invoke(TransactionCreateAction.Save)
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp),
-            shape = RoundedCornerShape(16.dp),
-        ) {
-            Icon(
-                imageVector = if (state.isFutureDate && !state.showDeleteButton) {
-                    Icons.Default.DateRange
-                } else {
-                    Icons.Default.Done
-                },
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = if (state.isFutureDate && !state.showDeleteButton) {
-                    stringResource(R.string.schedule)
-                } else {
-                    stringResource(R.string.save)
-                },
-                style = MaterialTheme.typography.titleSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                ),
-            )
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(72.dp))
     }
 }
 

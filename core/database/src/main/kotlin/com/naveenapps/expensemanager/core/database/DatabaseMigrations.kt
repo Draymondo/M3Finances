@@ -380,3 +380,32 @@ internal val MIGRATION_20_21 = object : Migration(20, 21) {
         )
     }
 }
+
+
+/**
+ * Creates the `installment_plan` table: metadata for installment purchases ("Paiements
+ * échelonnés"). The actual money movement happens through `AccountType.INSTALLMENT` hidden
+ * counterparty accounts created per plan — only the metadata row lives here.
+ *
+ * Column affinities must match the exported schema exactly, otherwise Room's own validation
+ * rejects the migration. No enum is persisted in this table, so no ordinal caveats.
+ */
+internal val MIGRATION_21_22 = object : Migration(21, 22) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `installment_plan` (" +
+                "`id` TEXT NOT NULL, " +
+                "`account_id` TEXT NOT NULL, " +
+                "`name` TEXT NOT NULL, " +
+                "`target_amount` REAL NOT NULL, " +
+                "`deadline` INTEGER, " +
+                "`notes` TEXT NOT NULL, " +
+                "`is_completed` INTEGER NOT NULL DEFAULT 0, " +
+                "`created_on` INTEGER NOT NULL, " +
+                "`updated_on` INTEGER NOT NULL, " +
+                "PRIMARY KEY(`id`), " +
+                "FOREIGN KEY(`account_id`) REFERENCES `account`(`id`) " +
+                "ON UPDATE NO ACTION ON DELETE CASCADE)"
+        )
+    }
+}

@@ -29,6 +29,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import com.naveenapps.expensemanager.core.designsystem.components.AmountText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -233,13 +234,14 @@ fun BudgetItem(
                     modifier = Modifier.weight(1f),
                 )
                 if (amount != null) {
-                    Text(
+                    AmountText(
                         text = amount.amountString ?: "",
-                        style = MaterialTheme.typography.titleMedium.copy(
+                        numberStyle = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.SemiBold,
                             letterSpacing = (-0.3).sp,
                         ),
                         color = MaterialTheme.colorScheme.onSurface,
+                        unitSizeFactor = 0.55f,
                     )
                 }
             }
@@ -354,10 +356,10 @@ fun DashBoardBudgetItem(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Bottom,
             ) {
-                // Spent amount — large and prominent
-                Text(
+                // Spent amount — large, prominent, tabular
+                AmountText(
                     text = transactionAmount ?: "—",
-                    style = MaterialTheme.typography.headlineSmall.copy(
+                    numberStyle = MaterialTheme.typography.headlineSmall.copy(
                         fontWeight = FontWeight.Bold,
                         letterSpacing = (-0.5).sp,
                     ),
@@ -366,6 +368,7 @@ fun DashBoardBudgetItem(
                     } else {
                         MaterialTheme.colorScheme.onSurface
                     },
+                    unitSizeFactor = 0.48f,
                 )
 
                 // "of $amount" — smaller, muted, baseline-aligned

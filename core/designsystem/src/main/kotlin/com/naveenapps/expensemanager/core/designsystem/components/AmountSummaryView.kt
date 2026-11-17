@@ -1,5 +1,6 @@
 package com.naveenapps.expensemanager.core.designsystem.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -17,6 +18,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -25,7 +28,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -38,26 +40,8 @@ import androidx.compose.ui.unit.sp
 import com.naveenapps.designsystem.theme.NaveenAppsPreviewTheme
 import com.naveenapps.designsystem.utils.AppPreviewsLightAndDarkMode
 import com.naveenapps.expensemanager.core.designsystem.R
-import com.naveenapps.expensemanager.core.designsystem.ui.components.AmountText
 import com.naveenapps.expensemanager.core.designsystem.ui.components.AppCardView
-import kotlin.math.abs
-
-// ── Héros émeraude ──────────────────────────────────────────────────────
-// Dégradé linéaire profond + halo radial en haut à droite. Le halo est
-// volontairement très doux : il guide le regard vers le total sans jamais
-// gêner la lecture des chiffres (qui sont blancs sur les deux thèmes).
-private val HeroGradientStart = Color(0xFF0E3F2B)
-private val HeroGradientMiddle = Color(0xFF0A2C20)
-private val HeroGradientEnd = Color(0xFF071F16)
-private val HeroHalo = Color(0x473DDC84)
-
-private val HeroIncome = Color(0xFF3DDC84)
-private val HeroExpense = Color(0xFFFF6B64)
-private val HeroOnIncome = Color(0xFF7BF0B0)
-private val HeroOnExpense = Color(0xFFFF8A80)
-
-private val HeroShape = RoundedCornerShape(22.dp)
-private val HeroCellShape = RoundedCornerShape(14.dp)
+import androidx.compose.ui.geometry.Offset
 
 @Composable
 fun WidgetHeader(
@@ -100,11 +84,19 @@ fun WidgetHeader(
     }
 }
 
-/**
- * Carte « héros » du tableau de bord : total du mois sur un dégradé émeraude,
- * chip de tendance honnête (neutre à 0,00 %, jamais verte sur un zéro), puis
- * dépense / revenu en deux cellules translucides.
- */
+private val HeroGradient = androidx.compose.ui.graphics.Brush.linearGradient(
+    colors = listOf(
+        Color(0xFF144D33),
+        Color(0xFF0B281B),
+        Color(0xFF07130C),
+    ),
+)
+private val HeroBorder = Color(0xFF26513F)
+private val HeroLabel = Color(0xFF9FD4BC)
+private val HeroValue = Color(0xFFF2FBF6)
+private val HeroCell = Color(0xFFFFFFFF).copy(alpha = 0.08f)
+private val HeroCellBorder = Color(0xFFFFFFFF).copy(alpha = 0.08f)
+
 @Composable
 fun AmountInfoWidget(
     expenseAmount: String,
@@ -114,201 +106,174 @@ fun AmountInfoWidget(
     trendText: String = "0.00%",
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(HeroShape)
-            .drawBehind {
-                drawRect(
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            HeroGradientStart,
-                            HeroGradientMiddle,
-                            HeroGradientEnd,
+    val incomeColor = colorResource(
+        id = com.naveenapps.expensemanager.core.common.R.color.green_500,
+    )
+    val expenseColor = colorResource(
+        id = com.naveenapps.expensemanager.core.common.R.color.red_500,
+    )
+
+    AppCardView(
+        modifier = modifier,
+        shape = RoundedCornerShape(28.dp),
+        border = BorderStroke(1.dp, HeroBorder),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(HeroGradient)
+                .drawBehind {
+                    // Soft emerald halo anchored top-right — the "fintech glow"
+                    // from the validated mock (Wallet/Revolut grammar).
+                    drawRect(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                Color(0xFF2FA36B).copy(alpha = 0.40f),
+                                Color(0xFF2FA36B).copy(alpha = 0f),
+                            ),
+                            center = Offset(size.width * 0.88f, -size.height * 0.30f),
+                            radius = size.width * 0.80f,
                         ),
-                        start = Offset.Zero,
-                        end = Offset(size.width, size.height),
+                    )
+                }
+                .padding(18.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = (stringResource(R.string.total) +
+                        if (transactionPeriod.isNotBlank()) "  ·  $transactionPeriod" else "").uppercase(),
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 1.4.sp,
+                        fontSize = 11.sp,
+                        fontFeatureSettings = "tnum",
                     ),
+                    color = HeroLabel.copy(alpha = 0.9f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
                 )
-                drawRect(
-                    brush = Brush.radialGradient(
-                        colors = listOf(HeroHalo, Color.Transparent),
-                        center = Offset(size.width * 0.85f, 0f),
-                        radius = size.width * 0.85f,
-                    ),
+                // Neutral translucent trend chip — deliberately NOT green/red
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFFFFFFFF).copy(alpha = 0.10f))
+                        .border(1.dp, Color(0xFFFFFFFF).copy(alpha = 0.08f), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 10.dp, vertical = 4.dp),
+                ) {
+                    Text(
+                        text = trendText,
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = 0.2.sp,
+                            fontFeatureSettings = "tnum",
+                        ),
+                        color = Color(0xFFDDEBE2),
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            AmountText(
+                text = balanceAmount,
+                numberStyle = MaterialTheme.typography.headlineLarge.copy(
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = (-0.8).sp,
+                    fontSize = 32.sp,
+                ),
+                color = HeroValue,
+                unitColor = HeroLabel,
+                unitSizeFactor = 0.44f,
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                SummaryCard(
+                    label = stringResource(R.string.expense),
+                    amount = expenseAmount,
+                    icon = Icons.Default.ArrowUpward,
+                    tintColor = expenseColor,
+                    modifier = Modifier.weight(1f),
+                    cardColor = HeroCell,
+                )
+                SummaryCard(
+                    label = stringResource(R.string.income),
+                    amount = incomeAmount,
+                    icon = Icons.Default.ArrowDownward,
+                    tintColor = incomeColor,
+                    modifier = Modifier.weight(1f),
+                    cardColor = HeroCell,
                 )
             }
-            .border(1.dp, Color.White.copy(alpha = 0.09f), HeroShape)
-            .padding(18.dp),
-    ) {
-        Text(
-            text = listOf(stringResource(R.string.total), transactionPeriod)
-                .filter { it.isNotBlank() }
-                .joinToString(" · "),
-            style = MaterialTheme.typography.labelLarge.copy(
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = 0.4.sp,
-            ),
-            color = Color.White.copy(alpha = 0.62f),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-
-        Spacer(Modifier.height(12.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.Bottom,
-        ) {
-            AmountText(
-                amount = balanceAmount,
-                modifier = Modifier.weight(1f, fill = false),
-                style = MaterialTheme.typography.headlineLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 34.sp,
-                    letterSpacing = (-1).sp,
-                ),
-                color = Color.White,
-            )
-            Spacer(Modifier.width(10.dp))
-            TrendChip(trendText = trendText)
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            HeroSplitCell(
-                label = stringResource(R.string.expense),
-                amount = expenseAmount,
-                icon = Icons.Default.ArrowUpward,
-                iconTint = HeroOnExpense,
-                iconBackground = Color(0x2EFF6B64),
-                modifier = Modifier.weight(1f),
-            )
-            HeroSplitCell(
-                label = stringResource(R.string.income),
-                amount = incomeAmount,
-                icon = Icons.Default.ArrowDownward,
-                iconTint = HeroOnIncome,
-                iconBackground = Color(0x2E3DDC84),
-                modifier = Modifier.weight(1f),
-            )
         }
     }
 }
 
 @Composable
-private fun HeroSplitCell(
+private fun SummaryCard(
     label: String,
     amount: String,
     icon: ImageVector,
-    iconTint: Color,
-    iconBackground: Color,
+    tintColor: Color,
     modifier: Modifier = Modifier,
+    cardColor: Color = Color(0xFFFFFFFF).copy(alpha = 0.08f),
 ) {
     Column(
         modifier = modifier
-            .clip(HeroCellShape)
-            .background(Color.White.copy(alpha = 0.07f))
-            .border(1.dp, Color.White.copy(alpha = 0.06f), HeroCellShape)
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+            .clip(RoundedCornerShape(16.dp))
+            .background(cardColor)
+            .border(1.dp, HeroCellBorder, RoundedCornerShape(16.dp))
+            .padding(14.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
-                    .size(16.dp)
-                    .clip(RoundedCornerShape(5.dp))
-                    .background(iconBackground),
+                    .size(26.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(tintColor.copy(alpha = 0.18f)),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = iconTint,
-                    modifier = Modifier.size(10.dp),
+                    tint = tintColor,
+                    modifier = Modifier.size(14.dp),
                 )
             }
-            Spacer(Modifier.width(6.dp))
+            Spacer(Modifier.width(8.dp))
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelSmall.copy(
+                style = MaterialTheme.typography.bodySmall.copy(
                     fontWeight = FontWeight.Medium,
                 ),
-                color = Color.White.copy(alpha = 0.62f),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+                color = HeroLabel,
             )
         }
 
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(10.dp))
 
         AmountText(
-            amount = amount,
-            style = MaterialTheme.typography.titleMedium.copy(
+            text = amount,
+            numberStyle = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
                 letterSpacing = (-0.3).sp,
+                fontSize = 15.sp,
             ),
-            color = Color.White,
+            color = HeroValue,
+            unitColor = HeroLabel,
+            unitSizeFactor = 0.52f,
         )
     }
 }
 
-/**
- * Chip de tendance : rouge si négative, verte si positive, **neutre** (gris
- * translucide) quand la variation est nulle — un « 0,00 % » vert serait un
- * mensonge visuel.
- */
-@Composable
-private fun TrendChip(
-    trendText: String,
-    modifier: Modifier = Modifier,
-) {
-    val trimmed = trendText.trim()
-    val numeric = trimmed
-        .removePrefix("+")
-        .removePrefix("-")
-        .removePrefix("−")
-        .removeSuffix("%")
-        .trim()
-        .toDoubleOrNull()
-
-    val isNeutral = numeric == null || abs(numeric) < 0.005
-    val isNegative = !isNeutral && (
-        trimmed.startsWith("-") || trimmed.startsWith("−")
-        )
-
-    val chipBackground = when {
-        isNeutral -> Color.White.copy(alpha = 0.12f)
-        isNegative -> Color(0x29FF6B64)
-        else -> Color(0x293DDC84)
-    }
-    val chipContent = when {
-        isNeutral -> Color.White.copy(alpha = 0.75f)
-        isNegative -> HeroOnExpense
-        else -> HeroOnIncome
-    }
-
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(9.dp))
-            .background(chipBackground)
-            .padding(horizontal = 9.dp, vertical = 4.dp),
-    ) {
-        Text(
-            text = trimmed,
-            style = MaterialTheme.typography.labelMedium.copy(
-                fontWeight = FontWeight.Bold,
-                fontFeatureSettings = "tnum",
-            ),
-            color = chipContent,
-            maxLines = 1,
-        )
-    }
-}
 
 @Composable
 fun AmountInfoWidgetCompact(
@@ -325,42 +290,43 @@ fun AmountInfoWidgetCompact(
         id = com.naveenapps.expensemanager.core.common.R.color.red_500,
     )
 
-    AppCardView(modifier = modifier) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            // ── Header ─────────────────────────────────────────────
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = stringResource(id = R.string.transaction_summary),
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        fontWeight = FontWeight.SemiBold,
-                    ),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                        .copy(alpha = 0.6f),
-                )
-                Spacer(Modifier.width(4.dp))
-                Box(
-                    Modifier
-                        .size(3.dp)
-                        .clip(CircleShape)
-                        .background(
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                                .copy(alpha = 0.25f),
+    AppCardView(
+        modifier = modifier,
+        shape = RoundedCornerShape(20.dp),
+        border = BorderStroke(1.dp, HeroBorder),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(HeroGradient)
+                .drawBehind {
+                    drawRect(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                Color(0xFF2FA36B).copy(alpha = 0.36f),
+                                Color(0xFF2FA36B).copy(alpha = 0f),
+                            ),
+                            center = Offset(size.width * 0.88f, -size.height * 0.30f),
+                            radius = size.width * 0.85f,
                         ),
-                )
-                Spacer(Modifier.width(4.dp))
-                Text(
-                    text = transactionPeriod,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                        .copy(alpha = 0.4f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f),
-                )
-            }
+                    )
+                }
+                .padding(14.dp),
+        ) {
+            // ── Header — same grammar as the main hero ─────────────
+            Text(
+                text = (stringResource(R.string.total) +
+                    if (transactionPeriod.isNotBlank()) "  ·  $transactionPeriod" else "").uppercase(),
+                style = MaterialTheme.typography.labelMedium.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 1.2.sp,
+                    fontSize = 10.sp,
+                    fontFeatureSettings = "tnum",
+                ),
+                color = HeroLabel.copy(alpha = 0.9f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
 
             Spacer(Modifier.height(10.dp))
 
@@ -402,8 +368,9 @@ private fun CompactAmountCell(
 ) {
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(tintColor.copy(alpha = 0.07f))
+            .clip(RoundedCornerShape(14.dp))
+            .background(HeroCell)
+            .border(1.dp, HeroCellBorder, RoundedCornerShape(14.dp))
             .padding(10.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -419,18 +386,21 @@ private fun CompactAmountCell(
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontWeight = FontWeight.Medium,
                 ),
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-                    .copy(alpha = 0.55f),
+                color = HeroLabel,
             )
         }
         Spacer(Modifier.height(4.dp))
         AmountText(
-            amount = amount,
-            style = MaterialTheme.typography.bodyMedium.copy(
+            text = amount,
+            numberStyle = MaterialTheme.typography.bodyMedium.copy(
                 fontWeight = FontWeight.Bold,
                 letterSpacing = (-0.3).sp,
+                fontSize = 13.sp,
             ),
-            color = tintColor,
+            color = HeroValue,
+            unitColor = HeroLabel,
+            unitSizeFactor = 0.60f,
+            maxLines = 1,
         )
     }
 }
@@ -442,11 +412,9 @@ private fun CompactBalanceCell(
 ) {
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(
-                MaterialTheme.colorScheme.surfaceContainerHighest
-                    .copy(alpha = 0.45f),
-            )
+            .clip(RoundedCornerShape(14.dp))
+            .background(HeroCellBorder.copy(alpha = 0.10f))
+            .border(1.dp, HeroCellBorder, RoundedCornerShape(14.dp))
             .padding(10.dp),
     ) {
         Text(
@@ -454,17 +422,20 @@ private fun CompactBalanceCell(
             style = MaterialTheme.typography.labelSmall.copy(
                 fontWeight = FontWeight.Medium,
             ),
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-                .copy(alpha = 0.55f),
+            color = HeroLabel,
         )
         Spacer(Modifier.height(4.dp))
         AmountText(
-            amount = amount,
-            style = MaterialTheme.typography.bodyMedium.copy(
+            text = amount,
+            numberStyle = MaterialTheme.typography.bodyMedium.copy(
                 fontWeight = FontWeight.Bold,
                 letterSpacing = (-0.3).sp,
+                fontSize = 13.sp,
             ),
-            color = MaterialTheme.colorScheme.onSurface,
+            color = HeroValue,
+            unitColor = HeroLabel,
+            unitSizeFactor = 0.60f,
+            maxLines = 1,
         )
     }
 }
