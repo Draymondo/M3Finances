@@ -43,6 +43,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.text.NumberFormat
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
@@ -167,12 +168,18 @@ class DashboardViewModel(
                 else -> ((currentPeriodDelta - previousPeriodDelta) / abs(previousPeriodDelta)) * 100.0
             }
 
-            val trendText = if (trendPercent == 0.0) {
-                "0.00%"
-            } else {
-                val sign = if (trendPercent >= 0) "+" else "-"
-                val absolutePercent = abs(trendPercent)
-                "$sign${String.format(Locale.US, "%.2f", absolutePercent)}%"
+            val trendText = run {
+                // Locale-aware percent (xx,xx % in French, xx.xx% in English)
+                val percentFormat = NumberFormat.getPercentInstance(Locale.getDefault()).apply {
+                    minimumFractionDigits = 2
+                    maximumFractionDigits = 2
+                }
+                if (trendPercent == 0.0) {
+                    percentFormat.format(0.0)
+                } else {
+                    val sign = if (trendPercent >= 0) "+" else "-"
+                    "$sign${percentFormat.format(abs(trendPercent) / 100.0)}"
+                }
             }
 
             _state.update {

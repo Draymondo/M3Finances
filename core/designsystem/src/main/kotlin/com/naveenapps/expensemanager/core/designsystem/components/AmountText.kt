@@ -1,5 +1,6 @@
 package com.naveenapps.expensemanager.core.designsystem.components
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
@@ -36,6 +37,7 @@ fun AmountText(
     unitSizeFactor: Float = 0.42f,
     textAlign: TextAlign = TextAlign.Start,
     maxLines: Int = 1,
+    horizontalArrangement: Arrangement.Horizontal = Arrangement.Start,
 ) {
     val separatorIndex = text.indexOfLast {
         it == ' ' || it == '\u00A0' || it == '\u202F'
@@ -57,6 +59,7 @@ fun AmountText(
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.Bottom,
+        horizontalArrangement = horizontalArrangement,
     ) {
         Text(
             text = number,

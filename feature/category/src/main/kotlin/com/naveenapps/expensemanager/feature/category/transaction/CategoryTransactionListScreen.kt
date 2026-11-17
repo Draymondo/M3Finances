@@ -174,6 +174,9 @@ private fun CategoryTransactionListScreenContent(
             val indicationSource = remember { MutableInteractionSource() }
             val isExpense = state.data.categoryType.isExpense()
             val categoryTransactions = state.data.categoryTransactions
+            // Bars are normalised to the largest share — the max bar fills the
+            // track, the others scale in proportion (mock: loyer = 100 %).
+            val maxPercent = categoryTransactions.maxOfOrNull { it.percent } ?: 0f
 
             LazyColumn(
                 modifier = modifier.fillMaxWidth(),
@@ -200,8 +203,9 @@ private fun CategoryTransactionListScreenContent(
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
                             PieChartView(
-                                totalAmountText = (if (isExpense) stringResource(id = R.string.expense)
-                                else stringResource(id = R.string.income)) + "\n" + state.data.totalAmount.amountString,
+                                totalAmountText = state.data.totalAmount.amountString ?: "",
+                                centerTopText = (if (isExpense) stringResource(id = R.string.expense)
+                                else stringResource(id = R.string.income)).uppercase(),
                                 chartData = state.data.pieChartData.map {
                                     PieChartUiData(
                                         it.titleResId?.let { resId -> stringResource(resId) } ?: it.name,
@@ -306,6 +310,11 @@ private fun CategoryTransactionListScreenContent(
                                         iconBackgroundColor = categoryTransaction.category.storedIcon.backgroundColor,
                                         amount = categoryTransaction.amount.amountString ?: "",
                                         percentage = categoryTransaction.percent,
+                                        barPercent = if (maxPercent > 0f) {
+                                            categoryTransaction.percent / maxPercent * 100f
+                                        } else {
+                                            0f
+                                        },
                                     )
                                 }
                             }

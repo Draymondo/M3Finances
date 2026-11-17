@@ -3,6 +3,7 @@ package com.naveenapps.expensemanager.core.designsystem.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.drawBehind
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.colorResource
@@ -39,6 +41,7 @@ import com.naveenapps.designsystem.theme.NaveenAppsPreviewTheme
 import com.naveenapps.designsystem.utils.AppPreviewsLightAndDarkMode
 import com.naveenapps.expensemanager.core.designsystem.R
 import com.naveenapps.expensemanager.core.designsystem.ui.components.AppCardView
+import androidx.compose.ui.geometry.Offset
 
 @Composable
 fun WidgetHeader(
@@ -119,6 +122,20 @@ fun AmountInfoWidget(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(HeroGradient)
+                .drawBehind {
+                    // Soft emerald halo anchored top-right — the "fintech glow"
+                    // from the validated mock (Wallet/Revolut grammar).
+                    drawRect(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                Color(0xFF2FA36B).copy(alpha = 0.40f),
+                                Color(0xFF2FA36B).copy(alpha = 0f),
+                            ),
+                            center = Offset(size.width * 0.88f, -size.height * 0.30f),
+                            radius = size.width * 0.80f,
+                        ),
+                    )
+                }
                 .padding(18.dp),
         ) {
             Row(
@@ -273,42 +290,43 @@ fun AmountInfoWidgetCompact(
         id = com.naveenapps.expensemanager.core.common.R.color.red_500,
     )
 
-    AppCardView(modifier = modifier) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            // ── Header ─────────────────────────────────────────────
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = stringResource(id = R.string.transaction_summary),
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        fontWeight = FontWeight.SemiBold,
-                    ),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                        .copy(alpha = 0.6f),
-                )
-                Spacer(Modifier.width(4.dp))
-                Box(
-                    Modifier
-                        .size(3.dp)
-                        .clip(CircleShape)
-                        .background(
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                                .copy(alpha = 0.25f),
+    AppCardView(
+        modifier = modifier,
+        shape = RoundedCornerShape(20.dp),
+        border = BorderStroke(1.dp, HeroBorder),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(HeroGradient)
+                .drawBehind {
+                    drawRect(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                Color(0xFF2FA36B).copy(alpha = 0.36f),
+                                Color(0xFF2FA36B).copy(alpha = 0f),
+                            ),
+                            center = Offset(size.width * 0.88f, -size.height * 0.30f),
+                            radius = size.width * 0.85f,
                         ),
-                )
-                Spacer(Modifier.width(4.dp))
-                Text(
-                    text = transactionPeriod,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                        .copy(alpha = 0.4f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f),
-                )
-            }
+                    )
+                }
+                .padding(14.dp),
+        ) {
+            // ── Header — same grammar as the main hero ─────────────
+            Text(
+                text = (stringResource(R.string.total) +
+                    if (transactionPeriod.isNotBlank()) "  ·  $transactionPeriod" else "").uppercase(),
+                style = MaterialTheme.typography.labelMedium.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 1.2.sp,
+                    fontSize = 10.sp,
+                    fontFeatureSettings = "tnum",
+                ),
+                color = HeroLabel.copy(alpha = 0.9f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
 
             Spacer(Modifier.height(10.dp))
 
@@ -350,8 +368,9 @@ private fun CompactAmountCell(
 ) {
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(tintColor.copy(alpha = 0.07f))
+            .clip(RoundedCornerShape(14.dp))
+            .background(HeroCell)
+            .border(1.dp, HeroCellBorder, RoundedCornerShape(14.dp))
             .padding(10.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -367,20 +386,21 @@ private fun CompactAmountCell(
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontWeight = FontWeight.Medium,
                 ),
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-                    .copy(alpha = 0.55f),
+                color = HeroLabel,
             )
         }
         Spacer(Modifier.height(4.dp))
-        Text(
+        AmountText(
             text = amount,
-            style = MaterialTheme.typography.bodyMedium.copy(
+            numberStyle = MaterialTheme.typography.bodyMedium.copy(
                 fontWeight = FontWeight.Bold,
                 letterSpacing = (-0.3).sp,
+                fontSize = 13.sp,
             ),
-            color = tintColor,
+            color = HeroValue,
+            unitColor = HeroLabel,
+            unitSizeFactor = 0.60f,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
         )
     }
 }
@@ -392,11 +412,9 @@ private fun CompactBalanceCell(
 ) {
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(
-                MaterialTheme.colorScheme.surfaceContainerHighest
-                    .copy(alpha = 0.45f),
-            )
+            .clip(RoundedCornerShape(14.dp))
+            .background(HeroCellBorder.copy(alpha = 0.10f))
+            .border(1.dp, HeroCellBorder, RoundedCornerShape(14.dp))
             .padding(10.dp),
     ) {
         Text(
@@ -404,19 +422,20 @@ private fun CompactBalanceCell(
             style = MaterialTheme.typography.labelSmall.copy(
                 fontWeight = FontWeight.Medium,
             ),
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-                .copy(alpha = 0.55f),
+            color = HeroLabel,
         )
         Spacer(Modifier.height(4.dp))
-        Text(
+        AmountText(
             text = amount,
-            style = MaterialTheme.typography.bodyMedium.copy(
+            numberStyle = MaterialTheme.typography.bodyMedium.copy(
                 fontWeight = FontWeight.Bold,
                 letterSpacing = (-0.3).sp,
+                fontSize = 13.sp,
             ),
-            color = MaterialTheme.colorScheme.onSurface,
+            color = HeroValue,
+            unitColor = HeroLabel,
+            unitSizeFactor = 0.60f,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
         )
     }
 }

@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.naveenapps.designsystem.theme.NaveenAppsPreviewTheme
 import com.naveenapps.expensemanager.core.designsystem.components.EmptyItem
+import com.naveenapps.expensemanager.core.designsystem.components.AmountText
 import com.naveenapps.expensemanager.core.designsystem.ui.components.AppCardView
 import com.naveenapps.expensemanager.core.designsystem.ui.components.AppCardViewDefaults
 import com.naveenapps.expensemanager.core.designsystem.ui.components.ExpenseManagerTopAppBar
@@ -234,10 +235,18 @@ fun DashBoardAccountItem(
     availableCreditLimit: String?,
     amountTextColor: Color,
     modifier: Modifier = Modifier,
+    isMuted: Boolean = false,
     onItemClick: (() -> Unit) = {}
 ) {
     val context = LocalContext.current
     val hasCreditLimit = !availableCreditLimit.isNullOrBlank()
+    // Accounts with no money vanish into a muted grey — only accounts holding
+    // money compete for attention (mock: "config pc · 0 FCFA" greyed out).
+    val effectiveAmountColor = if (isMuted) {
+        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)
+    } else {
+        amountTextColor
+    }
 
     AppCardView(
         modifier = modifier.width(170.dp),
@@ -284,16 +293,16 @@ fun DashBoardAccountItem(
 
             Spacer(Modifier.height(12.dp))
 
-            // ── Amount ─────────────────────────────────────────────
-            Text(
+            // ── Amount — tabular figures, reduced FCFA ─────────────
+            AmountText(
                 text = amount,
-                color = amountTextColor,
-                style = MaterialTheme.typography.titleMedium.copy(
+                color = effectiveAmountColor,
+                numberStyle = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
                     letterSpacing = (-0.3).sp,
                 ),
+                unitSizeFactor = 0.52f,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
             )
 
             Spacer(Modifier.height(4.dp))

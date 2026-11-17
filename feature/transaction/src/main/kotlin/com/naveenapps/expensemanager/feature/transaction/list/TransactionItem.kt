@@ -201,9 +201,11 @@ fun TransactionItem(
                         toName = toAccountName,
                     )
                 } else {
-                    // ── Title ──
+                    val hasMerchant = !notes.isNullOrBlank()
+                    // ── Title — merchant when present ("qu'est-ce que j'ai
+                    //    payé ?"), category otherwise ─────────────────
                     Text(
-                        text = categoryName,
+                        text = if (hasMerchant) notes!!.trim() else categoryName,
                         style = MaterialTheme.typography.bodyLarge.copy(
                             fontWeight = FontWeight.Medium,
                             fontSize = 15.sp,
@@ -223,26 +225,39 @@ fun TransactionItem(
 
                     Spacer(Modifier.height(3.dp))
 
-                    // ── Subtitle: account with dot separator ──
-                    AccountSubtitle(
-                        accountIcon = fromAccountIcon,
-                        accountColor = fromAccountColor,
-                        accountName = fromAccountName,
-                    )
-
-                    // ── Notes (if any) ──
-                    if (!notes.isNullOrBlank()) {
-                        Spacer(Modifier.height(2.dp))
-                        Text(
-                            text = notes,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
-                                fontSize = 12.sp,
-                            ),
-                            modifier = Modifier.fillMaxWidth(),
+                    // ── Subtitle: account (with WAVE chip) + category
+                    //    tucked behind when the merchant holds the title ──
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        AccountSubtitle(
+                            accountIcon = fromAccountIcon,
+                            accountColor = fromAccountColor,
+                            accountName = fromAccountName,
                         )
+                        if (hasMerchant) {
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = "·",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    fontSize = 11.sp,
+                                ),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    .copy(alpha = 0.4f),
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = categoryName,
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        .copy(alpha = 0.55f),
+                                ),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
                     }
                 }
             }

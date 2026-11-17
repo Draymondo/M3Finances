@@ -43,6 +43,7 @@ import com.naveenapps.expensemanager.core.common.utils.toCompleteDateWithDate
 import com.naveenapps.expensemanager.core.common.utils.toDate
 import com.naveenapps.expensemanager.core.common.utils.toDay
 import com.naveenapps.expensemanager.core.common.utils.toMonthYear
+import com.naveenapps.expensemanager.core.designsystem.components.AmountText
 import com.naveenapps.expensemanager.core.designsystem.components.EmptyItem
 import com.naveenapps.expensemanager.core.designsystem.ui.components.AppCardView
 import com.naveenapps.expensemanager.core.designsystem.ui.components.ExpenseManagerTopAppBar
@@ -360,13 +361,15 @@ fun TransactionHeaderItem(
                 )
             }
 
-            Text(
+            AmountText(
                 text = totalAmount,
-                style = MaterialTheme.typography.titleMedium.copy(
+                numberStyle = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.SemiBold,
                     letterSpacing = (-0.3).sp,
                 ),
                 color = colorResource(id = textColor),
+                unitSizeFactor = 0.55f,
+                horizontalArrangement = Arrangement.End,
             )
         }
     }

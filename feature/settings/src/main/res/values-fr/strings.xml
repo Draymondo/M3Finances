@@ -10,13 +10,13 @@
     <string name="currency">Personnaliser la devise</string>
     <string name="selected_daily_reminder_time">Nous vous rappellerons d\'ajouter votre dépense à l\'heure définie</string>
     <string name="recurring_transactions_settings">Transactions récurrentes</string>
-    <string name="recurring_transactions_settings_subtitle">Gérez vos factures, abonnements et autres transactions planifiées</string>
+    <string name="recurring_transactions_settings_subtitle">Abonnements et factures planifiées</string>
     <string name="debts_settings">Dettes</string>
-    <string name="debts_settings_subtitle">Suivez l\'argent prêté ou emprunté</string>
+    <string name="debts_settings_subtitle">Argent prêté ou emprunté</string>
     <string name="savings_goals_settings">Objectifs d\'épargne</string>
-    <string name="savings_goals_settings_subtitle">Suivez la progression de vos objectifs d\'épargne</string>
+    <string name="savings_goals_settings_subtitle">Progrès de tes objectifs d’épargne</string>
     <string name="shopping_lists_settings">Listes de courses</string>
-    <string name="shopping_lists_settings_subtitle">Prépare tes achats et enregistre-les au fur et à mesure</string>
+    <string name="shopping_lists_settings_subtitle">Prépare tes achats, coche au fil de l’eau</string>
     <string name="rate_us">Évaluez-nous</string>
     <string name="choose_web_browser">Choisir un navigateur web</string>
 
@@ -46,17 +46,17 @@
     <string name="tools">Outils</string>
     <string name="tools_subtitle">Transactions récurrentes, dettes, épargne, courses et prévisions</string>
     <string name="scheduled_transactions_settings">Transactions prévues</string>
-    <string name="scheduled_transactions_settings_subtitle">Consulter et valider les transactions en attente d\'échéance</string>
+    <string name="scheduled_transactions_settings_subtitle">Valider les transactions en attente</string>
     <string name="envelopes_settings">Enveloppes</string>
-    <string name="envelopes_settings_subtitle">Plafonner les dépenses d\'une catégorie, séparément des budgets classiques</string>
+    <string name="envelopes_settings_subtitle">Plafonner une catégorie hors budgets</string>
     <string name="work_time_settings">Temps de travail équivalent</string>
-    <string name="work_time_settings_subtitle">Convertit un prix en temps de travail nécessaire pour se le payer</string>
+    <string name="work_time_settings_subtitle">Un prix en temps de travail</string>
     <string name="currency_converter_settings_tool">Convertisseur de devises</string>
-    <string name="currency_converter_settings_tool_subtitle">Convertit des montants avec des taux de change en temps réel</string>
+    <string name="currency_converter_settings_tool_subtitle">Taux de change en temps réel</string>
     <string name="installment_plans_settings">Paiements échelonnés</string>
-    <string name="installment_plans_settings_subtitle">Liste et suivi des achats payés en plusieurs versements</string>
+    <string name="installment_plans_settings_subtitle">Achats payés en plusieurs versements</string>
     <string name="calendar_settings">Calendrier financier</string>
-    <string name="calendar_settings_subtitle">Visualise tes revenus, dépenses et solde au jour le jour sur un calendrier</string>
+    <string name="calendar_settings_subtitle">Revenus et dépenses au jour le jour</string>
 
     <string name="personalization">Personnalisation</string>
     <string name="notifications">Notifications</string>

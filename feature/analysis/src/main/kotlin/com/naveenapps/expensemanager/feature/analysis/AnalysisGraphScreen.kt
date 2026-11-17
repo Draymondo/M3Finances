@@ -27,6 +27,7 @@ import com.naveenapps.designsystem.theme.NaveenAppsPreviewTheme
 import com.naveenapps.designsystem.utils.AppPreviewsLightAndDarkMode
 import com.naveenapps.expensemanager.core.common.utils.getCompactNumber
 import com.naveenapps.expensemanager.core.designsystem.components.AmountInfoWidget
+import com.naveenapps.expensemanager.core.designsystem.components.AmountText
 import com.naveenapps.expensemanager.core.designsystem.components.AmountInfoWidgetCompact
 import com.naveenapps.expensemanager.core.designsystem.components.DashboardWidgetTitle
 import com.naveenapps.expensemanager.core.designsystem.components.EmptyItem
@@ -272,24 +273,26 @@ private fun AverageRow(
             color = labelColor,
             modifier = Modifier.weight(1f),
         )
-        Text(
+        AmountText(
             text = income,
-            style = MaterialTheme.typography.bodyMedium.copy(
+            numberStyle = MaterialTheme.typography.bodyMedium.copy(
                 fontWeight = FontWeight.SemiBold,
                 letterSpacing = (-0.3).sp,
             ),
             color = incomeColor,
-            textAlign = TextAlign.End,
+            unitSizeFactor = 0.58f,
+            horizontalArrangement = Arrangement.End,
             modifier = Modifier.weight(1f),
         )
-        Text(
+        AmountText(
             text = expense,
-            style = MaterialTheme.typography.bodyMedium.copy(
+            numberStyle = MaterialTheme.typography.bodyMedium.copy(
                 fontWeight = FontWeight.SemiBold,
                 letterSpacing = (-0.3).sp,
             ),
             color = expenseColor,
-            textAlign = TextAlign.End,
+            unitSizeFactor = 0.58f,
+            horizontalArrangement = Arrangement.End,
             modifier = Modifier.weight(1f),
         )
     }

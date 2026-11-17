@@ -14,6 +14,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.EditCalendar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.OutlinedTextFieldColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -43,6 +45,7 @@ fun ClickableTextField(
     modifier: Modifier = Modifier,
     leadingIcon: ImageVector? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions(),
+    colors: OutlinedTextFieldColors? = null,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed: Boolean by interactionSource.collectIsPressedAsState()
@@ -100,6 +103,7 @@ fun ClickableTextField(
         onValueChange = {},
         keyboardOptions = keyboardOptions,
         shape = RoundedCornerShape(8.dp),
+        colors = colors ?: OutlinedTextFieldDefaults.colors(),
     )
 }
 

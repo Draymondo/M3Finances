@@ -60,6 +60,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -431,11 +434,28 @@ private fun TransactionCreateContent(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
+                        // Date & time fields carry an emerald accent (mock):
+                        // green border + green label, always on.
+                        val fieldAccent = if (isSystemInDarkTheme()) {
+                            Color(0xFF34D399)
+                        } else {
+                            Color(0xFF15803D)
+                        }
+                        val accentFieldColors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = fieldAccent,
+                            unfocusedBorderColor = fieldAccent,
+                            focusedLabelColor = fieldAccent,
+                            unfocusedLabelColor = fieldAccent,
+                            cursorColor = fieldAccent,
+                            focusedLeadingIconColor = fieldAccent,
+                            unfocusedLeadingIconColor = fieldAccent,
+                        )
                         ClickableTextField(
                             modifier = Modifier.weight(1f),
                             value = state.dateTime.toCompleteDateWithDate(),
                             label = R.string.select_date,
                             leadingIcon = Icons.Outlined.EditCalendar,
+                            colors = accentFieldColors,
                             onClick = {
                                 focusManager.clearFocus(force = true)
                                 onAction.invoke(TransactionCreateAction.ShowDateSelection)
@@ -446,6 +466,7 @@ private fun TransactionCreateContent(
                             value = state.dateTime.toTimeAndMinutes(),
                             label = R.string.select_time,
                             leadingIcon = Icons.Outlined.AccessTime,
+                            colors = accentFieldColors,
                             onClick = {
                                 onAction.invoke(TransactionCreateAction.ShowTimeSelection)
                             },

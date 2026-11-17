@@ -2,6 +2,8 @@ package com.naveenapps.expensemanager.core.designsystem.ui.components
 
 import android.widget.LinearLayout
 import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -9,9 +11,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.viewinterop.AndroidView
+import com.naveenapps.expensemanager.core.designsystem.components.AmountText
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.sp
+import androidx.compose.material3.Text
 import com.github.mikephil.charting.animation.Easing
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.data.PieData
@@ -33,18 +41,22 @@ fun PieChartView(
     chartHeight: Int = 600,
     hideValues: Boolean = false,
     chartWidth: Int = LinearLayout.LayoutParams.MATCH_PARENT,
+    centerTopText: String? = null,
 ) {
     var isAnimated by remember { mutableStateOf(false) }
 
-    val onBackgroundColor = MaterialTheme.colorScheme.onBackground.toArgb()
     val holeColor = MaterialTheme.colorScheme.background.toArgb()
     val surfaceVariantColor = MaterialTheme.colorScheme.onSurfaceVariant
         .copy(alpha = 0.5f).toArgb()
 
-    Crossfade(targetState = chartData, label = "pie_chart") { pieChartData ->
-        AndroidView(
-            modifier = modifier.wrapContentSize(),
-            factory = { context ->
+    Box(
+        modifier = modifier.wrapContentSize(),
+        contentAlignment = Alignment.Center,
+    ) {
+        Crossfade(targetState = chartData, label = "pie_chart") { pieChartData ->
+            AndroidView(
+                modifier = Modifier.wrapContentSize(),
+                factory = { context ->
                 PieChart(context).apply {
                     layoutParams = LinearLayout.LayoutParams(chartWidth, chartHeight)
 
@@ -66,13 +78,9 @@ fun PieChartView(
                     setHoleColor(holeColor)
                     setDrawSlicesUnderHole(false)
 
-                    // ── Centre text ─────────────────────────────────
-                    // Bold typeface — same size whether labels are shown or not.
-                    setDrawCenterText(true)
-                    setCenterTextColor(onBackgroundColor)
-                    setCenterTextSize(15f)
-                    setCenterTextTypeface(android.graphics.Typeface.DEFAULT_BOLD)
-                    centerText = totalAmountText
+                    // ── Centre text — drawn by Compose, not the chart ──
+                    setDrawCenterText(false)
+                    centerText = ""
 
                     // ── Entry labels (on-slice text) off ────────────
                     // Removes the cramped text drawn directly on thin
@@ -102,13 +110,47 @@ fun PieChartView(
             },
             update = { chart ->
                 // Re-apply theme colours on recomposition (e.g. dark mode toggle)
-                chart.setCenterTextColor(onBackgroundColor)
                 chart.setHoleColor(holeColor)
                 chart.setTransparentCircleColor(holeColor)
-                chart.centerText = totalAmountText
                 updatePieChartWithData(chart, pieChartData, hideValues, surfaceVariantColor)
             },
         )
+        }
+
+        // ── Compose centre overlay — tabular digits, reduced FCFA ──
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.matchParentSize(),
+        ) {
+            Box(modifier = Modifier.weight(1f))
+            if (!centerTopText.isNullOrBlank()) {
+                Text(
+                    text = centerTopText,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 1.2.sp,
+                        fontFeatureSettings = "tnum",
+                    ),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                        .copy(alpha = 0.55f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            AmountText(
+                text = totalAmountText,
+                numberStyle = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.Black,
+                    fontSize = 15.sp,
+                    letterSpacing = (-0.3).sp,
+                ),
+                color = MaterialTheme.colorScheme.onBackground,
+                unitColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    .copy(alpha = 0.6f),
+                unitSizeFactor = 0.46f,
+            )
+            Box(modifier = Modifier.weight(1f))
+        }
     }
 }
 
