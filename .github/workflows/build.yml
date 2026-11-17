@@ -41,7 +41,26 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build debug APK
-        run: ./gradlew --no-configuration-cache assembleDebug
+        run: |
+          set -o pipefail
+          ./gradlew --no-configuration-cache assembleDebug 2>&1 | tee gradle-build.log
+
+      # Les logs d'Actions ne sont pas toujours accessibles depuis un sandbox :
+      # on republie les erreurs Kotlin/Gradle en annotations, lisibles via
+      # l'API des check-runs.
+      - name: Publish build errors as annotations
+        if: failure()
+        run: |
+          if [ -f gradle-build.log ]; then
+            grep -E "^e: |^w: .*error|error:|Execution failed for task|What went wrong|Caused by:" gradle-build.log \
+              | head -n 40 \
+              | sed -e 's/%/%25/g' -e 's/\r//g' \
+              | while IFS= read -r line; do
+                  echo "::error::$line"
+                done
+          else
+            echo "::error::gradle-build.log is missing"
+          fi
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -77,4 +96,20 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run Unit Tests
-        run: ./gradlew testDebugUnitTest
+        run: |
+          set -o pipefail
+          ./gradlew testDebugUnitTest 2>&1 | tee gradle-test.log
+
+      - name: Publish test errors as annotations
+        if: failure()
+        run: |
+          if [ -f gradle-test.log ]; then
+            grep -E "^e: |error:|FAILED|Execution failed for task|What went wrong|Caused by:" gradle-test.log \
+              | head -n 40 \
+              | sed -e 's/%/%25/g' -e 's/\r//g' \
+              | while IFS= read -r line; do
+                  echo "::error::$line"
+                done
+          else
+            echo "::error::gradle-test.log is missing"
+          fi
