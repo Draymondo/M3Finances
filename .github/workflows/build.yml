@@ -39,19 +39,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build debug APK
-        run: |
-          set +e
-          ./gradlew --no-configuration-cache assembleDebug 2>&1 | tee "$RUNNER_TEMP/gradle-debug-apk.log"
-          GRADLE_EXIT=${PIPESTATUS[0]}
-          if [ "$GRADLE_EXIT" -ne 0 ]; then
-            grep -E "^e: " "$RUNNER_TEMP/gradle-debug-apk.log" | while IFS= read -r line; do
-              echo "::error::$line"
-            done
-            grep -E "FAILED|Exception|error:|What went wrong|Execution failed|Could not|cannot find" "$RUNNER_TEMP/gradle-debug-apk.log" | head -20 | while IFS= read -r line; do
-              echo "::error::$line"
-            done
-            exit "$GRADLE_EXIT"
-          fi
+        run: ./gradlew --no-configuration-cache assembleDebug
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -87,16 +75,4 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run Unit Tests
-        run: |
-          set +e
-          ./gradlew testDebugUnitTest 2>&1 | tee "$RUNNER_TEMP/gradle-unit-test.log"
-          GRADLE_EXIT=${PIPESTATUS[0]}
-          if [ "$GRADLE_EXIT" -ne 0 ]; then
-            grep -E "^e: " "$RUNNER_TEMP/gradle-unit-test.log" | while IFS= read -r line; do
-              echo "::error::$line"
-            done
-            grep -E "FAILED|Exception|error:|What went wrong|Execution failed|Could not|cannot find|> There were failing tests| failures" "$RUNNER_TEMP/gradle-unit-test.log" | head -30 | while IFS= read -r line; do
-              echo "::error::$line"
-            done
-            exit "$GRADLE_EXIT"
-          fi
+        run: ./gradlew testDebugUnitTest
