@@ -82,7 +82,6 @@ fun PieChartView(
                     // Ni sur les parts, ni autour : la liste sous le donut
                     // porte les noms, les montants et les pourcentages.
                     setDrawEntryLabels(false)
-                    setDrawValues(false)
 
                     // ── Percent mode ────────────────────────────────
                     setUsePercentValues(true)
