@@ -133,5 +133,23 @@ lignes et légende de catégories.
 - Les signatures publiques utilisées ailleurs sont préservées : `AmountInfoWidget`/`…Compact`,
   `PieChartView`, `TransactionItem` (nouveau paramètre optionnel), `CategoryTransactionItem`
   (nouveau paramètre optionnel), `DecimalTextField`/`AutoSelectTextField` (paramètre `textStyle` optionnel).
-- **Compilation non exécutée dans cet environnement** (pas de JDK ni de SDK Android) : à valider par
-  la CI (`assembleDebug` + `testDebugUnitTest`) avant d'installer l'APK.
+- **Compilé et testé par la CI GitHub Actions**, run
+  [`44054265265`](https://github.com/Draymondo/M3Finances/actions/runs/44054265265) :
+  `assembleDebug` ✅ et `testDebugUnitTest` ✅ (les deux jobs verts).
+  L'APK est téléchargeable depuis l'artefact `app-debug-apk` de ce run.
+- Le sandbox de développement n'a ni JDK ni SDK Android et l'accès réseau y est restreint : la
+  compilation passe donc obligatoirement par la CI.
+
+## CI
+
+`.github/workflows/build.yml` a été adapté pour rendre cette boucle exploitable :
+
+- ajout de `workflow_dispatch` → n'importe quelle branche peut être compilée à la demande
+  (`gh workflow run Build --ref <branche>`), sans devoir merger dans `main` ;
+- le job `unit-test` reçoit `--no-configuration-cache --stacktrace`, comme le job de build :
+  `org.gradle.configuration-cache=true` dans `gradle.properties` faisait échouer la tâche de test
+  dès la phase de configuration (échec en ~30 s, sans erreur Kotlin) ;
+- en cas d'échec, les lignes `e: …`, le bloc « What went wrong » et les `Caused by:` sont republiés
+  en **annotations de check-run** — récupérables via l'API même quand les logs bruts d'Actions sont
+  inaccessibles.
+
