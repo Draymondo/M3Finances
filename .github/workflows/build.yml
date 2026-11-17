@@ -39,7 +39,13 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build debug APK
-        run: ./gradlew --no-configuration-cache assembleDebug
+        run: |
+          ./gradlew --no-configuration-cache assembleDebug --console=plain 2>&1 | tee /tmp/build.log
+          code=${PIPESTATUS[0]}
+          if [ $code -ne 0 ]; then
+            grep -E "e: |FAILED|went wrong|error|Exception" /tmp/build.log | head -80 | sed 's/%/%25/g; s/\r//g' | while IFS= read -r line; do echo "::error::${line:0:400}"; done
+            exit $code
+          fi
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -75,4 +81,10 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run Unit Tests
-        run: ./gradlew testDebugUnitTest
+        run: |
+          ./gradlew testDebugUnitTest --console=plain 2>&1 | tee /tmp/test.log
+          code=${PIPESTATUS[0]}
+          if [ $code -ne 0 ]; then
+            grep -E "e: |FAILED|went wrong|error|Exception|AssertionError|expected" /tmp/test.log | head -80 | sed 's/%/%25/g; s/\r//g' | while IFS= read -r line; do echo "::error::${line:0:400}"; done
+            exit $code
+          fi
