@@ -58,8 +58,6 @@
     <string name="calendar_settings">Financial Calendar</string>
     <string name="calendar_settings_subtitle">View daily income, expenses and net balance on a calendar</string>
 
-    <string name="tools_group_money">Money &amp; goals</string>
-
     <string name="personalization">Personalization</string>
     <string name="notifications">Notifications</string>
     <string name="data_and_backup"><![CDATA[Data & Backup]]></string>

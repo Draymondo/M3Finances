@@ -58,9 +58,6 @@
     <string name="calendar_settings">Calendrier financier</string>
     <string name="calendar_settings_subtitle">Revenus et dépenses au jour le jour</string>
 
-    <!-- Écran Outils : recherche + groupes sémantiques (sans badge « NOUVEAU ») -->
-    <string name="tools_group_money">Argent &amp; objectifs</string>
-
     <string name="personalization">Personnalisation</string>
     <string name="notifications">Notifications</string>
     <string name="data_and_backup"><![CDATA[Données & sauvegarde]]></string>
