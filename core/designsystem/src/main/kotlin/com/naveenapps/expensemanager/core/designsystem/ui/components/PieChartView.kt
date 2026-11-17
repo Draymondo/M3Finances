@@ -117,7 +117,7 @@ fun PieChartView(
         )
         }
 
-        // ── Compose centre overlay — tabular digits, reduced FCFA ──
+        // ── Compose centre overlay — compact enough to sit inside the hole ──
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.matchParentSize(),
@@ -128,7 +128,8 @@ fun PieChartView(
                     text = centerTopText,
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontWeight = FontWeight.SemiBold,
-                        letterSpacing = 1.2.sp,
+                        fontSize = 9.sp,
+                        letterSpacing = 0.8.sp,
                         fontFeatureSettings = "tnum",
                     ),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -141,13 +142,13 @@ fun PieChartView(
                 text = totalAmountText,
                 numberStyle = MaterialTheme.typography.bodyMedium.copy(
                     fontWeight = FontWeight.Black,
-                    fontSize = 15.sp,
-                    letterSpacing = (-0.3).sp,
+                    fontSize = 12.5.sp,
+                    letterSpacing = (-0.2).sp,
                 ),
                 color = MaterialTheme.colorScheme.onBackground,
                 unitColor = MaterialTheme.colorScheme.onSurfaceVariant
                     .copy(alpha = 0.6f),
-                unitSizeFactor = 0.46f,
+                unitSizeFactor = 0.42f,
             )
             Box(modifier = Modifier.weight(1f))
         }

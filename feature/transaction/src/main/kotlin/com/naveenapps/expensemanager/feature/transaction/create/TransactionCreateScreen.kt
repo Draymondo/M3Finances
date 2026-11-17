@@ -451,7 +451,7 @@ private fun TransactionCreateContent(
                             unfocusedLeadingIconColor = fieldAccent,
                         )
                         ClickableTextField(
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1.3f),
                             value = state.dateTime.toCompleteDateWithDate(),
                             label = R.string.select_date,
                             leadingIcon = Icons.Outlined.EditCalendar,
