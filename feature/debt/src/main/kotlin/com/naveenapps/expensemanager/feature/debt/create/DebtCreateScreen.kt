@@ -354,6 +354,29 @@ private fun DebtCreateBody(
                         errorMessage = stringResource(R.string.person_name_error),
                     )
 
+                    // Auto-complétion : dès qu'on tape, on propose les noms déjà utilisés,
+                    // pour éviter « Ali » et « ali » qui deviendraient deux personnes.
+                    if (!state.isEditing) {
+                        val typed = state.personName.value.trim().lowercase()
+                        val suggestions = state.knownPersonNames
+                            .filter { typed.isNotEmpty() && it.lowercase().startsWith(typed) }
+                            .filter { it.lowercase() != typed }
+                            .take(4)
+                        if (suggestions.isNotEmpty()) {
+                            FlowRow(
+                                modifier = Modifier.padding(top = 4.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                for (name in suggestions) {
+                                    AssistChip(
+                                        onClick = { state.personName.onValueChange(name) },
+                                        label = { Text(text = name) },
+                                    )
+                                }
+                            }
+                        }
+                    }
+
                     if (!state.isEditing) {
                         DecimalTextField(
                             modifier = Modifier.fillMaxWidth(),

@@ -9,6 +9,8 @@ val DebtViewModelModule = module {
     viewModel {
         DebtListViewModel(
             getDebtsUseCase = get(),
+            getCurrencyUseCase = get(),
+            getFormattedAmountUseCase = get(),
             trackToolUsageUseCase = get(),
             appComposeNavigator = get(),
         )
@@ -21,6 +23,7 @@ val DebtViewModelModule = module {
             getAllAccountsUseCase = get(),
             getDefaultCurrencyUseCase = get(),
             getFormattedAmountUseCase = get(),
+            getDebtsUseCase = get(),
             findDebtByIdUseCase = get(),
             addDebtUseCase = get(),
             updateDebtUseCase = get(),

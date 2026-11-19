@@ -11,8 +11,8 @@
     <string name="selected_daily_reminder_time">Nous vous rappellerons d\'ajouter votre dépense à l\'heure définie</string>
     <string name="recurring_transactions_settings">Transactions récurrentes</string>
     <string name="recurring_transactions_settings_subtitle">Abonnements et factures planifiées</string>
-    <string name="debts_settings">Dettes</string>
-    <string name="debts_settings_subtitle">Argent prêté ou emprunté</string>
+    <string name="debts_settings">Prêts &amp; dettes</string>
+    <string name="debts_settings_subtitle">Ce qu\'on me doit, ce que je dois</string>
     <string name="savings_goals_settings">Objectifs d\'épargne</string>
     <string name="savings_goals_settings_subtitle">Progrès de tes objectifs d’épargne</string>
     <string name="shopping_lists_settings">Listes de courses</string>
@@ -86,4 +86,15 @@
     <string name="tool_new_badge">NOUVEAU</string>
     <string name="tools_search_placeholder">Rechercher un outil…</string>
     <string name="tools_empty">Aucun outil ne correspond à votre recherche</string>
+    <!-- Alias de recherche : l'outil a été renommé, on garde les mots-clés habituels -->
+    <string-array name="tool_alias_debts">
+        <item>dette</item>
+        <item>dettes</item>
+        <item>prêt</item>
+        <item>pret</item>
+        <item>emprunt</item>
+        <item>crédit</item>
+        <item>credit</item>
+        <item>carnet</item>
+    </string-array>
 </resources>

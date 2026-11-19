@@ -11,6 +11,7 @@ import com.naveenapps.expensemanager.core.domain.usecase.debt.DeleteDebtReminder
 import com.naveenapps.expensemanager.core.domain.usecase.debt.DeleteDebtUseCase
 import com.naveenapps.expensemanager.core.domain.usecase.debt.FindDebtByIdUseCase
 import com.naveenapps.expensemanager.core.domain.usecase.debt.GetDebtRemindersUseCase
+import com.naveenapps.expensemanager.core.domain.usecase.debt.GetDebtsUseCase
 import com.naveenapps.expensemanager.core.domain.usecase.debt.UpdateDebtUseCase
 import com.naveenapps.expensemanager.core.domain.usecase.settings.currency.GetCurrencyUseCase
 import com.naveenapps.expensemanager.core.domain.usecase.settings.currency.GetDefaultCurrencyUseCase
@@ -42,6 +43,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Date
+import java.util.Locale
 import java.util.UUID
 import kotlin.math.abs
 
@@ -51,6 +53,7 @@ class DebtCreateViewModel(
     getAllAccountsUseCase: GetAllAccountsUseCase,
     getDefaultCurrencyUseCase: GetDefaultCurrencyUseCase,
     private val getFormattedAmountUseCase: GetFormattedAmountUseCase,
+    private val getDebtsUseCase: GetDebtsUseCase,
     private val findDebtByIdUseCase: FindDebtByIdUseCase,
     private val addDebtUseCase: AddDebtUseCase,
     private val updateDebtUseCase: UpdateDebtUseCase,
@@ -95,7 +98,24 @@ class DebtCreateViewModel(
 
     init {
         observeAccountsAndCurrency(getCurrencyUseCase, getAllAccountsUseCase)
+        observeKnownPersonNames()
         loadDebtWhenReady(savedStateHandle)
+    }
+
+    /**
+     * Alimente l'auto-complétion du champ « Personne » avec les noms déjà saisis ailleurs.
+     * Les doublons de casse (« Ali » / « ali ») sont fondus en une seule proposition.
+     */
+    private fun observeKnownPersonNames() {
+        getDebtsUseCase.invoke()
+            .onEach { debts ->
+                val names = debts.map { it.debt.personName.trim() }
+                    .filter { it.isNotBlank() }
+                    .distinctBy { it.lowercase(Locale.getDefault()) }
+                    .sortedBy { it.lowercase(Locale.getDefault()) }
+                _state.update { it.copy(knownPersonNames = names) }
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun observeAccountsAndCurrency(

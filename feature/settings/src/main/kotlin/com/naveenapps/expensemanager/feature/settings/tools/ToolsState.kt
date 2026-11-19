@@ -23,6 +23,8 @@ data class ToolItemUiModel(
     val usageCount: Int = 0,
     val group: ToolGroup,
     val isNew: Boolean = false,
+    /** Mots-clés supplémentaires (string-array) cherchés en plus du titre. */
+    val searchAliasRes: Int? = null,
 )
 
 data class ToolsState(

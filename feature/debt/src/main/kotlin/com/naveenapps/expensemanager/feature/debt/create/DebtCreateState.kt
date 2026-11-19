@@ -45,4 +45,6 @@ data class DebtCreateState(
      * nowhere to attach a reminder row to until it's actually saved (see DebtCreateViewModel). */
     val reminders: List<DebtReminder> = emptyList(),
     val showAddReminderDialog: Boolean = false,
+    /** Noms de personnes déjà utilisés dans des dettes — sert uniquement à l'auto-complétion. */
+    val knownPersonNames: List<String> = emptyList(),
 )

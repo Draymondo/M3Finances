@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="debts">Debts</string>
-    <string name="no_debts_available">No debts yet\nTap + to record money lent or borrowed</string>
+    <string name="debts">Loans &amp; debts</string>
+    <string name="no_debts_available">Nothing lent or borrowed yet\nTap + to record money lent or borrowed</string>
     <string name="owes_you">Owes you</string>
     <string name="you_owe">You owe</string>
     <string name="due_on">Due %1$s</string>
@@ -34,4 +34,14 @@
     <string name="no_reminders">No reminder dates set</string>
     <string name="add_reminder">Add reminder date</string>
     <string name="delete_reminder">Delete reminder</string>
+
+    <string name="section_owed_to_me">Owed to me</string>
+    <string name="section_i_owe">I owe</string>
+    <string name="section_settled">Settled</string>
+    <string name="overdue">Overdue</string>
+
+    <plurals name="debt_count">
+        <item quantity="one">%1$d debt</item>
+        <item quantity="other">%1$d debts</item>
+    </plurals>
 </resources>

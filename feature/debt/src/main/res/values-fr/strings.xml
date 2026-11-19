@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="debts">Dettes</string>
-    <string name="no_debts_available">Aucune dette pour l\'instant\nAppuyez sur + pour enregistrer un prêt ou un emprunt</string>
+    <string name="debts">Prêts &amp; dettes</string>
+    <string name="no_debts_available">Aucun prêt ni dette pour l\'instant\nAppuyez sur + pour enregistrer de l\'argent prêté ou emprunté</string>
     <string name="owes_you">Vous doit</string>
     <string name="you_owe">Vous devez</string>
     <string name="due_on">Échéance %1$s</string>
@@ -34,4 +34,14 @@
     <string name="no_reminders">Aucune date de rappel définie</string>
     <string name="add_reminder">Ajouter une date de rappel</string>
     <string name="delete_reminder">Supprimer le rappel</string>
+
+    <string name="section_owed_to_me">On me doit</string>
+    <string name="section_i_owe">Je dois</string>
+    <string name="section_settled">Réglées</string>
+    <string name="overdue">En retard</string>
+
+    <plurals name="debt_count">
+        <item quantity="one">%1$d dette</item>
+        <item quantity="other">%1$d dettes</item>
+    </plurals>
 </resources>

@@ -11,8 +11,8 @@
     <string name="selected_daily_reminder_time">We will remind you to add your expense at every on time</string>
     <string name="recurring_transactions_settings">Recurring Transactions</string>
     <string name="recurring_transactions_settings_subtitle">Manage bills, subscriptions and other scheduled transactions</string>
-    <string name="debts_settings">Debts</string>
-    <string name="debts_settings_subtitle">Track money you\'ve lent or borrowed</string>
+    <string name="debts_settings">Loans &amp; debts</string>
+    <string name="debts_settings_subtitle">What I\'m owed, what I owe</string>
     <string name="savings_goals_settings">Savings goals</string>
     <string name="savings_goals_settings_subtitle">Track progress toward your savings targets</string>
     <string name="shopping_lists_settings">Shopping lists</string>
@@ -86,4 +86,11 @@
     <string name="tool_new_badge">NEW</string>
     <string name="tools_search_placeholder">Search tools…</string>
     <string name="tools_empty">No tool matches your search</string>
+    <string-array name="tool_alias_debts">
+        <item>debt</item>
+        <item>debts</item>
+        <item>loan</item>
+        <item>loans</item>
+        <item>credit</item>
+    </string-array>
 </resources>

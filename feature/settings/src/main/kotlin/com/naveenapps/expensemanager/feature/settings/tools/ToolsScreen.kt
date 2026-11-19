@@ -38,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -73,7 +74,13 @@ fun ToolsScreen(
         for (tool in state.tools) {
             if (tool.group != group) continue
             val title = stringResource(tool.titleRes)
-            if (needle.isEmpty() || title.lowercase().contains(needle)) {
+            val aliases = tool.searchAliasRes
+                ?.let { stringArrayResource(it).toList() }
+                .orEmpty()
+            val matches = needle.isEmpty() ||
+                title.lowercase().contains(needle) ||
+                aliases.any { it.lowercase().contains(needle) }
+            if (matches) {
                 matched.add(tool)
             }
         }

@@ -50,6 +50,7 @@ class ToolsViewModel(
                     icon = Icons.Outlined.Handshake,
                     usageCount = usageMap[ToolType.DEBTS] ?: 0,
                     group = ToolGroup.MONEY,
+                    searchAliasRes = R.array.tool_alias_debts,
                 ),
                 ToolItemUiModel(
                     type = ToolType.SAVINGS_GOALS,
