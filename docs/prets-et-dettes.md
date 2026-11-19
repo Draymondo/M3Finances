@@ -76,7 +76,10 @@ les doublons à la source. Les noms viennent de `GetDebtsUseCase`, aucune nouvel
 
 ## Vérifications
 
-- Compilation et tests unitaires passés par la CI GitHub Actions (voir le run associé au commit).
+- CI GitHub Actions, run [`44428229422`](https://github.com/Draymondo/M3Finances/actions/runs/44428229422)
+  sur le commit `7c19bb4` : `debug-apk` ✅ et `unit-test` ✅.
+  Un premier passage (`44427458864`) avait révélé que `TextFieldValue.onValueChange` est nullable
+  dans ce projet — corrigé par un `?.invoke` explicite sur les chips.
 - Aucune migration de base : `version = 22` inchangée, donc installable par-dessus la version
   actuellement sur l'appareil sans perte de données.
 
