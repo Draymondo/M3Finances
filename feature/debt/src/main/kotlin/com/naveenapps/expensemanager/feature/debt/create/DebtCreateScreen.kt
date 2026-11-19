@@ -369,7 +369,7 @@ private fun DebtCreateBody(
                             ) {
                                 for (name in suggestions) {
                                     AssistChip(
-                                        onClick = { state.personName.onValueChange(name) },
+                                        onClick = { state.personName.onValueChange?.invoke(name) },
                                         label = { Text(text = name) },
                                     )
                                 }
